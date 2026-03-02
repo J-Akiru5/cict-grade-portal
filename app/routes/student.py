@@ -1,0 +1,126 @@
+from flask import Blueprint, render_template, request
+from flask_login import login_required, current_user
+from app.utils.security import role_required
+from app.services import student_service, gwa_service
+
+student_bp = Blueprint('student', __name__, template_folder='../../templates/student')
+
+CURRENT_SEMESTER = '1st'
+CURRENT_YEAR = '2024-2025'
+
+
+def _is_htmx() -> bool:
+    return request.headers.get('HX-Request') == 'true'
+
+
+@student_bp.route('/dashboard')
+@login_required
+@role_required('student')
+def dashboard():
+    student = student_service.get_student_profile(current_user.id)
+    grades = student_service.get_grades(
+        student.id, semester=CURRENT_SEMESTER, academic_year=CURRENT_YEAR
+    ) if student else []
+    gwa = gwa_service.compute_gwa(grades)
+    gwa_status = gwa_service.get_gwa_status(gwa)
+
+    context = {
+        'student': student,
+        'grades': grades,
+        'gwa': gwa,
+        'gwa_status': gwa_status,
+        'current_semester': CURRENT_SEMESTER,
+        'current_year': CURRENT_YEAR,
+        'active_page': 'dashboard',
+    }
+
+    if _is_htmx():
+        return render_template('partials/dashboard.html', **context)
+    return render_template('student/pages/dashboard.html', **context)
+
+
+@student_bp.route('/profile')
+@login_required
+@role_required('student')
+def profile():
+    student = student_service.get_student_profile(current_user.id)
+    context = {
+        'student': student,
+        'active_page': 'profile',
+    }
+    if _is_htmx():
+        return render_template('partials/profile.html', **context)
+    return render_template('student/pages/profile.html', **context)
+
+
+@student_bp.route('/subjects')
+@login_required
+@role_required('student')
+def subjects():
+    student = student_service.get_student_profile(current_user.id)
+    semester = request.args.get('semester', CURRENT_SEMESTER)
+    year = request.args.get('year', CURRENT_YEAR)
+    enrollments = student_service.get_all_enrollments(student.id) if student else []
+    context = {
+        'student': student,
+        'enrollments': enrollments,
+        'active_page': 'subjects',
+        'current_semester': semester,
+        'current_year': year,
+    }
+    if _is_htmx():
+        return render_template('partials/subjects.html', **context)
+    return render_template('student/pages/subjects.html', **context)
+
+
+@student_bp.route('/schedule')
+@login_required
+@role_required('student')
+def schedule():
+    student = student_service.get_student_profile(current_user.id)
+    semester = request.args.get('semester', CURRENT_SEMESTER)
+    year = request.args.get('year', CURRENT_YEAR)
+    matrix = student_service.get_schedule_matrix(
+        student.id, semester=semester, academic_year=year
+    ) if student else {}
+    time_slots = student_service.get_time_slots()
+    context = {
+        'student': student,
+        'matrix': matrix,
+        'time_slots': time_slots,
+        'days': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        'active_page': 'schedule',
+        'current_semester': semester,
+        'current_year': year,
+    }
+    if _is_htmx():
+        return render_template('partials/schedule.html', **context)
+    return render_template('student/pages/schedule.html', **context)
+
+
+@student_bp.route('/grades')
+@login_required
+@role_required('student')
+def grades():
+    student = student_service.get_student_profile(current_user.id)
+    semester = request.args.get('semester', CURRENT_SEMESTER)
+    year = request.args.get('year', CURRENT_YEAR)
+    grade_list = student_service.get_grades(
+        student.id, semester=semester, academic_year=year
+    ) if student else []
+    gwa = gwa_service.compute_gwa(grade_list)
+    gwa_status = gwa_service.get_gwa_status(gwa)
+
+    context = {
+        'student': student,
+        'grades': grade_list,
+        'gwa': gwa,
+        'gwa_status': gwa_status,
+        'active_page': 'grades',
+        'current_semester': semester,
+        'current_year': year,
+        'get_grade_color': gwa_service.get_grade_color,
+    }
+    if _is_htmx():
+        return render_template('partials/grades.html', **context)
+    return render_template('student/pages/grades.html', **context)

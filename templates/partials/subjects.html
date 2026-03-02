@@ -1,0 +1,81 @@
+{# HTMX partial: Subjects / Enrollment — injected into #main-content #}
+<div class="space-y-5" id="subjects-content">
+
+  {# ── Header ── #}
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-slate-800 font-bold text-lg">Enrolled Subjects</h1>
+      <p class="text-slate-400 text-sm mt-0.5">All subjects for the current curriculum.</p>
+    </div>
+    <div class="bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-mono text-slate-600">
+      {{ current_year }} • {{ current_semester }} Sem
+    </div>
+  </div>
+
+  {# ── Enrollments Table ── #}
+  <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    {% if enrollments %}
+      <table class="ledger-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Subject Code</th>
+            <th>Subject Title</th>
+            <th class="text-center">Units</th>
+            <th>Instructor</th>
+            <th>Semester</th>
+            <th>Year</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for enroll in enrollments %}
+            <tr>
+              <td class="text-slate-400 text-xs">{{ loop.index }}</td>
+              <td>
+                <span class="font-mono font-semibold text-[#5B0000] text-sm">
+                  {{ enroll.subject.subject_code }}
+                </span>
+              </td>
+              <td class="text-slate-700">{{ enroll.subject.subject_title }}</td>
+              <td class="text-center font-mono text-slate-600 font-semibold">
+                {{ enroll.subject.units }}
+              </td>
+              <td class="text-slate-600 text-sm">
+                {{ enroll.subject.instructor_name or '—' }}
+              </td>
+              <td>
+                <span class="bg-slate-100 text-slate-600 text-xs px-2 py-0.5 rounded font-medium">
+                  {{ enroll.semester }}
+                </span>
+              </td>
+              <td class="font-mono text-slate-500 text-xs">{{ enroll.academic_year }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr class="bg-slate-50">
+            <td colspan="3" class="px-4 py-3 text-slate-600 text-sm font-semibold text-right">
+              Total Units
+            </td>
+            <td class="px-4 py-3 text-center font-mono font-bold text-slate-800">
+              {{ enrollments|map(attribute='subject')|map(attribute='units')|sum }}
+            </td>
+            <td colspan="3"></td>
+          </tr>
+        </tfoot>
+      </table>
+    {% else %}
+      <div class="py-16 flex flex-col items-center justify-center text-slate-400">
+        <svg class="w-12 h-12 mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13
+                   C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477
+                   14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247
+                   18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+        </svg>
+        <p class="text-sm">No subjects enrolled yet.</p>
+      </div>
+    {% endif %}
+  </div>
+
+</div>

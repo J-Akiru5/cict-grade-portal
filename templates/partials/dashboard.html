@@ -1,0 +1,127 @@
+{# HTMX partial: Dashboard — injected into #main-content #}
+<div class="space-y-6" id="dashboard-content">
+
+  {# ── Welcome Hero Card ── #}
+  <div class="rounded-2xl overflow-hidden shadow-sm
+              bg-[radial-gradient(circle_at_top_right,_#5B0000_0%,_#3D0000_60%,_#1A1A1A_100%)]">
+    <div class="px-6 py-6 flex items-center justify-between">
+      <div>
+        <p class="text-white/60 text-sm font-medium">Welcome back,</p>
+        <h1 class="text-white font-bold text-2xl mt-0.5">
+          {{ student.full_name if student else current_user.email }}
+        </h1>
+        <div class="flex items-center gap-2 mt-2">
+          <span class="bg-white/10 text-white/80 text-xs font-mono px-2 py-1 rounded">
+            {{ student.student_id if student else '—' }}
+          </span>
+          <span class="bg-white/10 text-white/80 text-xs px-2 py-1 rounded">
+            {{ student.section if student else 'N/A' }}
+          </span>
+        </div>
+      </div>
+
+      {# GWA Badge #}
+      <div class="text-center flex-shrink-0">
+        <div class="w-20 h-20 rounded-full border-4 border-[#EAB308]/50 flex flex-col
+                    items-center justify-center bg-black/20">
+          <span class="font-mono font-bold text-xl {{ gwa_status.color if gwa_status else 'text-white' }}">
+            {{ '%.2f'|format(gwa) if gwa else 'N/A' }}
+          </span>
+          <span class="text-white/50 text-[9px] uppercase tracking-widest">GWA</span>
+        </div>
+        {% if gwa %}
+          <span class="mt-1 inline-block text-[10px] px-2 py-0.5 rounded-full {{ gwa_status.badge }}">
+            {{ gwa_status.label }}
+          </span>
+        {% endif %}
+      </div>
+    </div>
+
+    {# Semester bar #}
+    <div class="bg-black/20 px-6 py-2 flex items-center gap-2 text-white/60 text-xs">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+      </svg>
+      Academic Year {{ current_year }} &nbsp;•&nbsp; {{ current_semester }} Semester
+    </div>
+  </div>
+
+  {# ── Quick Stats Row ── #}
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+    {% set total_subjects = grades|length %}
+    {% set passed = grades|selectattr('computed_remarks', 'equalto', 'PASSED')|list|length %}
+    {% set failed = grades|selectattr('computed_remarks', 'equalto', 'FAILED')|list|length %}
+    {% set total_units = grades|map(attribute='enrollment')|map(attribute='subject')|map(attribute='units')|sum %}
+
+    {% for label, value, color, icon_d in [
+      ('Subjects', total_subjects, 'text-slate-700', 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13'),
+      ('Passed', passed, 'text-status-pass', 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'),
+      ('Failed', failed, 'text-status-fail', 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z'),
+      ('Units', total_units, 'text-blue-500', 'M4 6h16M4 10h16M4 14h16M4 18h16'),
+    ] %}
+    <div class="bg-white rounded-xl border border-slate-200 px-5 py-4 shadow-sm">
+      <div class="flex items-center justify-between">
+        <div class="{{ color }} font-bold text-2xl">{{ value }}</div>
+        <svg class="w-8 h-8 {{ color }} opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="{{ icon_d }}" />
+        </svg>
+      </div>
+      <div class="text-slate-500 text-xs mt-1 font-medium">{{ label }}</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {# ── Recent Grades Mini Table ── #}
+  <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+      <h3 class="font-semibold text-slate-800 text-sm">Current Semester Grades</h3>
+      <a href="{{ url_for('student.grades') }}"
+         hx-get="{{ url_for('student.grades') }}"
+         hx-target="#main-content"
+         hx-push-url="true"
+         class="text-[#5B0000] text-xs font-medium hover:text-[#3D0000] transition-colors">
+        View all →
+      </a>
+    </div>
+    {% if grades %}
+      <table class="ledger-table">
+        <thead>
+          <tr>
+            <th>Subject</th>
+            <th>Units</th>
+            <th>Grade</th>
+            <th class="hidden sm:table-cell">Remarks</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for g in grades[:5] %}
+            <tr>
+              <td>
+                <div class="font-medium text-slate-800 text-xs">{{ g.enrollment.subject.subject_code }}</div>
+                <div class="text-slate-400 text-xs truncate max-w-[150px]">{{ g.enrollment.subject.subject_title }}</div>
+              </td>
+              <td class="font-mono text-center text-slate-600">{{ g.enrollment.subject.units }}</td>
+              <td>
+                <span class="font-mono font-bold {{ get_grade_color(g.grade_value) }}">
+                  {{ g.grade_display }}
+                </span>
+              </td>
+              <td class="hidden sm:table-cell">
+                {% set rem = g.computed_remarks %}
+                <span class="grade-badge {{ 'grade-pass' if rem == 'PASSED' else ('grade-fail' if rem == 'FAILED' else 'grade-inc') }}">
+                  {{ rem }}
+                </span>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="py-10 text-center text-slate-400 text-sm">
+        No grades encoded yet for this semester.
+      </div>
+    {% endif %}
+  </div>
+
+</div>

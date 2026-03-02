@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  {# ── SEO & Meta ──────────────────────────────────────────── #}
+  <title>{% block title %}CICT Grade Portal{% endblock %} | CICT Grade Portal - ISUFST Dingle</title>
+  <meta name="description" content="The official academic grading and performance monitoring platform for the College of Information and Communications Technology, ISUFST Dingle Campus." />
+  <meta name="keywords" content="ISUFST, CICT Grade Portal, Dingle Campus, ICT Grades, Student Performance System" />
+  <meta name="theme-color" content="#5B0000" />
+
+  {# ── Robots (authenticated routes: no index) ─────────────── #}
+  {% block robots %}{% endblock %}
+
+  {# ── Open Graph ──────────────────────────────────────────── #}
+  <meta property="og:title" content="CICT Grade Portal: Academic Excellence Verified" />
+  <meta property="og:description" content="Secure access to student records and faculty grade encoding for CICT Dingle." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="{{ url_for('static', filename='img/og-preview.jpg') }}" />
+
+  {# ── Fonts ───────────────────────────────────────────────── #}
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  {# ── Tailwind Compiled CSS ───────────────────────────────── #}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}" />
+
+  {# ── HTMX ────────────────────────────────────────────────── #}
+  <script src="https://unpkg.com/htmx.org@2.0.4" defer></script>
+
+  {# ── Schema.org JSON-LD ──────────────────────────────────── #}
+  {% block jsonld %}{% endblock %}
+
+  {% block head %}{% endblock %}
+</head>
+<body class="h-full antialiased" hx-headers='{"X-CSRFToken": "{{ csrf_token() }}"}'>
+
+  {# ── Flash Messages ──────────────────────────────────────── #}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div id="flash-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm">
+        {% for category, message in messages %}
+          {% set color = {
+            'success': 'bg-green-50 border-green-400 text-green-800',
+            'error':   'bg-red-50 border-red-400 text-red-800',
+            'warning': 'bg-yellow-50 border-yellow-400 text-yellow-800',
+            'info':    'bg-blue-50 border-blue-400 text-blue-800',
+          }.get(category, 'bg-white border-slate-300 text-slate-700') %}
+          <div class="flex items-start gap-3 px-4 py-3 rounded-lg border-l-4 shadow-lg {{ color }}
+                      animate-[slideIn_0.3s_ease-out]">
+            <span class="text-sm font-medium">{{ message }}</span>
+          </div>
+        {% endfor %}
+      </div>
+      <script>
+        setTimeout(() => {
+          const c = document.getElementById('flash-container');
+          if (c) c.style.opacity = '0', c.style.transition = 'opacity 0.5s', setTimeout(() => c.remove(), 500);
+        }, 4000);
+      </script>
+    {% endif %}
+  {% endwith %}
+
+  {# ── Page Content ────────────────────────────────────────── #}
+  {% block content %}{% endblock %}
+
+</body>
+</html>

@@ -1,0 +1,174 @@
+{# HTMX partial: Grade Ledger — injected into #main-content #}
+<div class="space-y-5" id="grades-content">
+
+  {# ── Header + Semester Filter ── #}
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div>
+      <h1 class="text-slate-800 font-bold text-lg">Grade Ledger</h1>
+      <p class="text-slate-400 text-sm">Official academic grades on the Philippine standard scale.</p>
+    </div>
+
+    {# Semester switcher — HTMX driven #}
+    <div class="flex items-center gap-2">
+      {% for sem in ['1st', '2nd', 'Summer'] %}
+        <button
+          hx-get="{{ url_for('student.grades') }}?semester={{ sem }}&year={{ current_year }}"
+          hx-target="#main-content"
+          hx-push-url="true"
+          class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200
+                 {{ 'bg-[#5B0000] text-white shadow-sm' if current_semester == sem
+                    else 'bg-white text-slate-600 border border-slate-200 hover:border-[#5B0000] hover:text-[#5B0000]' }}">
+          {{ sem }} Sem
+        </button>
+      {% endfor %}
+    </div>
+  </div>
+
+  {# ── GWA Summary Banner ── #}
+  {% if gwa %}
+    <div class="bg-[#5B0000]/5 border border-[#5B0000]/20 rounded-xl px-6 py-4
+                flex items-center justify-between">
+      <div>
+        <div class="text-[#5B0000] font-semibold text-sm">General Weighted Average</div>
+        <div class="text-slate-500 text-xs mt-0.5">
+          Based on {{ grades|length }} subject(s) with encoded grades
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="text-right">
+          <div class="font-mono font-bold text-3xl {{ gwa_status.color }}">
+            {{ '%.4f'|format(gwa) }}
+          </div>
+          <span class="text-xs px-2 py-0.5 rounded-full {{ gwa_status.badge }}">
+            {{ gwa_status.label }}
+          </span>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  {# ── Grade Ledger Table (The "Paper Ledger" feel) ── #}
+  <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+
+    {# Table header bar #}
+    <div class="px-5 py-3 border-b border-slate-100 bg-[#5B0000]">
+      <h2 class="text-white font-semibold text-sm uppercase tracking-widest">
+        Academic Record — {{ current_semester }} Semester, {{ current_year }}
+      </h2>
+    </div>
+
+    {% if grades %}
+      <table class="ledger-table">
+        <thead>
+          <tr>
+            <th class="w-8">#</th>
+            <th>Subjects</th>
+            <th class="text-center">Unit</th>
+            <th class="text-center">Grade</th>
+            <th>Subject Instructor</th>
+            <th class="text-center">Remarks</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for g in grades %}
+            {% set subj = g.enrollment.subject %}
+            <tr>
+              <td class="text-slate-400 text-xs">{{ loop.index }}</td>
+              <td>
+                <div class="font-mono font-semibold text-[#5B0000] text-sm">
+                  {{ subj.subject_code }}
+                </div>
+                <div class="text-slate-500 text-xs mt-0.5">{{ subj.subject_title }}</div>
+              </td>
+              <td class="text-center font-mono text-slate-600 font-semibold text-sm">
+                {{ subj.units }}
+              </td>
+              <td class="text-center">
+                <span class="font-mono font-bold text-base {{ get_grade_color(g.grade_value) }}">
+                  {{ g.grade_display }}
+                </span>
+              </td>
+              <td class="text-slate-600 text-sm">
+                {{ subj.instructor_name or '—' }}
+              </td>
+              <td class="text-center">
+                {% set rem = g.computed_remarks %}
+                {% if rem == 'PASSED' %}
+                  <span class="grade-badge grade-pass">PASSED</span>
+                {% elif rem == 'FAILED' %}
+                  <span class="grade-badge grade-fail">FAILED</span>
+                {% elif rem == 'INC' %}
+                  <span class="grade-badge grade-inc">INC</span>
+                {% elif rem == 'DRP' %}
+                  <span class="grade-badge grade-inc">DRP</span>
+                {% else %}
+                  <span class="grade-badge grade-inc text-slate-400">PENDING</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+
+        {# ── Total Final Grade footer ── #}
+        <tfoot>
+          <tr class="border-t-2 border-[#5B0000]/20 bg-[#5B0000]/5">
+            <td colspan="2" class="px-4 py-4">
+              <div class="text-[#5B0000] font-bold text-sm uppercase tracking-wider">
+                Total Final Grade (GWA)
+              </div>
+              <div class="text-slate-400 text-xs mt-0.5">
+                Philippine Scale: 1.00 (Excellent) – 5.00 (Failed) • Passing: ≤ 3.00
+              </div>
+            </td>
+            <td class="text-center font-mono font-bold text-slate-700">
+              {{ grades|map(attribute='enrollment')|map(attribute='subject')|map(attribute='units')|sum }}
+            </td>
+            <td class="text-center" colspan="3">
+              {% if gwa %}
+                <div class="font-mono font-bold text-2xl {{ gwa_status.color }}">
+                  {{ '%.2f'|format(gwa) }}
+                </div>
+                <div class="text-xs {{ gwa_status.color }} opacity-70">{{ gwa_status.label }}</div>
+              {% else %}
+                <span class="text-slate-400 text-sm">N/A</span>
+              {% endif %}
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+
+    {% else %}
+      <div class="py-16 flex flex-col items-center justify-center text-slate-400">
+        <svg class="w-12 h-12 mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586
+                   a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        <p class="text-sm">No grades encoded for this semester yet.</p>
+      </div>
+    {% endif %}
+  </div>
+
+  {# ── Grading Scale Legend ── #}
+  <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <div class="px-5 py-3 border-b border-slate-100">
+      <h3 class="text-slate-500 text-xs font-semibold uppercase tracking-widest">
+        Philippine Grading Scale Reference
+      </h3>
+    </div>
+    <div class="px-5 py-4 grid grid-cols-3 sm:grid-cols-6 gap-3 text-center text-xs">
+      {% for grade_val, equiv in [
+        ('1.00', 'Excellent'), ('1.25', 'Excellent'), ('1.50', 'Superior'),
+        ('1.75', 'Superior'), ('2.00', 'Very Good'), ('2.25', 'Very Good'),
+        ('2.50', 'Good'), ('2.75', 'Good'), ('3.00', 'Satisfactory'),
+        ('5.00', 'Failed'), ('INC', 'Incomplete'), ('DRP', 'Dropped'),
+      ] %}
+        <div class="rounded-lg bg-slate-50 border border-slate-200 px-2 py-2">
+          <div class="font-mono font-bold text-slate-800">{{ grade_val }}</div>
+          <div class="text-slate-400 text-[10px] mt-0.5 leading-tight">{{ equiv }}</div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
