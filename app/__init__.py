@@ -17,6 +17,15 @@ def create_app(config_name: str | None = None) -> Flask:
     # Load config
     app.config.from_object(config.get(config_name, config['default']))
 
+    # Fail fast with a clear message when the DB URI is missing (e.g. Vercel
+    # env var not configured) instead of a cryptic SQLAlchemy RuntimeError.
+    if not app.config.get('SQLALCHEMY_DATABASE_URI'):
+        raise RuntimeError(
+            "SQLALCHEMY_DATABASE_URI is not set. "
+            "Add DATABASE_URL to your environment variables "
+            "(Vercel dashboard → Project Settings → Environment Variables)."
+        )
+
     # Initialize extensions
     db.init_app(app)
     migrate.init_app(app, db)
