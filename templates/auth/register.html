@@ -60,13 +60,27 @@
                      a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
           </svg>
         </div>
-        <h1 class="text-white font-bold text-xl tracking-tight">Faculty Registration</h1>
+        <h1 class="text-white font-bold text-xl tracking-tight">Register</h1>
         <p class="text-white/60 text-sm mt-1">CICT Grade Portal — ISUFST Dingle</p>
       </div>
 
       {# Card Body #}
       <div class="px-8 py-8">
-        <h2 class="text-white font-semibold text-lg mb-6">Create Faculty Account</h2>
+        <h2 class="text-white font-semibold text-lg mb-5">Create Your Account</h2>
+
+        {# Role Selector #}
+        <div class="flex rounded-lg overflow-hidden border border-white/20 mb-5" id="role-tabs">
+          <button type="button" id="tab-student"
+                  onclick="setRole('student')"
+                  class="flex-1 py-2 text-sm font-semibold transition bg-white/20 text-white">
+            Student
+          </button>
+          <button type="button" id="tab-faculty"
+                  onclick="setRole('faculty')"
+                  class="flex-1 py-2 text-sm font-semibold transition bg-transparent text-white/50">
+            Faculty
+          </button>
+        </div>
 
         {# Flash Messages #}
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -85,6 +99,7 @@
 
         <form method="POST" action="{{ url_for('auth.register') }}" class="space-y-4">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          <input type="hidden" name="role" id="role-input" value="student"/>
 
           {# Full Name #}
           <div>
@@ -110,8 +125,20 @@
                           focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all"/>
           </div>
 
-          {# Employee ID #}
-          <div>
+          {# Student ID — shown for student role #}
+          <div id="field-student-id">
+            <label for="student_id" class="block text-white/80 text-sm font-medium mb-1.5">Student ID *</label>
+            <input type="text" id="student_id" name="student_id"
+                   autocomplete="off"
+                   placeholder="e.g. 2024-00001"
+                   value="{{ request.form.get('student_id', '') }}"
+                   class="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20
+                          text-white placeholder-white/40 text-sm
+                          focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all"/>
+          </div>
+
+          {# Employee ID — shown for faculty role #}
+          <div id="field-employee-id" class="hidden">
             <label for="employee_id" class="block text-white/80 text-sm font-medium mb-1.5">
               Employee ID <span class="text-white/40 font-normal">(optional)</span>
             </label>
@@ -181,7 +208,7 @@
                   class="w-full mt-2 px-4 py-3 bg-gradient-to-r from-maroon to-maroon/80
                          text-white font-semibold rounded-lg border border-gold/20
                          hover:from-maroon/90 hover:to-maroon/70 transition-all text-sm tracking-wide">
-            Create Faculty Account
+            Create Account
           </button>
         </form>
 
@@ -201,5 +228,28 @@ function togglePassword(id, btn) {
   const input = document.getElementById(id);
   input.type = input.type === 'password' ? 'text' : 'password';
 }
+
+function setRole(role) {
+  document.getElementById('role-input').value = role;
+  const tabStudent = document.getElementById('tab-student');
+  const tabFaculty = document.getElementById('tab-faculty');
+  const fieldStudent = document.getElementById('field-student-id');
+  const fieldEmployee = document.getElementById('field-employee-id');
+  if (role === 'student') {
+    tabStudent.className = tabStudent.className.replace('bg-transparent text-white/50', 'bg-white/20 text-white');
+    tabFaculty.className = tabFaculty.className.replace('bg-white/20 text-white', 'bg-transparent text-white/50');
+    fieldStudent.classList.remove('hidden');
+    fieldEmployee.classList.add('hidden');
+  } else {
+    tabFaculty.className = tabFaculty.className.replace('bg-transparent text-white/50', 'bg-white/20 text-white');
+    tabStudent.className = tabStudent.className.replace('bg-white/20 text-white', 'bg-transparent text-white/50');
+    fieldEmployee.classList.remove('hidden');
+    fieldStudent.classList.add('hidden');
+  }
+}
+
+// Restore role selection after validation errors
+const savedRole = '{{ request.form.get("role", "student") }}';
+if (savedRole) setRole(savedRole);
 </script>
 {% endblock %}

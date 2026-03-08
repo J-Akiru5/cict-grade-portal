@@ -11,17 +11,74 @@
     </form>
   </div>
 
-  {# ── Create Student Form ── #}
+  {# ── Create Student: New Account ── #}
   <details class="paper-card">
-    <summary class="p-4 cursor-pointer font-semibold text-slate-800 select-none">+ Create Student Profile</summary>
+    <summary class="p-4 cursor-pointer font-semibold text-slate-800 select-none">+ Create Student (New Login)</summary>
     <div class="px-5 pb-5 border-t border-slate-100 pt-4">
       <form method="POST" action="{{ url_for('panel.admin_create_student') }}"
             class="grid grid-cols-2 gap-3">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Email *</label>
+          <input name="email" type="email" required placeholder="student@isufst.edu.ph"
+                 class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Password *</label>
+          <input name="password" type="password" required placeholder="Min. 8 characters"
+                 class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Student ID *</label>
+          <input name="student_id" required placeholder="e.g. 2024-00001"
+                 class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Full Name *</label>
+          <input name="full_name" required
+                 class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Section</label>
+          <input name="section" placeholder="e.g. BSIT-2A"
+                 class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Year Level</label>
+          <select name="year_level" class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40">
+            <option value="">—</option>
+            {% for y in [1,2,3,4] %}<option value="{{ y }}">{{ y }}</option>{% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Curriculum Year</label>
+          <input name="curriculum_year" placeholder="e.g. 2024-2025"
+                 class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+        </div>
+        <div class="flex items-end">
+          <button type="submit" class="w-full px-4 py-1.5 bg-maroon text-white text-sm font-semibold rounded-lg hover:bg-maroon/90 transition">
+            Create Student
+          </button>
+        </div>
+      </form>
+    </div>
+  </details>
+
+  {# ── Attach Profile to Existing Orphan User (e.g. self-registered) ── #}
+  {% if orphan_users %}
+  <details class="paper-card">
+    <summary class="p-4 cursor-pointer font-semibold text-slate-700 select-none">
+      + Attach Profile to Existing User
+      <span class="ml-2 px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-xs font-semibold">{{ orphan_users|length }} pending</span>
+    </summary>
+    <div class="px-5 pb-5 border-t border-slate-100 pt-4">
+      <p class="text-xs text-slate-500 mb-3">Students who self-registered but have no academic profile yet.</p>
+      <form method="POST" action="{{ url_for('panel.admin_create_student') }}" class="grid grid-cols-2 gap-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <div class="col-span-2">
           <label class="block text-xs font-medium text-slate-600 mb-1">User Account *</label>
           <select name="user_id" required class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40">
-            <option value="">— Select user (student role) —</option>
+            <option value="">— Select user —</option>
             {% for u in orphan_users %}
               <option value="{{ u.id }}">{{ u.email }}</option>
             {% endfor %}
@@ -54,14 +111,15 @@
           <input name="curriculum_year" placeholder="e.g. 2024-2025"
                  class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
         </div>
-        <div class="col-span-2 flex items-end">
-          <button type="submit" class="px-4 py-1.5 bg-maroon text-white text-sm font-semibold rounded-lg hover:bg-maroon/90 transition">
-            Create Profile
+        <div class="col-span-2 flex justify-end">
+          <button type="submit" class="px-4 py-1.5 bg-slate-700 text-white text-sm font-semibold rounded-lg hover:bg-slate-800 transition">
+            Attach Profile
           </button>
         </div>
       </form>
     </div>
   </details>
+  {% endif %}
 
   {# ── Student Table ── #}
   {% if students %}

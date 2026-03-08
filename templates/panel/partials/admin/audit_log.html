@@ -18,49 +18,48 @@
           <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Actor</th>
           <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Student</th>
           <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Subject</th>
-          <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Old Grade</th>
-          <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">New Grade</th>
-          <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Remarks</th>
+          <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Before</th>
+          <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">After</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-slate-100">
         {% for entry in entries %}
         <tr class="hover:bg-slate-50 transition-colors">
           <td class="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">
-            {{ entry.changed_at.strftime('%Y-%m-%d %H:%M') if entry.changed_at else '—' }}
+            {{ entry.timestamp.strftime('%Y-%m-%d %H:%M') if entry.timestamp else '—' }}
           </td>
           <td class="px-4 py-3 text-xs text-slate-700 truncate max-w-[140px]">
-            {{ entry.changed_by_user.email if entry.changed_by_user else 'system' }}
+            {{ entry.actor.email if entry.actor else 'system' }}
           </td>
           <td class="px-4 py-3">
             <span class="font-medium text-slate-800 text-xs">
-              {{ entry.enrollment.student.full_name if entry.enrollment and entry.enrollment.student else '—' }}
+              {{ entry.target_student.full_name if entry.target_student else '—' }}
             </span>
             <span class="block font-mono text-[10px] text-slate-400">
-              {{ entry.enrollment.student.student_id if entry.enrollment and entry.enrollment.student else '' }}
+              {{ entry.target_student.student_id if entry.target_student else '' }}
             </span>
           </td>
           <td class="px-4 py-3 font-mono text-xs font-semibold text-maroon">
-            {{ entry.enrollment.subject.subject_code if entry.enrollment and entry.enrollment.subject else '—' }}
+            {% if entry.grade and entry.grade.enrollment and entry.grade.enrollment.subject %}
+              {{ entry.grade.enrollment.subject.subject_code }}
+            {% else %}—{% endif %}
           </td>
           <td class="px-4 py-3 text-center text-xs text-slate-500">
-            {{ entry.old_grade if entry.old_grade is not none else '—' }}
+            {{ entry.old_remarks or ('%.2f'|format(entry.old_grade) if entry.old_grade is not none else '—') }}
           </td>
           <td class="px-4 py-3 text-center">
-            {% set g = entry.new_grade %}
-            {% if g is not none %}
-              {% if g|float <= 3.0 and g != 'INC' and g != 'DRP' %}
-              <span class="inline-block px-2 py-0.5 bg-green-50 text-green-700 rounded-full text-xs font-semibold">{{ g }}</span>
-              {% elif g == 5.0 %}
-              <span class="inline-block px-2 py-0.5 bg-red-50 text-red-700 rounded-full text-xs font-semibold">{{ g }}</span>
+            {% if entry.new_remarks %}
+              <span class="inline-block px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full text-xs font-semibold">{{ entry.new_remarks }}</span>
+            {% elif entry.new_grade is not none %}
+              {% if entry.new_grade <= 3.0 %}
+              <span class="inline-block px-2 py-0.5 bg-green-50 text-green-700 rounded-full text-xs font-semibold">{{ '%.2f'|format(entry.new_grade) }}</span>
               {% else %}
-              <span class="inline-block px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full text-xs font-semibold">{{ g }}</span>
+              <span class="inline-block px-2 py-0.5 bg-red-50 text-red-700 rounded-full text-xs font-semibold">{{ '%.2f'|format(entry.new_grade) }}</span>
               {% endif %}
             {% else %}
               <span class="text-slate-400 text-xs">—</span>
             {% endif %}
           </td>
-          <td class="px-4 py-3 text-xs text-slate-500">{{ entry.remarks or '—' }}</td>
         </tr>
         {% endfor %}
       </tbody>

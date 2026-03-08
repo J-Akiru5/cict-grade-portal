@@ -33,12 +33,8 @@
     {# ── Brand / Logo ── #}
     <div class="px-5 pt-4 md:pt-6 pb-5 border-b border-white/10">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-maroon flex items-center justify-center flex-shrink-0">
-          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 14l9-5-9-5-9 5 9 5zm0 7V14m-7 3.5A9 9 0 0112 21a9 9 0 017-3.5"/>
-          </svg>
-        </div>
+        <img src="{{ url_for('static', filename='img/cict-logo.png') }}"
+             alt="CICT Logo" class="w-10 h-10 rounded-xl object-cover flex-shrink-0" />
         <div>
           <div class="text-white font-bold text-sm leading-tight">CICT Portal</div>
           <div class="text-white/40 text-xs">ISUFST Dingle</div>
@@ -123,14 +119,12 @@
         </svg>
       </button>
 
-      {# Brand #}
+      {# Brand with logos #}
       <div class="flex items-center gap-2">
-        <div class="w-7 h-7 rounded-lg bg-maroon flex items-center justify-center">
-          <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 14l9-5-9-5-9 5 9 5z"/>
-          </svg>
-        </div>
+        <img src="{{ url_for('static', filename='img/isufst-logo.png') }}"
+             alt="ISUFST" class="w-6 h-6 object-contain" />
+        <img src="{{ url_for('static', filename='img/cict-logo.png') }}"
+             alt="CICT" class="w-6 h-6 object-contain" />
         <span class="text-slate-800 font-bold text-sm">CICT Portal</span>
       </div>
 
@@ -194,7 +188,7 @@
 
     {# ── Swappable Content ── #}
     <main id="main-content"
-          class="flex-1 overflow-y-auto p-4 md:p-6 pb-24 md:pb-6 bg-slate-50"
+          class="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 pb-24 md:pb-6 bg-slate-50"
           aria-live="polite" aria-label="Page content"
           hx-indicator="#page-spinner, #page-spinner-mobile">
       {% block main_content %}{% endblock %}

@@ -7,14 +7,14 @@
       <div>
         <label class="block text-xs font-medium text-slate-500 mb-0.5">Semester</label>
         <select name="semester" class="rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40">
-          <option value="1st" {% if filter_semester == '1st' %}selected{% endif %}>1st</option>
-          <option value="2nd" {% if filter_semester == '2nd' %}selected{% endif %}>2nd</option>
-          <option value="Summer" {% if filter_semester == 'Summer' %}selected{% endif %}>Summer</option>
+          <option value="1st" {% if current_semester == '1st' %}selected{% endif %}>1st</option>
+          <option value="2nd" {% if current_semester == '2nd' %}selected{% endif %}>2nd</option>
+          <option value="Summer" {% if current_semester == 'Summer' %}selected{% endif %}>Summer</option>
         </select>
       </div>
       <div>
         <label class="block text-xs font-medium text-slate-500 mb-0.5">Academic Year</label>
-        <input name="year" value="{{ filter_year }}" placeholder="2024-2025"
+        <input name="year" value="{{ current_year }}" placeholder="2024-2025"
                class="rounded-lg border border-slate-200 px-3 py-1.5 text-sm w-28 focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
       </div>
       <button type="submit" class="px-4 py-1.5 bg-maroon text-white text-sm font-semibold rounded-lg hover:bg-maroon/90 transition">Filter</button>

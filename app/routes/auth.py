@@ -97,10 +97,20 @@ def register():
         password = request.form.get('password', '')
         confirm = request.form.get('confirm_password', '')
         full_name = request.form.get('full_name', '').strip()
+        role = request.form.get('role', 'student').strip()
         employee_id = request.form.get('employee_id', '').strip() or None
+        student_id = request.form.get('student_id', '').strip() or None
+
+        if role not in ('student', 'faculty'):
+            flash('Invalid role selection.', 'error')
+            return render_template('auth/register.html')
 
         if not email or not password or not full_name:
             flash('Email, full name, and password are required.', 'error')
+            return render_template('auth/register.html')
+
+        if role == 'student' and not student_id:
+            flash('Student ID is required for student registration.', 'error')
             return render_template('auth/register.html')
 
         if password != confirm:
@@ -112,32 +122,43 @@ def register():
             return render_template('auth/register.html')
 
         try:
-            response = auth_service.sign_up(email, password, role='faculty')
+            response = auth_service.sign_up(email, password, role=role)
             sb_user = response.user
 
-            from app.models.faculty import Faculty
             user = User(
                 id=str(sb_user.id),
                 email=sb_user.email,
-                role='faculty',
+                role=role,
                 is_active=True,
             )
             db.session.add(user)
 
-            faculty = Faculty(
-                user_id=str(sb_user.id),
-                full_name=full_name,
-                employee_id=employee_id,
-                department='CICT',
-            )
-            db.session.add(faculty)
-            db.session.commit()
+            if role == 'faculty':
+                from app.models.faculty import Faculty
+                profile = Faculty(
+                    user_id=str(sb_user.id),
+                    full_name=full_name,
+                    employee_id=employee_id,
+                    department='CICT',
+                )
+                db.session.add(profile)
+                success_msg = 'Registration successful! Please check your email to confirm your account, then log in.'
+            else:
+                from app.models.student import Student
+                profile = Student(
+                    user_id=str(sb_user.id),
+                    full_name=full_name,
+                    student_id=student_id,
+                )
+                db.session.add(profile)
+                success_msg = 'Registration successful! You can now log in.'
 
-            flash('Registration successful! Please check your email to confirm your account, then log in.', 'success')
+            db.session.commit()
+            flash(success_msg, 'success')
             return redirect(url_for('auth.login'))
 
         except Exception as e:
-            logging.warning(f'Faculty registration failure for {email}: {e}')
+            logging.warning(f'Registration failure for {email} ({role}): {e}')
             flash('Registration failed. This email may already be registered.', 'error')
 
     return render_template('auth/register.html')

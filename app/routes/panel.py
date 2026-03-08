@@ -421,19 +421,40 @@ def admin_students():
 @role_required('admin')
 def admin_create_student():
     try:
-        user_id = request.form['user_id']
-        admin_service.create_student(
-            user_id=user_id,
-            student_id=request.form['student_id'],
-            full_name=request.form['full_name'],
-            section=request.form.get('section') or None,
-            year_level=int(request.form['year_level']) if request.form.get('year_level') else None,
-            curriculum_year=request.form.get('curriculum_year') or None,
-            age=int(request.form['age']) if request.form.get('age') else None,
-            address=request.form.get('address') or None,
-            contact_number=request.form.get('contact_number') or None,
-            gmail=request.form.get('gmail') or None,
-        )
+        email = request.form.get('email', '').strip().lower()
+        password = request.form.get('password', '').strip()
+
+        if email and password:
+            admin_service.create_student_with_account(
+                email=email,
+                password=password,
+                student_id=request.form['student_id'],
+                full_name=request.form['full_name'],
+                section=request.form.get('section') or None,
+                year_level=int(request.form['year_level']) if request.form.get('year_level') else None,
+                curriculum_year=request.form.get('curriculum_year') or None,
+                age=int(request.form['age']) if request.form.get('age') else None,
+                address=request.form.get('address') or None,
+                contact_number=request.form.get('contact_number') or None,
+                gmail=request.form.get('gmail') or None,
+            )
+        else:
+            user_id = request.form.get('user_id', '').strip()
+            if not user_id:
+                flash('Provide email + password, or select an existing user account.', 'error')
+                return redirect(url_for('panel.admin_students'))
+            admin_service.create_student(
+                user_id=user_id,
+                student_id=request.form['student_id'],
+                full_name=request.form['full_name'],
+                section=request.form.get('section') or None,
+                year_level=int(request.form['year_level']) if request.form.get('year_level') else None,
+                curriculum_year=request.form.get('curriculum_year') or None,
+                age=int(request.form['age']) if request.form.get('age') else None,
+                address=request.form.get('address') or None,
+                contact_number=request.form.get('contact_number') or None,
+                gmail=request.form.get('gmail') or None,
+            )
         flash('Student profile created.', 'success')
     except Exception as e:
         flash(f'Error: {e}', 'error')
@@ -684,7 +705,7 @@ def admin_settings():
 
     if request.method == 'POST':
         semester = request.form.get('semester')
-        year = request.form.get('year', '').strip()
+        year = request.form.get('academic_year', '').strip()
         if not semester or not year:
             flash('Semester and year are required.', 'error')
         else:

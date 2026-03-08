@@ -16,6 +16,8 @@ class GradeAudit(db.Model):
     target_student_id = db.Column(db.Integer, db.ForeignKey('students.id'), nullable=True)
     old_grade = db.Column(db.Float, nullable=True)
     new_grade = db.Column(db.Float, nullable=True)
+    old_remarks = db.Column(db.String(10), nullable=True)
+    new_remarks = db.Column(db.String(10), nullable=True)
     ip_address = db.Column(db.String(45), nullable=True)   # supports IPv6
     timestamp = db.Column(
         db.DateTime,
@@ -28,6 +30,7 @@ class GradeAudit(db.Model):
     actor = db.relationship('User', back_populates='grade_audits_as_actor',
                             foreign_keys=[actor_id])
     target_student = db.relationship('Student', foreign_keys=[target_student_id])
+    grade = db.relationship('Grade', foreign_keys=[grade_id], lazy='select', viewonly=True)
 
     def __repr__(self):
         return (

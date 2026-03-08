@@ -16,13 +16,13 @@
       </svg>
     </div>
 
-    <div class="px-6 py-6 flex items-center justify-between relative z-10">
-      <div>
+    <div class="px-4 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 relative z-10">
+      <div class="min-w-0 flex-1">
         <p class="text-white/60 text-sm font-medium">Welcome back,</p>
-        <h1 class="text-white font-bold text-2xl mt-0.5">
+        <h1 class="text-white font-bold text-xl mt-0.5 truncate">
           {{ faculty.full_name if faculty else current_user.email }}
         </h1>
-        <div class="flex items-center gap-2 mt-2">
+        <div class="flex flex-wrap items-center gap-2 mt-2">
           {% if faculty and faculty.employee_id %}
             <span class="bg-white/10 text-white/80 text-xs font-mono px-2 py-1 rounded">
               {{ faculty.employee_id }}
@@ -39,9 +39,9 @@
         </div>
       </div>
       <div class="text-center flex-shrink-0">
-        <div class="w-20 h-20 rounded-full border-4 border-gold/50 flex flex-col
+        <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-gold/50 flex flex-col
                     items-center justify-center bg-black/20">
-          <span class="font-mono font-bold text-xl text-white">{{ subjects|length }}</span>
+          <span class="font-mono font-bold text-lg sm:text-xl text-white">{{ subjects|length }}</span>
           <span class="text-white/50 text-[9px] uppercase tracking-widest">Subjects</span>
         </div>
       </div>
@@ -56,14 +56,14 @@
   </div>
 
   {# ── Quick Stats ── #}
-  <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
     {% for label, value, color in [
       ('Assigned Subjects', subjects|length, 'text-maroon'),
       ('Academic Year', current_year, 'text-slate-700'),
       ('Semester', current_semester, 'text-blue-600'),
     ] %}
-    <div class="paper-card px-5 py-4">
-      <div class="text-2xl font-bold font-mono {{ color }}">{{ value }}</div>
+    <div class="paper-card px-4 py-4">
+      <div class="text-2xl font-bold font-mono truncate {{ color }}">{{ value }}</div>
       <div class="text-xs text-slate-500 mt-1">{{ label }}</div>
     </div>
     {% endfor %}

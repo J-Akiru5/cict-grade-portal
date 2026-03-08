@@ -198,6 +198,49 @@ def delete_student(student_db_id: int) -> None:
     db.session.commit()
 
 
+def create_student_with_account(
+    email: str,
+    password: str,
+    student_id: str,
+    full_name: str,
+    section: str = None,
+    year_level: int = None,
+    curriculum_year: str = None,
+    age: int = None,
+    address: str = None,
+    contact_number: str = None,
+    gmail: str = None,
+) -> Student:
+    """Create a Supabase auth account + local User + Student profile in one step."""
+    client = _get_admin_supabase()
+    response = client.auth.admin.create_user({
+        'email': email,
+        'password': password,
+        'email_confirm': True,
+        'user_metadata': {'role': 'student'},
+    })
+    sb_user = response.user
+
+    user = User(id=str(sb_user.id), email=email, role='student', is_active=True)
+    db.session.add(user)
+
+    student = Student(
+        user_id=str(sb_user.id),
+        student_id=student_id,
+        full_name=full_name,
+        section=section,
+        year_level=year_level,
+        curriculum_year=curriculum_year,
+        age=age,
+        address=address,
+        contact_number=contact_number,
+        gmail=gmail,
+    )
+    db.session.add(student)
+    db.session.commit()
+    return student
+
+
 # ─── Subject Management ───────────────────────────────────────────────────────
 
 def get_all_subjects(search: str = None, page: int = 1, per_page: int = 25):
@@ -404,18 +447,23 @@ def get_full_audit_log(search: str = None, page: int = 1, per_page: int = 50):
         .options(
             db.joinedload(GradeAudit.actor),
             db.joinedload(GradeAudit.target_student),
+            db.joinedload(GradeAudit.grade)
+               .joinedload(Grade.enrollment)
+               .joinedload(Enrollment.subject),
         )
         .order_by(GradeAudit.timestamp.desc())
     )
     if search:
-        q = q.join(GradeAudit.actor, isouter=True).join(
-            GradeAudit.target_student, isouter=True
-        ).filter(
-            db.or_(
-                User.email.ilike(f'%{search}%'),
-                Student.full_name.ilike(f'%{search}%'),
-                Student.student_id.ilike(f'%{search}%'),
-            )
+        q = (
+            q.outerjoin(GradeAudit.actor)
+             .outerjoin(GradeAudit.target_student)
+             .filter(
+                 db.or_(
+                     User.email.ilike(f'%{search}%'),
+                     Student.full_name.ilike(f'%{search}%'),
+                     Student.student_id.ilike(f'%{search}%'),
+                 )
+             )
         )
     return q.paginate(page=page, per_page=per_page, error_out=False)
 

@@ -48,20 +48,45 @@ class Grade(db.Model):
         return f'<Grade enrollment={self.enrollment_id} value={self.grade_value}>'
 
 
-# ─── Audit Trail Event Listener ───────────────────────────────────────────────
-@event.listens_for(Grade, 'after_update')
-def grade_after_update(mapper, connection, target):
-    """Automatically writes a GradeAudit record after every grade change."""
+# ─── Audit Trail Event Listeners ─────────────────────────────────────────────
+@event.listens_for(Grade, 'after_insert')
+def grade_after_insert(mapper, connection, target):
+    """Writes a GradeAudit record the first time a grade is encoded."""
     from app.models.audit import GradeAudit
     from flask_login import current_user
-    import ipaddress
 
-    history = db.inspect(target).attrs.grade_value.history
-    if not history.has_changes():
+    if target.grade_value is None and target.remarks is None:
         return
 
-    old_val = history.deleted[0] if history.deleted else None
-    new_val = history.added[0] if history.added else None
+    audit = GradeAudit(
+        grade_id=target.id,
+        actor_id=current_user.id if current_user and current_user.is_authenticated else None,
+        target_student_id=target.enrollment.student_id if target.enrollment else None,
+        old_grade=None,
+        new_grade=target.grade_value,
+        old_remarks=None,
+        new_remarks=target.remarks,
+    )
+    db.session.add(audit)
+
+
+@event.listens_for(Grade, 'after_update')
+def grade_after_update(mapper, connection, target):
+    """Writes a GradeAudit record after every grade update."""
+    from app.models.audit import GradeAudit
+    from flask_login import current_user
+
+    insp = db.inspect(target).attrs
+    grade_history = insp.grade_value.history
+    remarks_history = insp.remarks.history
+
+    if not grade_history.has_changes() and not remarks_history.has_changes():
+        return
+
+    old_val = grade_history.deleted[0] if grade_history.deleted else None
+    new_val = grade_history.added[0] if grade_history.added else None
+    old_rem = remarks_history.deleted[0] if remarks_history.deleted else None
+    new_rem = remarks_history.added[0] if remarks_history.added else None
 
     audit = GradeAudit(
         grade_id=target.id,
@@ -69,5 +94,7 @@ def grade_after_update(mapper, connection, target):
         target_student_id=target.enrollment.student_id if target.enrollment else None,
         old_grade=old_val,
         new_grade=new_val,
+        old_remarks=old_rem,
+        new_remarks=new_rem,
     )
     db.session.add(audit)
