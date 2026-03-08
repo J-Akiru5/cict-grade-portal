@@ -1,0 +1,117 @@
+{# HTMX partial: Admin — Enrollments #}
+<div class="space-y-6">
+  <div class="flex items-center justify-between flex-wrap gap-3">
+    <h2 class="text-lg font-bold text-slate-800">Enrollments</h2>
+    {# Semester/Year Filter #}
+    <form method="GET" class="flex gap-2 flex-wrap items-end">
+      <div>
+        <label class="block text-xs font-medium text-slate-500 mb-0.5">Semester</label>
+        <select name="semester" class="rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40">
+          <option value="1st" {% if filter_semester == '1st' %}selected{% endif %}>1st</option>
+          <option value="2nd" {% if filter_semester == '2nd' %}selected{% endif %}>2nd</option>
+          <option value="Summer" {% if filter_semester == 'Summer' %}selected{% endif %}>Summer</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-500 mb-0.5">Academic Year</label>
+        <input name="year" value="{{ filter_year }}" placeholder="2024-2025"
+               class="rounded-lg border border-slate-200 px-3 py-1.5 text-sm w-28 focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+      </div>
+      <button type="submit" class="px-4 py-1.5 bg-maroon text-white text-sm font-semibold rounded-lg hover:bg-maroon/90 transition">Filter</button>
+    </form>
+  </div>
+
+  {# ── Create Enrollment ── #}
+  <details class="paper-card">
+    <summary class="p-4 cursor-pointer font-semibold text-slate-800 select-none">+ Enroll Student</summary>
+    <div class="px-5 pb-5 border-t border-slate-100 pt-4">
+      <form method="POST" action="{{ url_for('panel.admin_create_enrollment') }}" class="grid grid-cols-2 gap-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Student *</label>
+          <select name="student_db_id" required
+                  class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40">
+            <option value="">— Select student —</option>
+            {% for st in all_students %}
+            <option value="{{ st.id }}">{{ st.full_name }} ({{ st.student_id }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Subject *</label>
+          <select name="subject_id" required
+                  class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40">
+            <option value="">— Select subject —</option>
+            {% for subj in all_subjects %}
+            <option value="{{ subj.id }}">{{ subj.subject_code }} — {{ subj.subject_title }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Semester *</label>
+          <select name="semester"
+                  class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40">
+            <option value="1st" {% if current_semester == '1st' %}selected{% endif %}>1st</option>
+            <option value="2nd" {% if current_semester == '2nd' %}selected{% endif %}>2nd</option>
+            <option value="Summer" {% if current_semester == 'Summer' %}selected{% endif %}>Summer</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Academic Year *</label>
+          <input name="academic_year" value="{{ current_year }}" placeholder="2024-2025"
+                 class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+        </div>
+        <div class="col-span-2 flex justify-end">
+          <button type="submit" class="px-4 py-1.5 bg-maroon text-white text-sm font-semibold rounded-lg hover:bg-maroon/90 transition">
+            Enroll
+          </button>
+        </div>
+      </form>
+    </div>
+  </details>
+
+  {# ── Enrollments Table ── #}
+  {% if enrollments %}
+  <div class="paper-card overflow-hidden">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="bg-slate-50 border-b border-slate-200">
+          <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">#</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Student</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Student ID</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Subject</th>
+          <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Semester</th>
+          <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Year</th>
+          <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Action</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for enroll in enrollments %}
+        <tr class="hover:bg-slate-50 transition-colors">
+          <td class="px-4 py-2 text-slate-400 text-xs">{{ loop.index }}</td>
+          <td class="px-4 py-2 font-medium text-slate-800">{{ enroll.student.full_name }}</td>
+          <td class="px-4 py-2 font-mono text-xs text-slate-500">{{ enroll.student.student_id }}</td>
+          <td class="px-4 py-2">
+            <span class="font-mono text-xs font-semibold text-maroon">{{ enroll.subject.subject_code }}</span>
+            <span class="text-slate-600 text-xs ml-1">{{ enroll.subject.subject_title }}</span>
+          </td>
+          <td class="px-4 py-2 text-center text-slate-600 text-xs">{{ enroll.semester }}</td>
+          <td class="px-4 py-2 text-center text-slate-600 text-xs">{{ enroll.academic_year }}</td>
+          <td class="px-4 py-2 text-center">
+            <form method="POST" action="{{ url_for('panel.admin_delete_enrollment', enrollment_id=enroll.id) }}"
+                  onsubmit="return confirm('Remove this enrollment?');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+              <button type="submit" class="text-xs px-3 py-1 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition">Remove</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="paper-card p-10 text-center text-slate-400">
+    No enrollments found for {{ filter_semester }} semester, {{ filter_year }}.
+  </div>
+  {% endif %}
+</div>

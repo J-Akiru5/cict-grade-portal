@@ -1,0 +1,42 @@
+{# HTMX partial: My Subjects #}
+<div class="space-y-4">
+  <div class="flex items-center justify-between">
+    <h2 class="text-lg font-bold text-slate-800">My Subjects</h2>
+    <span class="text-xs text-slate-500">{{ current_year }} • {{ current_semester }} Semester</span>
+  </div>
+
+  {% if subjects %}
+  <div class="grid gap-4 sm:grid-cols-2">
+    {% for subject in subjects %}
+    <div class="paper-card p-5 hover:shadow-md transition-shadow">
+      <div class="flex items-start justify-between mb-3">
+        <div>
+          <div class="font-mono font-bold text-maroon text-sm">{{ subject.subject_code }}</div>
+          <div class="font-semibold text-slate-800 text-base mt-0.5">{{ subject.subject_title }}</div>
+        </div>
+        <span class="bg-slate-100 text-slate-600 text-xs font-mono px-2 py-1 rounded">
+          {{ subject.units }} units
+        </span>
+      </div>
+      {% if subject.department %}
+        <div class="text-xs text-slate-400 mb-4">{{ subject.department }}</div>
+      {% endif %}
+      <div class="flex gap-2">
+        <a href="{{ url_for('panel.subject_grades', subject_id=subject.id, semester=current_semester, year=current_year) }}"
+           class="flex-1 text-center text-xs px-3 py-2 bg-maroon text-white rounded-lg hover:bg-maroon/90 transition font-medium">
+          Encode Grades
+        </a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="paper-card p-10 text-center text-slate-400">
+    <svg class="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13"/>
+    </svg>
+    No subjects assigned. Contact an administrator.
+  </div>
+  {% endif %}
+</div>

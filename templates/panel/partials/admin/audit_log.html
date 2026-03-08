@@ -1,0 +1,89 @@
+{# HTMX partial: Admin — Full Audit Log #}
+<div class="space-y-6">
+  <div class="flex items-center justify-between flex-wrap gap-3">
+    <h2 class="text-lg font-bold text-slate-800">Audit Log</h2>
+    <form method="GET" class="flex gap-2">
+      <input name="q" value="{{ search }}" placeholder="Search student, actor, subject…"
+             class="text-sm rounded-lg border border-slate-200 px-3 py-1.5 w-64 focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+      <button type="submit" class="px-4 py-1.5 bg-maroon text-white text-sm font-semibold rounded-lg hover:bg-maroon/90 transition">Search</button>
+    </form>
+  </div>
+
+  {% if entries %}
+  <div class="paper-card overflow-hidden">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="bg-slate-50 border-b border-slate-200">
+          <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Timestamp</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Actor</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Student</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Subject</th>
+          <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Old Grade</th>
+          <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">New Grade</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Remarks</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for entry in entries %}
+        <tr class="hover:bg-slate-50 transition-colors">
+          <td class="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">
+            {{ entry.changed_at.strftime('%Y-%m-%d %H:%M') if entry.changed_at else '—' }}
+          </td>
+          <td class="px-4 py-3 text-xs text-slate-700 truncate max-w-[140px]">
+            {{ entry.changed_by_user.email if entry.changed_by_user else 'system' }}
+          </td>
+          <td class="px-4 py-3">
+            <span class="font-medium text-slate-800 text-xs">
+              {{ entry.enrollment.student.full_name if entry.enrollment and entry.enrollment.student else '—' }}
+            </span>
+            <span class="block font-mono text-[10px] text-slate-400">
+              {{ entry.enrollment.student.student_id if entry.enrollment and entry.enrollment.student else '' }}
+            </span>
+          </td>
+          <td class="px-4 py-3 font-mono text-xs font-semibold text-maroon">
+            {{ entry.enrollment.subject.subject_code if entry.enrollment and entry.enrollment.subject else '—' }}
+          </td>
+          <td class="px-4 py-3 text-center text-xs text-slate-500">
+            {{ entry.old_grade if entry.old_grade is not none else '—' }}
+          </td>
+          <td class="px-4 py-3 text-center">
+            {% set g = entry.new_grade %}
+            {% if g is not none %}
+              {% if g|float <= 3.0 and g != 'INC' and g != 'DRP' %}
+              <span class="inline-block px-2 py-0.5 bg-green-50 text-green-700 rounded-full text-xs font-semibold">{{ g }}</span>
+              {% elif g == 5.0 %}
+              <span class="inline-block px-2 py-0.5 bg-red-50 text-red-700 rounded-full text-xs font-semibold">{{ g }}</span>
+              {% else %}
+              <span class="inline-block px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full text-xs font-semibold">{{ g }}</span>
+              {% endif %}
+            {% else %}
+              <span class="text-slate-400 text-xs">—</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3 text-xs text-slate-500">{{ entry.remarks or '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if pagination.pages > 1 %}
+  <div class="flex justify-center gap-2">
+    {% if pagination.has_prev %}
+      <a href="{{ url_for('panel.admin_audit_log', page=pagination.prev_num, q=search) }}"
+         class="px-3 py-1.5 text-sm bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200">← Prev</a>
+    {% endif %}
+    <span class="px-3 py-1.5 text-sm text-slate-500">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+    {% if pagination.has_next %}
+      <a href="{{ url_for('panel.admin_audit_log', page=pagination.next_num, q=search) }}"
+         class="px-3 py-1.5 text-sm bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200">Next →</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div class="paper-card p-10 text-center text-slate-400">
+    {% if search %}No audit entries matching "<em>{{ search }}</em>".{% else %}No audit entries yet.{% endif %}
+  </div>
+  {% endif %}
+</div>

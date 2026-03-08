@@ -1,0 +1,67 @@
+{% extends "panel/layout.html" %}
+{% block page_title %}Edit Student{% endblock %}
+{% block main_content %}
+<div class="max-w-2xl mx-auto space-y-6">
+  <div class="paper-card p-6">
+    <h2 class="text-lg font-bold text-slate-800 mb-4">Edit Student Profile</h2>
+    <form method="POST" action="{{ url_for('panel.admin_edit_student', student_db_id=student.id) }}" class="space-y-4">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Student ID</label>
+          <input name="student_id" value="{{ student.student_id }}" required
+                 class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Full Name</label>
+          <input name="full_name" value="{{ student.full_name }}" required
+                 class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Section</label>
+          <input name="section" value="{{ student.section or '' }}"
+                 class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Year Level</label>
+          <select name="year_level" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40">
+            <option value="">—</option>
+            {% for y in [1,2,3,4] %}
+              <option value="{{ y }}" {{ 'selected' if student.year_level == y else '' }}>{{ y }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Curriculum Year</label>
+          <input name="curriculum_year" value="{{ student.curriculum_year or '' }}"
+                 class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Age</label>
+          <input name="age" type="number" value="{{ student.age or '' }}"
+                 class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Contact Number</label>
+          <input name="contact_number" value="{{ student.contact_number or '' }}"
+                 class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Gmail</label>
+          <input name="gmail" type="email" value="{{ student.gmail or '' }}"
+                 class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">Address</label>
+        <textarea name="address" rows="2"
+                  class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40">{{ student.address or '' }}</textarea>
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button type="submit" class="px-4 py-2 bg-maroon text-white text-sm font-semibold rounded-lg hover:bg-maroon/90 transition">Save Changes</button>
+        <a href="{{ url_for('panel.admin_students') }}" class="px-4 py-2 bg-slate-100 text-slate-700 text-sm font-semibold rounded-lg hover:bg-slate-200 transition">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

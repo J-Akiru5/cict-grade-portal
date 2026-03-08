@@ -1,0 +1,104 @@
+{# HTMX partial: Panel Dashboard #}
+<div class="space-y-6">
+
+  {# ── Hero Card ── #}
+  <div class="rounded-2xl overflow-hidden shadow-sm relative
+              bg-[radial-gradient(circle_at_top_right,_#800000_0%,_#5B0000_60%,_#1A1A1A_100%)]">
+    <div class="absolute inset-0 pointer-events-none overflow-hidden opacity-20">
+      <svg class="w-full h-full" viewBox="0 0 600 200" fill="none">
+        <line x1="80" y1="30" x2="250" y2="100" stroke="#D4AF37" stroke-width="0.5" opacity="0.3"/>
+        <line x1="250" y1="100" x2="450" y2="60" stroke="#D4AF37" stroke-width="0.5" opacity="0.2"/>
+        <line x1="450" y1="60" x2="550" y2="150" stroke="#D4AF37" stroke-width="0.5" opacity="0.25"/>
+        <circle cx="80" cy="30" r="2" fill="#D4AF37" opacity="0.4"/>
+        <circle cx="250" cy="100" r="3" fill="#D4AF37" opacity="0.4"/>
+        <circle cx="450" cy="60" r="2" fill="#D4AF37" opacity="0.3"/>
+        <circle cx="550" cy="150" r="3" fill="#D4AF37" opacity="0.35"/>
+      </svg>
+    </div>
+
+    <div class="px-6 py-6 flex items-center justify-between relative z-10">
+      <div>
+        <p class="text-white/60 text-sm font-medium">Welcome back,</p>
+        <h1 class="text-white font-bold text-2xl mt-0.5">
+          {{ faculty.full_name if faculty else current_user.email }}
+        </h1>
+        <div class="flex items-center gap-2 mt-2">
+          {% if faculty and faculty.employee_id %}
+            <span class="bg-white/10 text-white/80 text-xs font-mono px-2 py-1 rounded">
+              {{ faculty.employee_id }}
+            </span>
+          {% endif %}
+          <span class="bg-white/10 text-white/80 text-xs px-2 py-1 rounded capitalize">
+            {{ current_user.role }}
+          </span>
+          {% if faculty and faculty.department %}
+            <span class="bg-white/10 text-white/80 text-xs px-2 py-1 rounded">
+              {{ faculty.department }}
+            </span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="text-center flex-shrink-0">
+        <div class="w-20 h-20 rounded-full border-4 border-gold/50 flex flex-col
+                    items-center justify-center bg-black/20">
+          <span class="font-mono font-bold text-xl text-white">{{ subjects|length }}</span>
+          <span class="text-white/50 text-[9px] uppercase tracking-widest">Subjects</span>
+        </div>
+      </div>
+    </div>
+    <div class="bg-black/20 px-6 py-2 flex items-center gap-2 text-white/60 text-xs relative z-10">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+      </svg>
+      Academic Year {{ current_year }} &nbsp;•&nbsp; {{ current_semester }} Semester
+    </div>
+  </div>
+
+  {# ── Quick Stats ── #}
+  <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+    {% for label, value, color in [
+      ('Assigned Subjects', subjects|length, 'text-maroon'),
+      ('Academic Year', current_year, 'text-slate-700'),
+      ('Semester', current_semester, 'text-blue-600'),
+    ] %}
+    <div class="paper-card px-5 py-4">
+      <div class="text-2xl font-bold font-mono {{ color }}">{{ value }}</div>
+      <div class="text-xs text-slate-500 mt-1">{{ label }}</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {# ── Assigned Subjects ── #}
+  {% if subjects %}
+  <div class="paper-card p-5">
+    <h3 class="font-semibold text-slate-800 mb-3">Assigned Subjects</h3>
+    <div class="space-y-2">
+      {% for subject in subjects %}
+      <div class="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-100">
+        <div>
+          <div class="font-mono text-sm font-semibold text-slate-800">{{ subject.subject_code }}</div>
+          <div class="text-xs text-slate-500">{{ subject.subject_title }}</div>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-slate-400">{{ subject.units }} units</span>
+          <a href="{{ url_for('panel.subject_grades', subject_id=subject.id) }}"
+             class="text-xs px-3 py-1 bg-maroon text-white rounded-lg hover:bg-maroon/90 transition">
+            Encode Grades
+          </a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% else %}
+  <div class="paper-card p-8 text-center text-slate-400">
+    <svg class="w-10 h-10 mx-auto mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13"/>
+    </svg>
+    No subjects assigned yet. Contact the administrator.
+  </div>
+  {% endif %}
+
+</div>

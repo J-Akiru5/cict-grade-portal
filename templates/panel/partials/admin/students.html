@@ -1,0 +1,124 @@
+{# HTMX partial: Admin — Students CRUD #}
+<div class="space-y-6">
+  <div class="flex items-center justify-between flex-wrap gap-3">
+    <h2 class="text-lg font-bold text-slate-800">Students</h2>
+    <form method="GET" class="flex gap-2">
+      <input name="q" value="{{ search }}" placeholder="Search name, ID, section…"
+             class="text-sm rounded-lg border border-slate-200 px-3 py-1.5 w-60 focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+      <button type="submit" class="px-4 py-1.5 bg-maroon text-white text-sm font-semibold rounded-lg hover:bg-maroon/90 transition">
+        Search
+      </button>
+    </form>
+  </div>
+
+  {# ── Create Student Form ── #}
+  <details class="paper-card">
+    <summary class="p-4 cursor-pointer font-semibold text-slate-800 select-none">+ Create Student Profile</summary>
+    <div class="px-5 pb-5 border-t border-slate-100 pt-4">
+      <form method="POST" action="{{ url_for('panel.admin_create_student') }}"
+            class="grid grid-cols-2 gap-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">User Account *</label>
+          <select name="user_id" required class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40">
+            <option value="">— Select user (student role) —</option>
+            {% for u in orphan_users %}
+              <option value="{{ u.id }}">{{ u.email }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Student ID *</label>
+          <input name="student_id" required placeholder="e.g. 2024-00001"
+                 class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Full Name *</label>
+          <input name="full_name" required
+                 class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Section</label>
+          <input name="section" placeholder="e.g. BSIT-2A"
+                 class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Year Level</label>
+          <select name="year_level" class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40">
+            <option value="">—</option>
+            {% for y in [1,2,3,4] %}<option value="{{ y }}">{{ y }}</option>{% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Curriculum Year</label>
+          <input name="curriculum_year" placeholder="e.g. 2024-2025"
+                 class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+        </div>
+        <div class="col-span-2 flex items-end">
+          <button type="submit" class="px-4 py-1.5 bg-maroon text-white text-sm font-semibold rounded-lg hover:bg-maroon/90 transition">
+            Create Profile
+          </button>
+        </div>
+      </form>
+    </div>
+  </details>
+
+  {# ── Student Table ── #}
+  {% if students %}
+  <div class="paper-card overflow-hidden">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="bg-slate-50 border-b border-slate-200">
+          <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Name</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Student ID</th>
+          <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Section</th>
+          <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Year</th>
+          <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for student in students %}
+        <tr class="hover:bg-slate-50 transition-colors">
+          <td class="px-4 py-3 font-medium text-slate-800">{{ student.full_name }}</td>
+          <td class="px-4 py-3 font-mono text-xs text-slate-500">{{ student.student_id }}</td>
+          <td class="px-4 py-3 text-center text-slate-600">{{ student.section or '—' }}</td>
+          <td class="px-4 py-3 text-center text-slate-600">{{ student.year_level or '—' }}</td>
+          <td class="px-4 py-3 text-center">
+            <div class="flex items-center justify-center gap-2">
+              <a href="{{ url_for('panel.admin_edit_student', student_db_id=student.id) }}"
+                 class="text-xs px-3 py-1 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition">Edit</a>
+              <form method="POST" action="{{ url_for('panel.admin_delete_student', student_db_id=student.id) }}"
+                    onsubmit="return confirm('Delete {{ student.full_name }}? This cannot be undone.');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <button type="submit" class="text-xs px-3 py-1 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition">
+                  Delete
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if pagination.pages > 1 %}
+  <div class="flex justify-center gap-2">
+    {% if pagination.has_prev %}
+      <a href="{{ url_for('panel.admin_students', page=pagination.prev_num, q=search) }}"
+         class="px-3 py-1.5 text-sm bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200">← Prev</a>
+    {% endif %}
+    <span class="px-3 py-1.5 text-sm text-slate-500">{{ pagination.page }} / {{ pagination.pages }}</span>
+    {% if pagination.has_next %}
+      <a href="{{ url_for('panel.admin_students', page=pagination.next_num, q=search) }}"
+         class="px-3 py-1.5 text-sm bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200">Next →</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div class="paper-card p-10 text-center text-slate-400">
+    {% if search %}No students match "{{ search }}".{% else %}No student profiles yet.{% endif %}
+  </div>
+  {% endif %}
+</div>

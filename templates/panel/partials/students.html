@@ -1,0 +1,69 @@
+{# HTMX partial: Student Search #}
+<div class="space-y-4">
+  <div class="flex items-center justify-between flex-wrap gap-3">
+    <h2 class="text-lg font-bold text-slate-800">Students</h2>
+    <form method="GET" action="{{ url_for('panel.students') }}" class="flex gap-2">
+      <input name="q" value="{{ search }}" placeholder="Search name or ID…"
+             class="text-sm rounded-lg border border-slate-200 px-3 py-1.5 w-64
+                    focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+      <button type="submit" class="px-4 py-1.5 bg-maroon text-white text-sm font-semibold rounded-lg hover:bg-maroon/90 transition">
+        Search
+      </button>
+    </form>
+  </div>
+
+  {% if students %}
+  <div class="paper-card overflow-hidden">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="bg-slate-50 border-b border-slate-200">
+          <th class="px-4 py-3 text-left font-semibold text-slate-600 text-xs uppercase tracking-wide">Name</th>
+          <th class="px-4 py-3 text-left font-semibold text-slate-600 text-xs uppercase tracking-wide">Student ID</th>
+          <th class="px-4 py-3 text-left font-semibold text-slate-600 text-xs uppercase tracking-wide">Section</th>
+          <th class="px-4 py-3 text-left font-semibold text-slate-600 text-xs uppercase tracking-wide">Year Level</th>
+          <th class="px-4 py-3 text-center font-semibold text-slate-600 text-xs uppercase tracking-wide">View</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for student in students %}
+        <tr class="hover:bg-slate-50 transition-colors">
+          <td class="px-4 py-3 font-medium text-slate-800">{{ student.full_name }}</td>
+          <td class="px-4 py-3 font-mono text-xs text-slate-500">{{ student.student_id }}</td>
+          <td class="px-4 py-3 text-slate-600">{{ student.section or '—' }}</td>
+          <td class="px-4 py-3 text-slate-600">
+            {{ ('Year ' ~ student.year_level) if student.year_level else '—' }}
+          </td>
+          <td class="px-4 py-3 text-center">
+            <a href="{{ url_for('panel.student_detail', student_db_id=student.id) }}"
+               class="text-xs px-3 py-1 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition">
+              View
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {# Pagination #}
+  {% if pagination.pages > 1 %}
+  <div class="flex justify-center gap-2">
+    {% if pagination.has_prev %}
+      <a href="{{ url_for('panel.students', page=pagination.prev_num, q=search) }}"
+         class="px-3 py-1.5 text-sm bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition">← Prev</a>
+    {% endif %}
+    <span class="px-3 py-1.5 text-sm text-slate-500">Page {{ pagination.page }} / {{ pagination.pages }}</span>
+    {% if pagination.has_next %}
+      <a href="{{ url_for('panel.students', page=pagination.next_num, q=search) }}"
+         class="px-3 py-1.5 text-sm bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition">Next →</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div class="paper-card p-10 text-center text-slate-400">
+    {% if search %}No students found matching "{{ search }}".
+    {% else %}No students in the system yet.{% endif %}
+  </div>
+  {% endif %}
+</div>

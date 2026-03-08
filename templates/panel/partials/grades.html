@@ -1,0 +1,103 @@
+{# HTMX partial: Grade Encoding for a Subject #}
+<div class="space-y-4">
+
+  {# ── Header ── #}
+  <div class="flex items-center justify-between flex-wrap gap-3">
+    <div>
+      <a href="{{ url_for('panel.my_subjects') }}" class="text-xs text-maroon hover:underline">← My Subjects</a>
+      <h2 class="text-lg font-bold text-slate-800 mt-0.5">
+        {{ subject.subject_code }} — {{ subject.subject_title }}
+      </h2>
+    </div>
+    {# Semester/Year filter #}
+    <form method="GET" class="flex items-center gap-2">
+      <select name="semester"
+              class="text-sm rounded-lg border border-slate-200 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-maroon/40"
+              onchange="this.form.submit()">
+        {% for s in ['1st', '2nd', 'Summer'] %}
+          <option value="{{ s }}" {{ 'selected' if current_semester == s else '' }}>{{ s }} Sem</option>
+        {% endfor %}
+      </select>
+      <input name="year" value="{{ current_year }}" placeholder="2024-2025"
+             class="text-sm rounded-lg border border-slate-200 px-3 py-1.5 w-28 focus:outline-none focus:ring-2 focus:ring-maroon/40"
+             onchange="this.form.submit()"/>
+    </form>
+  </div>
+
+  {# ── Grade Table ── #}
+  {% if enrollments %}
+  <div class="paper-card overflow-hidden">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="bg-slate-50 border-b border-slate-200">
+          <th class="px-4 py-3 text-left font-semibold text-slate-600 text-xs uppercase tracking-wide">Student</th>
+          <th class="px-4 py-3 text-left font-semibold text-slate-600 text-xs uppercase tracking-wide">Student ID</th>
+          <th class="px-4 py-3 text-center font-semibold text-slate-600 text-xs uppercase tracking-wide">Current Grade</th>
+          <th class="px-4 py-3 text-center font-semibold text-slate-600 text-xs uppercase tracking-wide">Remarks</th>
+          <th class="px-4 py-3 text-center font-semibold text-slate-600 text-xs uppercase tracking-wide">Encode</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for enrollment in enrollments %}
+        {% set grade = enrollment.grade %}
+        <tr class="hover:bg-slate-50 transition-colors">
+          <td class="px-4 py-3 font-medium text-slate-800">{{ enrollment.student.full_name }}</td>
+          <td class="px-4 py-3 font-mono text-xs text-slate-500">{{ enrollment.student.student_id }}</td>
+          <td class="px-4 py-3 text-center font-mono font-bold
+                     {% if grade and grade.grade_value %}
+                       {% if grade.grade_value <= 1.75 %}text-green-600
+                       {% elif grade.grade_value <= 2.50 %}text-blue-600
+                       {% elif grade.grade_value <= 3.0 %}text-yellow-600
+                       {% else %}text-red-600{% endif %}
+                     {% else %}text-slate-400{% endif %}">
+            {{ grade.grade_display if grade else '—' }}
+          </td>
+          <td class="px-4 py-3 text-center">
+            {% if grade %}
+              {% set r = grade.computed_remarks %}
+              <span class="text-xs font-semibold px-2 py-0.5 rounded-full
+                           {% if r == 'PASSED' %}bg-green-100 text-green-700
+                           {% elif r == 'FAILED' %}bg-red-100 text-red-700
+                           {% elif r in ('INC','DRP') %}bg-yellow-100 text-yellow-700
+                           {% else %}bg-slate-100 text-slate-500{% endif %}">
+                {{ r }}
+              </span>
+            {% else %}
+              <span class="text-xs text-slate-400">—</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3">
+            <form method="POST"
+                  action="{{ url_for('panel.encode_grade', subject_id=subject.id, enrollment_id=enrollment.id) }}"
+                  class="flex items-center gap-2 justify-center">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+              <input type="hidden" name="semester" value="{{ current_semester }}"/>
+              <input type="hidden" name="year" value="{{ current_year }}"/>
+              <input name="grade_value"
+                     value="{{ grade.grade_value if grade and grade.grade_value else (grade.remarks if grade and grade.remarks else '') }}"
+                     placeholder="1.75 / INC / DRP"
+                     class="w-32 rounded-lg border border-slate-200 px-2 py-1 text-sm text-center font-mono
+                            focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+              <button type="submit"
+                      class="px-3 py-1 bg-maroon text-white text-xs font-semibold rounded-lg hover:bg-maroon/90 transition">
+                Save
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <p class="text-xs text-slate-400 text-center">
+    Valid grades: 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 2.75, 3.0, 5.0 &nbsp;|&nbsp; Special: INC, DRP
+  </p>
+
+  {% else %}
+  <div class="paper-card p-10 text-center text-slate-400">
+    No students enrolled in this subject for {{ current_semester }} Semester {{ current_year }}.
+  </div>
+  {% endif %}
+
+</div>
