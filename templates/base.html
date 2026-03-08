@@ -2,7 +2,10 @@
 <html lang="en" class="h-full">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
   {# ── SEO & Meta ──────────────────────────────────────────── #}
   <title>{% block title %}CICT Grade Portal{% endblock %} | CICT Grade Portal - ISUFST Dingle</title>
@@ -19,6 +22,10 @@
   <meta property="og:type" content="website" />
   <meta property="og:image" content="{{ url_for('static', filename='img/og-preview.jpg') }}" />
 
+  {# ── PWA Manifest ────────────────────────────────────────── #}
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}" />
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/icon-192.png') }}" />
+
   {# ── Fonts ───────────────────────────────────────────────── #}
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -30,6 +37,9 @@
   {# ── HTMX ────────────────────────────────────────────────── #}
   <script src="https://unpkg.com/htmx.org@2.0.4" defer></script>
 
+  {# ── Fuse.js (client-side fuzzy search) ──────────────────── #}
+  <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0" defer></script>
+
   {# ── Schema.org JSON-LD ──────────────────────────────────── #}
   {% block jsonld %}{% endblock %}
 
@@ -40,7 +50,7 @@
   {# ── Flash Messages ──────────────────────────────────────── #}
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-      <div id="flash-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm">
+      <div id="flash-container" class="fixed top-4 right-4 z-[60] flex flex-col gap-2 max-w-sm">
         {% for category, message in messages %}
           {% set color = {
             'success': 'bg-green-50 border-green-400 text-green-800',
@@ -65,6 +75,14 @@
 
   {# ── Page Content ────────────────────────────────────────── #}
   {% block content %}{% endblock %}
+
+  {# ── Service Worker Registration ─────────────────────────── #}
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/static/sw.js', { scope: '/' })
+        .catch(() => {});
+    }
+  </script>
 
 </body>
 </html>

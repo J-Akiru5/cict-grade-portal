@@ -3,17 +3,35 @@
 {% block robots %}<meta name="robots" content="noindex, nofollow" />{% endblock %}
 
 {% block content %}
-<div class="flex h-screen overflow-hidden">
+<div id="app-shell" class="flex h-screen overflow-hidden">
 
   {# ═══════════════════════════════════════════════════
-     SIDEBAR
+     MOBILE: Drawer Backdrop
+  ══════════════════════════════════════════════════════ #}
+  <div class="mobile-drawer-backdrop md:hidden" id="drawer-backdrop"
+       onclick="document.getElementById('app-shell').classList.remove('drawer-open')"></div>
+
+  {# ═══════════════════════════════════════════════════
+     SIDEBAR — Desktop: fixed | Mobile: drawer
   ══════════════════════════════════════════════════════ #}
   <aside id="sidebar"
-         class="flex flex-col w-64 min-h-screen bg-surface-dark border-r border-white/10
-                fixed left-0 top-0 bottom-0 z-30 overflow-y-auto">
+         class="mobile-drawer md:!transform-none md:!translate-x-0
+                flex flex-col w-72 md:w-64 min-h-screen bg-surface-dark border-r border-white/10
+                md:fixed md:left-0 md:top-0 md:bottom-0 md:z-30 overflow-y-auto">
+
+    {# ── Drawer close btn (mobile only) ── #}
+    <div class="flex items-center justify-between px-5 pt-5 pb-0 md:hidden">
+      <span class="text-white/40 text-xs uppercase tracking-widest font-semibold">Menu</span>
+      <button onclick="document.getElementById('app-shell').classList.remove('drawer-open')"
+              class="text-white/50 hover:text-white p-1" aria-label="Close menu">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
 
     {# ── Brand / Logo ── #}
-    <div class="px-5 pt-6 pb-5 border-b border-white/10">
+    <div class="px-5 pt-4 md:pt-6 pb-5 border-b border-white/10">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-xl bg-maroon flex items-center justify-center flex-shrink-0">
           <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -52,8 +70,6 @@
 
     {# ── Navigation ── #}
     <nav class="flex-1 px-3 mt-4 space-y-1" aria-label="Panel navigation">
-
-      {# ── Shared: Faculty + Admin ── #}
       <p class="px-3 pt-2 pb-1 text-white/30 text-[10px] uppercase tracking-widest font-semibold">Menu</p>
 
       {% set shared_nav = [
@@ -72,12 +88,11 @@
       {% for endpoint, page_name, label, icon_path in shared_nav %}
         <a href="{{ url_for(endpoint) }}"
            hx-get="{{ url_for(endpoint) }}"
-           hx-target="#main-content"
-           hx-push-url="true"
-           hx-indicator="#page-spinner"
+           hx-target="#main-content" hx-push-url="true" hx-indicator="#page-spinner"
            class="nav-link {{ 'active' if active_page == page_name else '' }}"
            aria-current="{{ 'page' if active_page == page_name else 'false' }}"
-           id="nav-{{ page_name }}">
+           id="nav-{{ page_name }}"
+           onclick="document.getElementById('app-shell').classList.remove('drawer-open')">
           <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ icon_path }}" />
           </svg>
@@ -109,12 +124,11 @@
         {% for endpoint, page_name, label, icon_path in admin_nav %}
           <a href="{{ url_for(endpoint) }}"
              hx-get="{{ url_for(endpoint) }}"
-             hx-target="#main-content"
-             hx-push-url="true"
-             hx-indicator="#page-spinner"
+             hx-target="#main-content" hx-push-url="true" hx-indicator="#page-spinner"
              class="nav-link {{ 'active' if active_page == page_name else '' }}"
              aria-current="{{ 'page' if active_page == page_name else 'false' }}"
-             id="nav-{{ page_name }}">
+             id="nav-{{ page_name }}"
+             onclick="document.getElementById('app-shell').classList.remove('drawer-open')">
             <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ icon_path }}" />
             </svg>
@@ -143,10 +157,48 @@
   {# ═══════════════════════════════════════════════════
      MAIN CONTENT AREA
   ══════════════════════════════════════════════════════ #}
-  <div class="flex-1 flex flex-col min-h-screen ml-64">
+  <div class="flex-1 flex flex-col min-h-screen ml-0 md:ml-64">
 
-    {# ── Top Bar ── #}
-    <header class="navbar-glass sticky top-0 z-20 flex items-center justify-between
+    {# ── Mobile Header (< md) ── #}
+    <header class="mobile-header md:hidden">
+      <button id="hamburger-btn" aria-label="Open menu"
+              onclick="document.getElementById('app-shell').classList.add('drawer-open')">
+        <svg class="w-6 h-6 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-lg bg-maroon flex items-center justify-center">
+          <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5"/>
+          </svg>
+        </div>
+        <span class="text-slate-800 font-bold text-sm">
+          {% if current_user.role == 'admin' %}Admin{% else %}Faculty{% endif %}
+        </span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button id="search-toggle" aria-label="Search"
+                onclick="document.getElementById('search-overlay').classList.add('open'); document.getElementById('search-input').focus();">
+          <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+        </button>
+        <div class="w-7 h-7 rounded-full
+                    {% if current_user.role == 'admin' %}bg-gold{% else %}bg-blue-700{% endif %}
+                    border border-white/20
+                    flex items-center justify-center font-bold text-white text-xs font-mono">
+          {{ current_user.email[0].upper() if current_user.email else 'F' }}
+        </div>
+      </div>
+    </header>
+
+    {# ── Desktop Top Bar (≥ md) ── #}
+    <header class="navbar-glass sticky top-0 z-20 hidden md:flex items-center justify-between
                    h-16 px-6 shadow-sm">
       <div class="flex items-center gap-3">
         <div id="page-spinner" class="htmx-indicator">
@@ -158,6 +210,19 @@
       </div>
 
       <div class="flex items-center gap-4">
+        {# Desktop search #}
+        <div class="relative">
+          <input type="text" id="desktop-search-input" placeholder="Search pages..."
+                 class="w-48 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200 text-sm
+                        text-slate-700 placeholder-slate-400
+                        focus:outline-none focus:ring-2 focus:ring-maroon/30 focus:border-maroon/30
+                        transition-all duration-200"
+                 oninput="handleSearch(this.value, 'desktop-search-results')" />
+          <div id="desktop-search-results"
+               class="absolute top-full mt-1 left-0 right-0 bg-white rounded-lg shadow-xl border border-slate-200
+                      overflow-hidden z-50 hidden">
+          </div>
+        </div>
         <div class="text-right hidden sm:block">
           <div class="text-xs text-slate-500">Academic Year</div>
           <div class="text-xs font-semibold text-slate-700 font-mono">
@@ -177,26 +242,265 @@
       </div>
     </header>
 
+    {# ── Mobile HTMX Spinner ── #}
+    <div id="page-spinner-mobile" class="htmx-indicator md:hidden flex justify-center py-2">
+      <div class="cict-spinner"></div>
+    </div>
+
     {# ── Swappable Content ── #}
-    <main
-      id="main-content"
-      class="flex-1 overflow-y-auto p-6 bg-slate-50"
-      aria-live="polite"
-      aria-label="Page content"
-    >
+    <main id="main-content"
+          class="flex-1 overflow-y-auto p-4 md:p-6 pb-24 md:pb-6 bg-slate-50"
+          aria-live="polite" aria-label="Page content"
+          hx-indicator="#page-spinner, #page-spinner-mobile">
       {% block main_content %}{% endblock %}
     </main>
   </div>
+
+  {# ═══════════════════════════════════════════════════
+     MOBILE: Search Overlay
+  ══════════════════════════════════════════════════════ #}
+  <div id="search-overlay" class="search-overlay md:hidden"
+       onclick="if(event.target===this)this.classList.remove('open')">
+    <div class="search-panel">
+      <div class="flex items-center gap-3 mb-3">
+        <button onclick="document.getElementById('search-overlay').classList.remove('open')"
+                class="text-slate-400 hover:text-slate-600 p-1" aria-label="Close search">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+        <input type="text" id="search-input" class="search-input"
+               placeholder="Search pages..."
+               autocomplete="off"
+               oninput="handleSearch(this.value, 'mobile-search-results')" />
+      </div>
+      <div id="mobile-search-results" class="max-h-64 overflow-y-auto"></div>
+    </div>
+  </div>
+
+  {# ═══════════════════════════════════════════════════
+     MOBILE: Bottom Navigation Bar
+  ══════════════════════════════════════════════════════ #}
+  <nav class="bottom-nav md:hidden" aria-label="Quick navigation">
+
+    {% if current_user.role == 'admin' %}
+      {# ── Admin Bottom Nav ── #}
+      {# Dashboard #}
+      <a href="{{ url_for('panel.dashboard') }}"
+         hx-get="{{ url_for('panel.dashboard') }}"
+         hx-target="#main-content" hx-push-url="true"
+         class="bottom-nav-item {{ 'active' if active_page == 'dashboard' else '' }}"
+         id="bnav-dashboard">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0h6"/>
+        </svg>
+        <span>Home</span>
+      </a>
+
+      {# Students #}
+      <a href="{{ url_for('panel.students') }}"
+         hx-get="{{ url_for('panel.students') }}"
+         hx-target="#main-content" hx-push-url="true"
+         class="bottom-nav-item {{ 'active' if active_page == 'students' else '' }}"
+         id="bnav-students">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+        <span>Students</span>
+      </a>
+
+      {# Users — Hero center #}
+      <a href="{{ url_for('panel.admin_users') }}"
+         hx-get="{{ url_for('panel.admin_users') }}"
+         hx-target="#main-content" hx-push-url="true"
+         class="bottom-nav-hero"
+         id="bnav-users">
+        <div class="bottom-nav-hero-btn {{ 'ring-2 ring-gold' if active_page == 'admin_users' else '' }}">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+          </svg>
+        </div>
+        <span class="bottom-nav-hero-label">Users</span>
+      </a>
+
+      {# Subjects #}
+      <a href="{{ url_for('panel.admin_subjects') }}"
+         hx-get="{{ url_for('panel.admin_subjects') }}"
+         hx-target="#main-content" hx-push-url="true"
+         class="bottom-nav-item {{ 'active' if active_page == 'admin_subjects' else '' }}"
+         id="bnav-subjects">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+        </svg>
+        <span>Subjects</span>
+      </a>
+
+      {# Settings #}
+      <a href="{{ url_for('panel.admin_settings') }}"
+         hx-get="{{ url_for('panel.admin_settings') }}"
+         hx-target="#main-content" hx-push-url="true"
+         class="bottom-nav-item {{ 'active' if active_page == 'admin_settings' else '' }}"
+         id="bnav-settings">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+        <span>Settings</span>
+      </a>
+
+    {% else %}
+      {# ── Faculty Bottom Nav ── #}
+      {# Subjects #}
+      <a href="{{ url_for('panel.my_subjects') }}"
+         hx-get="{{ url_for('panel.my_subjects') }}"
+         hx-target="#main-content" hx-push-url="true"
+         class="bottom-nav-item {{ 'active' if active_page == 'subjects' else '' }}"
+         id="bnav-subjects">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13"/>
+        </svg>
+        <span>Subjects</span>
+      </a>
+
+      {# Students #}
+      <a href="{{ url_for('panel.students') }}"
+         hx-get="{{ url_for('panel.students') }}"
+         hx-target="#main-content" hx-push-url="true"
+         class="bottom-nav-item {{ 'active' if active_page == 'students' else '' }}"
+         id="bnav-students">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+        <span>Students</span>
+      </a>
+
+      {# Dashboard — Hero center #}
+      <a href="{{ url_for('panel.dashboard') }}"
+         hx-get="{{ url_for('panel.dashboard') }}"
+         hx-target="#main-content" hx-push-url="true"
+         class="bottom-nav-hero"
+         id="bnav-dashboard">
+        <div class="bottom-nav-hero-btn {{ 'ring-2 ring-gold' if active_page == 'dashboard' else '' }}">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0h6"/>
+          </svg>
+        </div>
+        <span class="bottom-nav-hero-label">Home</span>
+      </a>
+
+      {# Schedule #}
+      <a href="{{ url_for('panel.faculty_schedule') }}"
+         hx-get="{{ url_for('panel.faculty_schedule') }}"
+         hx-target="#main-content" hx-push-url="true"
+         class="bottom-nav-item {{ 'active' if active_page == 'schedule' else '' }}"
+         id="bnav-schedule">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+        </svg>
+        <span>Schedule</span>
+      </a>
+
+      {# Audit Log #}
+      <a href="{{ url_for('panel.audit_log') }}"
+         hx-get="{{ url_for('panel.audit_log') }}"
+         hx-target="#main-content" hx-push-url="true"
+         class="bottom-nav-item {{ 'active' if active_page == 'audit_log' else '' }}"
+         id="bnav-audit">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+        </svg>
+        <span>Audit</span>
+      </a>
+    {% endif %}
+  </nav>
+
 </div>
 
+{# ═══════════════════════════════════════════════════
+   SCRIPTS: Nav highlight + Fuse.js Search
+══════════════════════════════════════════════════════ #}
 <script>
-  document.body.addEventListener('htmx:afterSettle', function(evt) {
+  // ── Active nav highlight on HTMX swap ──
+  document.body.addEventListener('htmx:afterSettle', function() {
     const path = window.location.pathname;
     document.querySelectorAll('.nav-link').forEach(link => {
       const href = link.getAttribute('href');
       link.classList.toggle('active', href && path.startsWith(href));
       link.setAttribute('aria-current', href && path.startsWith(href) ? 'page' : 'false');
     });
+    document.querySelectorAll('.bottom-nav-item, .bottom-nav-hero').forEach(link => {
+      const href = link.getAttribute('href');
+      if (link.classList.contains('bottom-nav-hero')) {
+        const btn = link.querySelector('.bottom-nav-hero-btn');
+        if (btn) { btn.classList.toggle('ring-2', href && path.startsWith(href)); btn.classList.toggle('ring-gold', href && path.startsWith(href)); }
+      } else {
+        link.classList.toggle('active', href && path.startsWith(href));
+      }
+    });
+    document.getElementById('app-shell')?.classList.remove('drawer-open');
+  });
+
+  // ── Fuse.js Search ──
+  const searchData = [
+    { name: 'Dashboard', url: '{{ url_for("panel.dashboard") }}', icon: '🏠', keywords: 'home overview' },
+    { name: 'My Subjects', url: '{{ url_for("panel.my_subjects") }}', icon: '📚', keywords: 'courses subjects teaching' },
+    { name: 'Students', url: '{{ url_for("panel.students") }}', icon: '👥', keywords: 'class list enrollment' },
+    { name: 'My Schedule', url: '{{ url_for("panel.faculty_schedule") }}', icon: '📅', keywords: 'timetable calendar weekly' },
+    { name: 'Audit Log', url: '{{ url_for("panel.audit_log") }}', icon: '📋', keywords: 'log history changes' },
+    {% if current_user.role == 'admin' %}
+    { name: 'Users', url: '{{ url_for("panel.admin_users") }}', icon: '👤', keywords: 'accounts faculty admin' },
+    { name: 'Students (CRUD)', url: '{{ url_for("panel.admin_students") }}', icon: '🎓', keywords: 'manage add edit student' },
+    { name: 'Subjects', url: '{{ url_for("panel.admin_subjects") }}', icon: '📖', keywords: 'manage add edit courses' },
+    { name: 'Enrollments', url: '{{ url_for("panel.admin_enrollments") }}', icon: '📝', keywords: 'enroll assign section' },
+    { name: 'Grade Import', url: '{{ url_for("panel.admin_grade_import") }}', icon: '📤', keywords: 'upload csv import grades' },
+    { name: 'Full Audit Log', url: '{{ url_for("panel.admin_audit_log") }}', icon: '🔍', keywords: 'all history full log' },
+    { name: 'Settings', url: '{{ url_for("panel.admin_settings") }}', icon: '⚙️', keywords: 'config configuration semester year' },
+    {% endif %}
+    { name: 'Logout', url: '{{ url_for("auth.logout") }}', icon: '🚪', keywords: 'sign out exit' },
+  ];
+
+  let fuse;
+  document.addEventListener('DOMContentLoaded', function() {
+    if (typeof Fuse !== 'undefined') {
+      fuse = new Fuse(searchData, { keys: ['name', 'keywords'], threshold: 0.4, includeScore: true });
+    }
+  });
+
+  function handleSearch(query, resultsContainerId) {
+    const container = document.getElementById(resultsContainerId);
+    if (!container || !fuse) return;
+    if (!query.trim()) { container.innerHTML = ''; container.classList.add('hidden'); return; }
+    const results = fuse.search(query);
+    if (results.length === 0) {
+      container.innerHTML = '<div class="px-4 py-3 text-slate-400 text-sm">No results found</div>';
+      container.classList.remove('hidden');
+      return;
+    }
+    container.innerHTML = results.map(r =>
+      `<a href="${r.item.url}" hx-get="${r.item.url}" hx-target="#main-content" hx-push-url="true"
+          class="search-result-item"
+          onclick="document.getElementById('search-overlay')?.classList.remove('open'); this.closest('[id$=search-results]')?.classList.add('hidden');">
+        <span class="text-lg">${r.item.icon}</span>
+        <span>${r.item.name}</span>
+      </a>`
+    ).join('');
+    container.classList.remove('hidden');
+    if (typeof htmx !== 'undefined') htmx.process(container);
+  }
+
+  document.addEventListener('click', function(e) {
+    const dr = document.getElementById('desktop-search-results');
+    const di = document.getElementById('desktop-search-input');
+    if (dr && di && !dr.contains(e.target) && e.target !== di) dr.classList.add('hidden');
   });
 </script>
 {% endblock %}
