@@ -15,6 +15,9 @@ class Config:
     SUPABASE_KEY = os.environ.get('SUPABASE_KEY')
     SUPABASE_SERVICE_KEY = os.environ.get('SUPABASE_SERVICE_KEY')
 
+    # Gemini AI Chatbot
+    GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
+
     # Session security
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'

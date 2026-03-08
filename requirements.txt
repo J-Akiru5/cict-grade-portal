@@ -15,6 +15,9 @@ python-dotenv==1.0.1
 email-validator==2.2.0
 Flask-Login==0.6.3
 
+# AI Chatbot
+google-genai>=1.0.0
+
 # Production
 gunicorn==23.0.0
 gevent==24.11.1

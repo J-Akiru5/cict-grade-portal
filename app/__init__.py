@@ -46,11 +46,13 @@ def create_app(config_name: str | None = None) -> Flask:
     from .routes.student import student_bp
     from .routes.main import main_bp
     from .routes.panel import panel_bp
+    from .routes.chatbot import chatbot_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(student_bp, url_prefix='/student')
     app.register_blueprint(panel_bp, url_prefix='/panel')
+    app.register_blueprint(chatbot_bp)
 
     # Register error handlers
     from .utils.errors import register_error_handlers

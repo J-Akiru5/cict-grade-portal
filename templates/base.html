@@ -12,6 +12,7 @@
   <meta name="description" content="The official academic grading and performance monitoring platform for the College of Information and Communications Technology, ISUFST Dingle Campus." />
   <meta name="keywords" content="ISUFST, CICT Grade Portal, Dingle Campus, ICT Grades, Student Performance System" />
   <meta name="theme-color" content="#800000" />
+  <meta name="csrf-token" content="{{ csrf_token() }}" />
 
   {# ── Robots (authenticated routes: no index) ─────────────── #}
   {% block robots %}{% endblock %}
@@ -83,6 +84,289 @@
         .catch(() => {});
     }
   </script>
+
+  {# ── AI Chatbot (only for authenticated users) ────────────── #}
+  {% if current_user.is_authenticated %}
+  <div id="chatbot-root" class="fixed bottom-6 right-6 z-[100] flex flex-col items-end gap-3" style="font-family: Inter, sans-serif;">
+
+    {# ── Chat Window ── #}
+    <div id="chatbot-window"
+         class="hidden flex-col w-[360px] max-w-[calc(100vw-3rem)] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden"
+         style="height:520px; max-height:calc(100vh - 120px);">
+
+      {# Header #}
+      <div class="flex items-center gap-3 px-4 py-3 bg-[#800000] text-white flex-shrink-0">
+        <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+          </svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="font-semibold text-sm leading-tight">CICT AI Assistant</div>
+          <div class="text-white/70 text-xs">Powered by Gemini</div>
+        </div>
+        <button id="chatbot-close" aria-label="Close chat"
+                class="text-white/70 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      {# Messages #}
+      <div id="chatbot-messages"
+           class="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-slate-50"
+           style="scroll-behavior: smooth;">
+        {# Welcome message #}
+        <div class="flex gap-2 items-start">
+          <div class="w-7 h-7 rounded-full bg-[#800000] flex items-center justify-center flex-shrink-0 mt-0.5">
+            <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+            </svg>
+          </div>
+          <div class="bg-white rounded-2xl rounded-tl-sm px-3 py-2 shadow-sm border border-slate-100 max-w-[260px]">
+            <p class="text-slate-700 text-sm leading-relaxed">
+              Hi! I'm your CICT Portal AI assistant. Ask me anything about grades, subjects, schedules, or portal features.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {# Typing indicator (hidden by default) #}
+      <div id="chatbot-typing" class="hidden px-4 pb-2">
+        <div class="flex gap-2 items-start">
+          <div class="w-7 h-7 rounded-full bg-[#800000] flex items-center justify-center flex-shrink-0">
+            <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+            </svg>
+          </div>
+          <div class="bg-white rounded-2xl rounded-tl-sm px-3 py-2 shadow-sm border border-slate-100">
+            <div class="flex gap-1 items-center h-4">
+              <span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style="animation-delay:0ms"></span>
+              <span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style="animation-delay:150ms"></span>
+              <span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style="animation-delay:300ms"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {# Input #}
+      <div class="flex-shrink-0 px-3 py-3 border-t border-slate-100 bg-white">
+        <form id="chatbot-form" class="flex gap-2 items-end">
+          <textarea id="chatbot-input" rows="1"
+                    placeholder="Type a message…"
+                    maxlength="2000"
+                    class="flex-1 resize-none rounded-xl border border-slate-200 bg-slate-50
+                           px-3 py-2 text-sm text-slate-800 placeholder-slate-400
+                           focus:outline-none focus:ring-2 focus:ring-[#800000]/30 focus:border-[#800000]/60
+                           transition-colors leading-relaxed"
+                    style="max-height: 100px; overflow-y: auto;"></textarea>
+          <button type="submit" id="chatbot-send"
+                  class="w-9 h-9 rounded-xl bg-[#800000] hover:bg-[#6b0000] active:scale-95
+                         flex items-center justify-center flex-shrink-0 transition-all
+                         disabled:opacity-40 disabled:cursor-not-allowed"
+                  aria-label="Send message">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+            </svg>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    {# ── Bubble Toggle Button ── #}
+    <button id="chatbot-toggle"
+            aria-label="Open AI chat assistant"
+            class="w-14 h-14 rounded-full bg-[#800000] hover:bg-[#6b0000] active:scale-95
+                   shadow-lg hover:shadow-xl transition-all flex items-center justify-center
+                   relative">
+      {# Chat icon (shown when closed) #}
+      <svg id="chatbot-icon-open" class="w-6 h-6 text-white transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+      </svg>
+      {# Close icon (shown when open) #}
+      <svg id="chatbot-icon-close" class="w-6 h-6 text-white transition-all hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+      {# Unread badge #}
+      <span id="chatbot-badge"
+            class="hidden absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 text-[10px] font-bold
+                   text-yellow-900 rounded-full flex items-center justify-center shadow">1</span>
+    </button>
+  </div>
+
+  <script>
+  (function () {
+    const root      = document.getElementById('chatbot-root');
+    const window_   = document.getElementById('chatbot-window');
+    const toggle    = document.getElementById('chatbot-toggle');
+    const closeBtn  = document.getElementById('chatbot-close');
+    const messages  = document.getElementById('chatbot-messages');
+    const form      = document.getElementById('chatbot-form');
+    const input     = document.getElementById('chatbot-input');
+    const sendBtn   = document.getElementById('chatbot-send');
+    const typing    = document.getElementById('chatbot-typing');
+    const badge     = document.getElementById('chatbot-badge');
+    const iconOpen  = document.getElementById('chatbot-icon-open');
+    const iconClose = document.getElementById('chatbot-icon-close');
+
+    let history = [];   // [{role, text}]
+    let isOpen  = false;
+    let sending = false;
+
+    // ── Toggle open/close ──────────────────────────────────
+    function openChat() {
+      window_.classList.remove('hidden');
+      window_.classList.add('flex');
+      iconOpen.classList.add('hidden');
+      iconClose.classList.remove('hidden');
+      badge.classList.add('hidden');
+      isOpen = true;
+      scrollToBottom();
+      input.focus();
+    }
+
+    function closeChat() {
+      window_.classList.add('hidden');
+      window_.classList.remove('flex');
+      iconOpen.classList.remove('hidden');
+      iconClose.classList.add('hidden');
+      isOpen = false;
+    }
+
+    toggle.addEventListener('click', () => isOpen ? closeChat() : openChat());
+    closeBtn.addEventListener('click', closeChat);
+
+    // ── Auto-resize textarea ───────────────────────────────
+    input.addEventListener('input', () => {
+      input.style.height = 'auto';
+      input.style.height = Math.min(input.scrollHeight, 100) + 'px';
+    });
+
+    // ── Send on Enter (Shift+Enter = newline) ──────────────
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        if (!sending) form.requestSubmit();
+      }
+    });
+
+    // ── Scroll helper ──────────────────────────────────────
+    function scrollToBottom() {
+      setTimeout(() => { messages.scrollTop = messages.scrollHeight; }, 50);
+    }
+
+    // ── Render a message bubble ────────────────────────────
+    function appendMessage(role, text) {
+      const isUser = role === 'user';
+      const wrapper = document.createElement('div');
+      wrapper.className = 'flex gap-2 items-start' + (isUser ? ' flex-row-reverse' : '');
+
+      if (!isUser) {
+        wrapper.innerHTML = `
+          <div class="w-7 h-7 rounded-full bg-[#800000] flex items-center justify-center flex-shrink-0 mt-0.5">
+            <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+            </svg>
+          </div>`;
+      }
+
+      const bubble = document.createElement('div');
+      bubble.className = isUser
+        ? 'bg-[#800000] text-white rounded-2xl rounded-tr-sm px-3 py-2 max-w-[260px] shadow-sm'
+        : 'bg-white rounded-2xl rounded-tl-sm px-3 py-2 shadow-sm border border-slate-100 max-w-[260px]';
+
+      // Render markdown-like bold (**text**) and line breaks safely
+      const safe = text
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n/g, '<br>');
+      bubble.innerHTML = `<p class="text-sm leading-relaxed ${isUser ? 'text-white' : 'text-slate-700'}">${safe}</p>`;
+
+      wrapper.appendChild(bubble);
+      messages.appendChild(wrapper);
+      scrollToBottom();
+    }
+
+    // ── Render an error message ────────────────────────────
+    function appendError(text) {
+      const el = document.createElement('div');
+      el.className = 'text-center';
+      el.innerHTML = `<span class="text-xs text-red-500 bg-red-50 border border-red-200 rounded-lg px-3 py-1 inline-block">${text}</span>`;
+      messages.appendChild(el);
+      scrollToBottom();
+    }
+
+    // ── Get CSRF token from cookie ─────────────────────────
+    function getCsrfToken() {
+      const meta = document.querySelector('meta[name="csrf-token"]');
+      if (meta) return meta.getAttribute('content');
+      // Fallback: read from cookie
+      const match = document.cookie.match(/csrf_token=([^;]+)/);
+      return match ? decodeURIComponent(match[1]) : '';
+    }
+
+    // ── Submit handler ─────────────────────────────────────
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = input.value.trim();
+      if (!msg || sending) return;
+
+      sending = true;
+      sendBtn.disabled = true;
+      input.value = '';
+      input.style.height = 'auto';
+
+      appendMessage('user', msg);
+      history.push({ role: 'user', text: msg });
+
+      typing.classList.remove('hidden');
+      scrollToBottom();
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken(),
+          },
+          body: JSON.stringify({ message: msg, history: history.slice(0, -1) }),
+        });
+
+        typing.classList.add('hidden');
+
+        const data = await res.json();
+        if (!res.ok || data.error) {
+          appendError(data.error || 'Something went wrong. Please try again.');
+        } else {
+          appendMessage('model', data.reply);
+          history.push({ role: 'model', text: data.reply });
+          // Keep history bounded
+          if (history.length > 20) history = history.slice(-20);
+        }
+      } catch (err) {
+        typing.classList.add('hidden');
+        appendError('Network error. Please check your connection.');
+      } finally {
+        sending = false;
+        sendBtn.disabled = false;
+        input.focus();
+      }
+    });
+
+    // ── Show badge when chat is closed and page loads ──────
+    setTimeout(() => {
+      if (!isOpen) badge.classList.remove('hidden');
+    }, 2000);
+  })();
+  </script>
+  {% endif %}
 
 </body>
 </html>
