@@ -1,22 +1,32 @@
 @import "tailwindcss";
 
-/* ─── CICT Design Tokens ─────────────────────────────── */
+/* ─── IRJICT-Sync Design Tokens ──────────────────────── */
 @theme {
-  --color-primary-maroon: #5B0000;
-  --color-maroon-dark: #3D0000;
-  --color-maroon-light: #7A0000;
-  --color-accent-gold: #EAB308;
-  --color-gold-dark: #CA8A04;
+  /* Primary palette — matched to IRJICT globals.css */
+    --color-maroon: #800000;
+    --color-maroon-dark: #5B0000;
+    --color-maroon-light: #9A0000;
+    --color-gold: #D4AF37;
+    --color-gold-dark: #B8962E;
+  
+    /* Surfaces */
   --color-surface-dark: #1A1A1A;
   --color-surface-mid: #2D2D2D;
+/* Status */
   --color-status-pass: #22C55E;
   --color-status-fail: #EF4444;
   --color-status-inc: #F59E0B;
 
+  /* Typography */
   --font-sans: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 }
 
+/* ─── CSS Variables (IRJICT parity) ──────────────────── */
+:root {
+  --maroon: #800000;
+  --gold: #D4AF37;
+}
 /* ─── Global Base ────────────────────────────────────── */
 @layer base {
   html {
@@ -24,18 +34,21 @@
     -webkit-font-smoothing: antialiased;
   }
   body {
-    @apply bg-slate-100 text-slate-800;
+    @apply bg-white text-gray-900 antialiased;
+    }
+    
+    .font-mono {
+      font-feature-settings: "liga" 1, "calt" 1;
   }
 }
 
-/* ─── HTMX Loading Indicator ─────────────────────────── */
+/* ─── Components ─────────────────────────────────────── */
 @layer components {
+  /* HTMX Loading */
   .htmx-indicator {
     display: none;
   }
-  .htmx-request .htmx-indicator {
-    display: flex;
-  }
+        .htmx-request .htmx-indicator,
   .htmx-request.htmx-indicator {
     display: flex;
   }
@@ -44,37 +57,80 @@
   .cict-spinner {
     width: 1.5rem;
     height: 1.5rem;
-    border: 3px solid rgba(91, 0, 0, 0.2);
-    border-top-color: #5B0000;
+    border: 3px solid rgba(128, 0, 0, 0.2);
+      border-top-color: #800000;
     border-radius: 50%;
     animation: spin 0.7s linear infinite;
   }
 
-  @keyframes spin {
-    to { transform: rotate(360deg); }
+        /* Glassmorphism Navbar (IRJICT twin) */
+        .navbar-glass {
+          @apply bg-white/80 backdrop-blur-md border-b border-gray-200;
+        }
+    
+        /* Paper Card with maroon indicator (IRJICT twin) */
+        .paper-card {
+          @apply bg-white border border-gray-200 shadow-sm rounded-lg;
+          border-left: 4px solid #800000;
+          transition: border-color 0.2s ease;
+        }
+    
+        .paper-card:hover {
+          border-left-color: #D4AF37;
   }
 
   /* Sidebar nav link */
   .nav-link {
-    @apply flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 
-           hover:bg-white/10 hover:text-white transition-all duration-200 
+    @apply flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-white/10 hover:text-white transition-all duration-200
            text-sm font-medium cursor-pointer;
   }
   .nav-link.active {
-    @apply bg-white/15 text-white border-l-2 border-accent-gold;
+    @apply bg-white/15 text-white;
+      border-left: 3px solid #D4AF37;
   }
 
-  /* Button styles */
+        /* Button styles (IRJICT twin) */
   .btn-primary {
-    @apply bg-primary-maroon text-white font-semibold px-6 py-2.5 rounded-lg
-           hover:bg-maroon-dark hover:shadow-[4px_4px_0px_0px_rgba(234,179,8,1)]
-           transition-all duration-200 focus:outline-none focus:ring-2 
-           focus:ring-accent-gold focus:ring-offset-2;
-  }
+    @apply bg-maroon text-white font-semibold px-6 py-2.5 rounded-lg;
+      @apply transition-all duration-200;
+      @apply focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2;
+    }
+    
+    .btn-primary:hover {
+      @apply bg-maroon-dark;
+      box-shadow: 4px 4px 0px 0px rgba(212, 175, 55, 1);
+    }
+    
+    .btn-primary:active {
+      transform: translate(2px, 2px);
+      box-shadow: none;
+    }
   .btn-gold {
-    @apply bg-accent-gold text-black font-bold px-6 py-2.5 rounded-lg
-           border-2 border-black hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]
-           transition-all duration-200;
+    @apply bg-gold text-black font-bold px-6 py-2.5 rounded-lg border-2 border-black transition-all duration-200;
+    }
+    
+    .btn-gold:hover {
+      box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+    }
+    
+    .btn-gold:active {
+      transform: translate(2px, 2px);
+      box-shadow: none;
+    }
+    
+    /* Status Badges (IRJICT twin) */
+    .badge-published {
+      @apply bg-green-100 text-green-700;
+    }
+    
+    .badge-under-review {
+      background: rgba(128, 0, 0, 0.1);
+      color: #800000;
+    }
+    
+    .badge-accepted {
+      background: rgba(212, 175, 55, 0.2);
+      @apply text-amber-800;
   }
 
   /* Grade badge */
@@ -86,18 +142,99 @@
   .grade-fail { @apply bg-red-100 text-red-700; }
   .grade-inc { @apply bg-slate-100 text-slate-500; }
 
+        /* Technical metadata styling */
+        .metadata-text {
+          @apply font-mono text-xs text-gray-500;
+        }
   /* Ledger table */
   .ledger-table {
     @apply w-full border-collapse bg-white text-sm;
   }
   .ledger-table thead th {
-    @apply bg-slate-50 text-slate-500 text-xs uppercase tracking-widest 
+    @apply bg-slate-50 text-slate-500 text-xs uppercase tracking-widest
            font-bold px-4 py-3 text-left border-b border-slate-200;
   }
   .ledger-table tbody tr {
-    @apply border-b border-slate-100 hover:bg-red-50 transition-colors;
+    @apply border-b border-slate-100 transition-colors;
+    }
+    
+    .ledger-table tbody tr:hover {
+      background: rgba(128, 0, 0, 0.03);
   }
   .ledger-table tbody td {
     @apply px-4 py-3 text-slate-700;
   }
+}
+
+/* ─── Utilities ──────────────────────────────────────── */
+@layer utilities {
+  .shadow-gold {
+    box-shadow: 4px 4px 0px 0px rgba(212, 175, 55, 1);
+  }
+
+  .skeleton-pulse {
+    @apply animate-pulse;
+    background: linear-gradient(90deg, rgba(128, 0, 0, 0.05), rgba(212, 175, 55, 0.1), rgba(128, 0, 0, 0.05));
+  }
+
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top, 0);
+  }
+
+  .pb-nav {
+    @apply pb-20 md:pb-0;
+  }
+
+  .desktop-only {
+    @apply hidden md:block;
+  }
+
+  .mobile-only {
+    @apply block md:hidden;
+  }
+}
+
+/* ─── Animations (outside @layer for global scope) ───── */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes float-dots {
+
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.3;
+  }
+
+  50% {
+    transform: translateY(-15px) scale(1.1);
+    opacity: 0.6;
+  }
+}
+
+.network-dot {
+  animation: float-dots 4s ease-in-out infinite;
+}
+
+.network-dot:nth-child(2n) {
+  animation-delay: 1s;
+}
+
+.network-dot:nth-child(3n) {
+  animation-delay: 2s;
+}
+
+.network-dot:nth-child(4n) {
+  animation-delay: 0.5s;
+}
+
+.network-dot:nth-child(5n) {
+  animation-delay: 1.5s;
 }

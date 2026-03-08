@@ -1,0 +1,76 @@
+import os
+import click
+import logging
+
+
+def _get_admin_supabase():
+    """Return a Supabase admin client using the service role key."""
+    from supabase import create_client
+    url = os.environ.get('SUPABASE_URL')
+    service_key = os.environ.get('SUPABASE_SERVICE_KEY')
+    if not url or not service_key:
+        raise RuntimeError('SUPABASE_URL and SUPABASE_SERVICE_KEY must be set.')
+    return create_client(url, service_key)
+
+
+def create_admin(email: str, password: str) -> None:
+    """
+    Bootstrap an admin user in both Supabase Auth and the local DB.
+    Safe to run multiple times — skips if the user already exists.
+    """
+    from app.extensions import db
+    from app.models.user import User
+
+    # Check if already exists locally
+    existing = User.query.filter_by(email=email).first()
+    if existing:
+        click.echo(f'User {email} already exists with role "{existing.role}". Skipping.')
+        return
+
+    client = _get_admin_supabase()
+
+    try:
+        response = client.auth.admin.create_user({
+            'email': email,
+            'password': password,
+            'email_confirm': True,
+            'user_metadata': {'role': 'admin'},
+        })
+        sb_user = response.user
+    except Exception as e:
+        # If the user already exists in Supabase but not locally, still sync
+        if 'already registered' in str(e).lower() or 'already been registered' in str(e).lower():
+            click.echo(f'Supabase user {email} already exists. Syncing local record...')
+            try:
+                users_response = client.auth.admin.list_users()
+                sb_user = next(
+                    (u for u in users_response if u.email == email), None
+                )
+                if not sb_user:
+                    raise RuntimeError(f'Could not find {email} in Supabase.')
+            except Exception as inner_e:
+                raise RuntimeError(f'Failed to retrieve existing Supabase user: {inner_e}')
+        else:
+            raise RuntimeError(f'Supabase error: {e}')
+
+    user = User(
+        id=str(sb_user.id),
+        email=email,
+        role='admin',
+        is_active=True,
+    )
+    db.session.add(user)
+    db.session.commit()
+    click.echo(f'✅  Admin user {email} created successfully (id={sb_user.id}).')
+
+
+def register_cli(app):
+    """Register all seed CLI commands on the Flask app."""
+
+    @app.cli.command('seed-admin')
+    @click.option('--email', default='admin@isufst.edu.ph', show_default=True,
+                  help='Admin email address.')
+    @click.password_option(help='Admin password (prompted if not given).')
+    def seed_admin_cmd(email, password):
+        """Bootstrap the first admin account."""
+        create_admin(email, password)

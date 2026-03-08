@@ -81,8 +81,63 @@ def _redirect_by_role(role: str):
     """Redirect to the appropriate dashboard based on user role."""
     if role == 'student':
         return redirect(url_for('student.dashboard'))
-    elif role == 'faculty':
-        return redirect(url_for('auth.login'))   # placeholder until faculty BP exists
-    elif role == 'admin':
-        return redirect(url_for('auth.login'))   # placeholder until admin BP exists
+    elif role in ('faculty', 'admin'):
+        return redirect(url_for('panel.dashboard'))
     return redirect(url_for('main.index'))
+
+
+@auth_bp.route('/register', methods=['GET', 'POST'])
+def register():
+    """Faculty self-registration."""
+    if current_user.is_authenticated:
+        return _redirect_by_role(current_user.role)
+
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip().lower()
+        password = request.form.get('password', '')
+        confirm = request.form.get('confirm_password', '')
+        full_name = request.form.get('full_name', '').strip()
+        employee_id = request.form.get('employee_id', '').strip() or None
+
+        if not email or not password or not full_name:
+            flash('Email, full name, and password are required.', 'error')
+            return render_template('auth/register.html')
+
+        if password != confirm:
+            flash('Passwords do not match.', 'error')
+            return render_template('auth/register.html')
+
+        if len(password) < 8:
+            flash('Password must be at least 8 characters.', 'error')
+            return render_template('auth/register.html')
+
+        try:
+            response = auth_service.sign_up(email, password, role='faculty')
+            sb_user = response.user
+
+            from app.models.faculty import Faculty
+            user = User(
+                id=str(sb_user.id),
+                email=sb_user.email,
+                role='faculty',
+                is_active=True,
+            )
+            db.session.add(user)
+
+            faculty = Faculty(
+                user_id=str(sb_user.id),
+                full_name=full_name,
+                employee_id=employee_id,
+                department='CICT',
+            )
+            db.session.add(faculty)
+            db.session.commit()
+
+            flash('Registration successful! Please check your email to confirm your account, then log in.', 'success')
+            return redirect(url_for('auth.login'))
+
+        except Exception as e:
+            logging.warning(f'Faculty registration failure for {email}: {e}')
+            flash('Registration failed. This email may already be registered.', 'error')
+
+    return render_template('auth/register.html')

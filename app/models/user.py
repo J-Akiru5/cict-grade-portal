@@ -24,6 +24,7 @@ class User(UserMixin, db.Model):
 
     # Relationships
     student_profile = db.relationship('Student', back_populates='user', uselist=False, lazy='select')
+    faculty_profile = db.relationship('Faculty', back_populates='user', uselist=False, lazy='select')
     grade_audits_as_actor = db.relationship('GradeAudit', back_populates='actor', lazy='dynamic')
 
     def __repr__(self):

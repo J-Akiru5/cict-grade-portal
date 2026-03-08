@@ -21,10 +21,37 @@
 
 {% block content %}
 <div class="min-h-screen flex items-center justify-center relative overflow-hidden
-            bg-[radial-gradient(circle_at_top_right,_#5B0000_0%,_#1e1e2e_45%,_#0f0f0f_100%)]">
+            bg-[radial-gradient(circle_at_top_right,_#800000_0%,_#1e1e2e_45%,_#0f0f0f_100%)]">
+
+  {# ── Network dot particle overlay (IRJICT twin) ── #}
+  <div class="absolute inset-0 pointer-events-none overflow-hidden">
+    <svg class="w-full h-full opacity-20" viewBox="0 0 800 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {# Connecting lines #}
+      <line x1="120" y1="80" x2="300" y2="200" stroke="#D4AF37" stroke-width="0.5" opacity="0.3"/>
+      <line x1="300" y1="200" x2="500" y2="150" stroke="#D4AF37" stroke-width="0.5" opacity="0.2"/>
+      <line x1="500" y1="150" x2="680" y2="300" stroke="#D4AF37" stroke-width="0.5" opacity="0.3"/>
+      <line x1="680" y1="300" x2="600" y2="480" stroke="#D4AF37" stroke-width="0.5" opacity="0.2"/>
+      <line x1="200" y1="400" x2="400" y2="350" stroke="#D4AF37" stroke-width="0.5" opacity="0.25"/>
+      <line x1="400" y1="350" x2="500" y2="150" stroke="#D4AF37" stroke-width="0.5" opacity="0.15"/>
+      <line x1="120" y1="80" x2="200" y2="400" stroke="#D4AF37" stroke-width="0.5" opacity="0.15"/>
+      <line x1="300" y1="200" x2="200" y2="400" stroke="#D4AF37" stroke-width="0.5" opacity="0.2"/>
+      <line x1="500" y1="150" x2="600" y2="480" stroke="#D4AF37" stroke-width="0.5" opacity="0.15"/>
+      {# Dots #}
+      <circle class="network-dot" cx="120" cy="80" r="3" fill="#D4AF37" opacity="0.4"/>
+      <circle class="network-dot" cx="300" cy="200" r="4" fill="#D4AF37" opacity="0.5"/>
+      <circle class="network-dot" cx="500" cy="150" r="3" fill="#D4AF37" opacity="0.3"/>
+      <circle class="network-dot" cx="680" cy="300" r="5" fill="#D4AF37" opacity="0.4"/>
+      <circle class="network-dot" cx="200" cy="400" r="3" fill="#D4AF37" opacity="0.35"/>
+      <circle class="network-dot" cx="400" cy="350" r="4" fill="#D4AF37" opacity="0.3"/>
+      <circle class="network-dot" cx="600" cy="480" r="3" fill="#D4AF37" opacity="0.25"/>
+      <circle class="network-dot" cx="50" cy="300" r="2" fill="#D4AF37" opacity="0.2"/>
+      <circle class="network-dot" cx="750" cy="100" r="2" fill="#D4AF37" opacity="0.3"/>
+      <circle class="network-dot" cx="700" cy="500" r="2" fill="#D4AF37" opacity="0.2"/>
+    </svg>
+  </div>
 
   {# ── Decorative grid overlay ── #}
-  <div class="absolute inset-0 opacity-10"
+  <div class="absolute inset-0 opacity-[0.04]"
        style="background-image: linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
               linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
               background-size: 40px 40px;">
@@ -32,7 +59,7 @@
 
   {# ── Floating gold orb ── #}
   <div class="absolute top-1/4 right-1/4 w-96 h-96 rounded-full opacity-10 blur-3xl
-              bg-[#EAB308] pointer-events-none"></div>
+              bg-gold pointer-events-none"></div>
 
   {# ── Login Card ── #}
   <div class="relative z-10 w-full max-w-md mx-4">
@@ -42,9 +69,9 @@
                 bg-white/10 backdrop-blur-md">
 
       {# Card Header #}
-      <div class="bg-[#5B0000]/60 px-8 pt-8 pb-6 border-b border-white/10 text-center">
-        {# Logo placeholder — replace with actual CICT logo img tag #}
-        <div class="mx-auto w-16 h-16 rounded-full bg-white/10 border-2 border-white/30
+      <div class="bg-maroon/60 px-8 pt-8 pb-6 border-b border-white/10 text-center">
+        {# Logo #}
+        <div class="mx-auto w-16 h-16 rounded-full bg-white/10 border-2 border-gold/40
                     flex items-center justify-center mb-4">
           <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -79,7 +106,7 @@
               placeholder="student@isufst.edu.ph"
               class="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20
                      text-white placeholder-white/40 text-sm
-                     focus:outline-none focus:border-accent-gold focus:ring-1 focus:ring-accent-gold
+                     focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold
                      transition-all duration-200"
             />
           </div>
@@ -99,7 +126,7 @@
                 placeholder="••••••••"
                 class="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20
                        text-white placeholder-white/40 text-sm
-                       focus:outline-none focus:border-accent-gold focus:ring-1 focus:ring-accent-gold
+                       focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold
                        transition-all duration-200 pr-12"
               />
               {# Toggle password visibility #}
@@ -119,14 +146,15 @@
             </div>
           </div>
 
-          {# Submit #}
+          {# Submit — IRJICT-style gold shadow button #}
           <button
             type="submit"
             id="login-submit-btn"
-            class="w-full mt-2 bg-[#5B0000] text-white font-bold py-3 rounded-lg
-                   hover:bg-[#3D0000] hover:shadow-[4px_4px_0px_0px_rgba(234,179,8,1)]
+            class="w-full mt-2 bg-maroon text-white font-bold py-3 rounded-lg
+                   hover:bg-maroon-dark hover:shadow-gold
+                   active:translate-x-[2px] active:translate-y-[2px] active:shadow-none
                    transition-all duration-200 focus:outline-none focus:ring-2
-                   focus:ring-accent-gold focus:ring-offset-1 focus:ring-offset-transparent
+                   focus:ring-gold focus:ring-offset-1 focus:ring-offset-transparent
                    flex items-center justify-center gap-2">
             <span>Sign In</span>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

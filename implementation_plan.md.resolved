@@ -1,0 +1,89 @@
+# CICT Grade Portal — IRJICT Design Sync
+
+Restyle the Flask grade portal to be visually identical to the IRJICT website (https://irjict.isufstcict.com). The portal already uses the right stack (Tailwind 4, HTMX, Inter/JetBrains Mono fonts) but needs color tokens, glassmorphism effects, particle overlays, and button styles corrected to match the IRJICT source exactly.
+
+## Key Differences Found
+
+| Element | Portal (current) | IRJICT (target) |
+|---|---|---|
+| Primary Maroon | `#5B0000` | `#800000` |
+| Accent Gold | `#EAB308` | `#D4AF37` |
+| Navbar glass | White topbar | `bg-white/80 backdrop-blur-md` |
+| Login hero | Pure gradient | Gradient + grid overlay + network dots |
+| Button shadow | Yellow | `rgba(212,175,55,1)` gold shadow |
+| Paper card | `border border-slate-200` | `border-l-4 border-l-maroon hover:border-l-gold` |
+| `--maroon` CSS var | Not defined | `#800000` via `:root` |
+
+---
+
+## Proposed Changes
+
+### CSS / Design Tokens
+
+#### [MODIFY] [input.css](file:///c:/dev/Flask/cict-grade-portal/app/static/css/input.css)
+
+- Sync color tokens: `#5B0000` → `#800000` for primary maroon, `#EAB308` → `#D4AF37` for accent gold
+- Add `:root` CSS variables `--maroon` and `--gold` to match IRJICT `globals.css`
+- Update glassmorphism nav class `.navbar-glass`
+- Add `.paper-card` component (border-l maroon/gold accent)
+- Update `.btn-primary` gold shadow to use `D4AF37`
+- Add `.skeleton-pulse` and `.badge-*` classes from IRJICT
+
+---
+
+### Templates
+
+#### [MODIFY] [login.html](file:///c:/dev/Flask/cict-grade-portal/templates/auth/login.html)
+
+- Update gradient from `#5B0000` → `#800000` throughout
+- Add animated particle/network SVG dot overlay (matches IRJICT hero)
+- Update gold orb from `#EAB308` → `#D4AF37`
+- Update button shadow to `D4AF37`
+- Add CICT logo (use `img` from irjict public URL or static)
+- Improve card glassmorphism to match IRJICT more closely
+
+#### [MODIFY] [student/layout.html](file:///c:/dev/Flask/cict-grade-portal/templates/student/layout.html)
+
+- Sidebar: replace `#5B0000` with `#800000` in brand square, avatar border, gold accents
+- Active nav link: use `border-l-gold` with `#D4AF37`
+- Top bar: switch to glassmorphism `bg-white/80 backdrop-blur-md border-b border-gray-200` (IRJICT `.navbar-glass`)
+- Gold avatar ring: use `#D4AF37`
+
+#### [MODIFY] [partials/dashboard.html](file:///c:/dev/Flask/cict-grade-portal/templates/partials/dashboard.html)
+
+- Hero card gradient: update maroon stops to `#800000`
+- GWA badge ring: `#D4AF37` border
+- Quick stat cards: add `paper-card` left-accent variant
+- "View all" link: use `#800000` color
+- Add IRJICT-style subtle network/dot background to hero card
+
+#### [MODIFY] [partials/grades.html](file:///c:/dev/Flask/cict-grade-portal/templates/partials/grades.html)
+
+- Semester switcher active: `bg-[#800000]`
+- GWA banner: adjust border to `#800000/20`
+- Table header bar: `bg-[#800000]`
+- Subject code color: `#800000`
+- Footer tfoot: `border-[#800000]/20` and `bg-[#800000]/5`
+
+#### [MODIFY] [partials/profile.html](file:///c:/dev/Flask/cict-grade-portal/templates/partials/profile.html)
+
+- Profile banner gradient: `#800000`
+- Avatar bg: `#1A1A1A` with `border-white` (keep)
+- Role badge: use `#800000/10` and `text-[#800000]`
+- Section value color: `#800000`
+- Use `paper-card` class on info cards
+
+---
+
+## Verification Plan
+
+### Manual Verification (Browser Tool)
+After applying changes, I will use the browser subagent to:
+1. Start the Flask dev server (`flask run`)
+2. Navigate to `http://127.0.0.1:5000/auth/login` — verify login page matches IRJICT aesthetic (maroon radial gradient, gold orb, network overlay, glassmorphism card)
+3. Navigate to `http://127.0.0.1:5000/student/dashboard` — verify sidebar maroon, gold active state, glassmorphism topbar, hero card gradient
+4. Navigate to `http://127.0.0.1:5000/student/grades` — verify ledger table header in `#800000`, gold GWA display
+5. Take screenshots and embed in walkthrough
+
+> [!NOTE]
+> No automated test suite exists for the frontend. Verification is entirely visual via browser screenshots.

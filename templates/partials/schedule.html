@@ -16,8 +16,8 @@
           hx-target="#main-content"
           hx-push-url="true"
           class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200
-                 {{ 'bg-[#5B0000] text-white shadow-sm' if current_semester == sem
-                    else 'bg-white text-slate-600 border border-slate-200 hover:border-[#5B0000]' }}">
+                 {{ 'bg-maroon text-white shadow-sm' if current_semester == sem
+                    else 'bg-white text-slate-600 border border-slate-200 hover:border-maroon' }}">
           {{ sem }} Sem
         </button>
       {% endfor %}
@@ -28,7 +28,7 @@
   <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden overflow-x-auto">
     <table class="w-full border-collapse text-xs min-w-[700px]">
       <thead>
-        <tr class="bg-[#5B0000]">
+        <tr class="bg-maroon">
           <th class="text-white/70 font-semibold uppercase tracking-widest px-4 py-3 text-left w-28">
             Time
           </th>
@@ -62,8 +62,8 @@
                          {{ 'bg-slate-50' if day in ['Sat', 'Sun'] else '' }}">
                 {% if slot_entries %}
                   {% for entry in slot_entries %}
-                    <div class="bg-[#5B0000] text-white rounded-md px-2 py-1.5 text-left
-                                shadow-sm border border-[#3D0000] mb-1 last:mb-0">
+                    <div class="bg-maroon text-white rounded-md px-2 py-1.5 text-left
+                                shadow-sm border border-maroon-dark mb-1 last:mb-0">
                       <div class="font-mono font-bold text-[10px] leading-tight">
                         {{ entry.subject_code }}
                       </div>
@@ -98,7 +98,7 @@
             {% if entry.subject_code not in seen %}
               {% if seen.append(entry.subject_code) %}{% endif %}
               <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
-                <div class="w-3 h-3 rounded-sm bg-[#5B0000]"></div>
+                <div class="w-3 h-3 rounded-sm bg-maroon"></div>
                 <span class="font-mono font-semibold text-slate-700 text-xs">
                   {{ entry.subject_code }}
                 </span>

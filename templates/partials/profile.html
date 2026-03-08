@@ -3,16 +3,16 @@
 
   {# ── Profile Header Card ── #}
   <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-    <div class="h-20 bg-[radial-gradient(circle_at_left,_#5B0000_0%,_#3D0000_100%)]"></div>
+    <div class="h-20 bg-[radial-gradient(circle_at_left,_#800000_0%,_#5B0000_100%)]"></div>
     <div class="px-6 pb-6">
       <div class="-mt-10 flex items-end justify-between">
         {# Avatar #}
-        <div class="w-20 h-20 rounded-full bg-[#1A1A1A] border-4 border-white
+        <div class="w-20 h-20 rounded-full bg-surface-dark border-4 border-white
                     flex items-center justify-center font-bold text-white text-2xl font-mono shadow-lg">
           {{ student.full_name[0].upper() if student and student.full_name else 'S' }}
         </div>
         <div class="mb-1">
-          <span class="inline-flex items-center gap-1 bg-[#5B0000]/10 text-[#5B0000]
+          <span class="inline-flex items-center gap-1 bg-maroon/10 text-maroon
                        text-xs font-semibold px-3 py-1 rounded-full">
             <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
               <path d="M10 9a3 3 0 100-6 3 3 0 000 6zM10 11a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
@@ -34,7 +34,7 @@
 
   {% if student %}
   {# ── Profile Fields Card ── #}
-  <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+  <div class="paper-card overflow-hidden">
     <div class="px-5 py-4 border-b border-slate-100 bg-slate-50">
       <h2 class="font-semibold text-slate-700 text-sm uppercase tracking-widest">Personal Information</h2>
     </div>
@@ -42,7 +42,7 @@
 
       {% set fields = [
         ('Full Name', student.full_name, 'text-slate-800 font-semibold'),
-        ('Section', student.section or '—', 'font-mono text-[#5B0000] font-semibold'),
+        ('Section', student.section or '—', 'font-mono text-maroon font-semibold'),
         ('Age', student.age|string if student.age else '—', 'text-slate-700'),
         ('Year Level', (student.year_level|string + ' Year') if student.year_level else '—', 'text-slate-700'),
         ('Address', student.address or '—', 'text-slate-700'),
@@ -62,7 +62,7 @@
   </div>
 
   {# ── Academic Info Card ── #}
-  <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+  <div class="paper-card overflow-hidden">
     <div class="px-5 py-4 border-b border-slate-100 bg-slate-50">
       <h2 class="font-semibold text-slate-700 text-sm uppercase tracking-widest">Academic Information</h2>
     </div>
@@ -73,7 +73,7 @@
       </div>
       <div class="bg-slate-50 rounded-lg px-4 py-3 border border-slate-200">
         <div class="text-slate-400 text-xs mb-1">Section</div>
-        <div class="font-mono text-[#5B0000] font-bold text-sm">{{ student.section or '—' }}</div>
+        <div class="font-mono text-maroon font-bold text-sm">{{ student.section or '—' }}</div>
       </div>
       <div class="bg-slate-50 rounded-lg px-4 py-3 border border-slate-200">
         <div class="text-slate-400 text-xs mb-1">Curriculum Year</div>

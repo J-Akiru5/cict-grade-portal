@@ -19,6 +19,10 @@ class Subject(db.Model):
     # Relationships
     enrollments = db.relationship('Enrollment', back_populates='subject', lazy='dynamic')
     schedules = db.relationship('Schedule', back_populates='subject', lazy='dynamic')
+    faculty = db.relationship(
+        'Faculty', secondary='faculty_subjects',
+        back_populates='subjects', lazy='select'
+    )
 
     def __repr__(self):
         return f'<Subject {self.subject_code}: {self.subject_title}>'

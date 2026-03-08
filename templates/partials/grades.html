@@ -16,8 +16,8 @@
           hx-target="#main-content"
           hx-push-url="true"
           class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200
-                 {{ 'bg-[#5B0000] text-white shadow-sm' if current_semester == sem
-                    else 'bg-white text-slate-600 border border-slate-200 hover:border-[#5B0000] hover:text-[#5B0000]' }}">
+                 {{ 'bg-maroon text-white shadow-sm' if current_semester == sem
+                    else 'bg-white text-slate-600 border border-slate-200 hover:border-maroon hover:text-maroon' }}">
           {{ sem }} Sem
         </button>
       {% endfor %}
@@ -26,10 +26,10 @@
 
   {# ── GWA Summary Banner ── #}
   {% if gwa %}
-    <div class="bg-[#5B0000]/5 border border-[#5B0000]/20 rounded-xl px-6 py-4
+    <div class="bg-maroon/5 border border-maroon/20 rounded-xl px-6 py-4
                 flex items-center justify-between">
       <div>
-        <div class="text-[#5B0000] font-semibold text-sm">General Weighted Average</div>
+        <div class="text-maroon font-semibold text-sm">General Weighted Average</div>
         <div class="text-slate-500 text-xs mt-0.5">
           Based on {{ grades|length }} subject(s) with encoded grades
         </div>
@@ -51,7 +51,7 @@
   <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
 
     {# Table header bar #}
-    <div class="px-5 py-3 border-b border-slate-100 bg-[#5B0000]">
+    <div class="px-5 py-3 border-b border-slate-100 bg-maroon">
       <h2 class="text-white font-semibold text-sm uppercase tracking-widest">
         Academic Record — {{ current_semester }} Semester, {{ current_year }}
       </h2>
@@ -75,7 +75,7 @@
             <tr>
               <td class="text-slate-400 text-xs">{{ loop.index }}</td>
               <td>
-                <div class="font-mono font-semibold text-[#5B0000] text-sm">
+                <div class="font-mono font-semibold text-maroon text-sm">
                   {{ subj.subject_code }}
                 </div>
                 <div class="text-slate-500 text-xs mt-0.5">{{ subj.subject_title }}</div>
@@ -111,9 +111,9 @@
 
         {# ── Total Final Grade footer ── #}
         <tfoot>
-          <tr class="border-t-2 border-[#5B0000]/20 bg-[#5B0000]/5">
+          <tr class="border-t-2 border-maroon/20 bg-maroon/5">
             <td colspan="2" class="px-4 py-4">
-              <div class="text-[#5B0000] font-bold text-sm uppercase tracking-wider">
+              <div class="text-maroon font-bold text-sm uppercase tracking-wider">
                 Total Final Grade (GWA)
               </div>
               <div class="text-slate-400 text-xs mt-0.5">
