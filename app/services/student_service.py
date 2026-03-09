@@ -4,7 +4,7 @@ from app.models.enrollment import Enrollment
 from app.models.grade import Grade
 from app.models.schedule import Schedule
 from app.extensions import db
-from datetime import time
+from datetime import time, datetime, timezone
 
 
 def get_student_profile(user_id: str) -> Student | None:
@@ -94,3 +94,17 @@ def get_time_slots() -> list[str]:
         end = f'{hour + 1:02d}:00'
         slots.append(f'{start}–{end}')
     return slots
+
+
+def update_student_profile(user_id: str, data: dict) -> Student | None:
+    """Update editable fields on a student's profile. Returns the updated Student or None."""
+    student = Student.query.filter_by(user_id=user_id).first()
+    if not student:
+        return None
+    allowed_fields = ['full_name', 'age', 'address', 'contact_number', 'gmail', 'year_level']
+    for field in allowed_fields:
+        if field in data:
+            setattr(student, field, data[field])
+    student.updated_at = datetime.now(timezone.utc)
+    db.session.commit()
+    return student

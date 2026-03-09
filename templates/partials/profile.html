@@ -11,7 +11,7 @@
                     flex items-center justify-center font-bold text-white text-2xl font-mono shadow-lg">
           {{ student.full_name[0].upper() if student and student.full_name else 'S' }}
         </div>
-        <div class="mb-1">
+        <div class="mb-1 flex items-center gap-2">
           <span class="inline-flex items-center gap-1 bg-maroon/10 text-maroon
                        text-xs font-semibold px-3 py-1 rounded-full">
             <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
@@ -19,6 +19,20 @@
             </svg>
             Student
           </span>
+          {% if student %}
+          <a href="{{ url_for('student.edit_profile') }}"
+             hx-get="{{ url_for('student.edit_profile') }}"
+             hx-target="#main-content"
+             hx-push-url="true"
+             hx-indicator="#page-spinner"
+             class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 px-3 py-1 rounded-full transition shadow-sm">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828A2 2 0 0110 16H8v-2a2 2 0 01.586-1.414z"/>
+            </svg>
+            Edit Profile
+          </a>
+          {% endif %}
         </div>
       </div>
       {% if student %}

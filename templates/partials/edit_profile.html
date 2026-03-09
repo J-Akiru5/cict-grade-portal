@@ -1,0 +1,163 @@
+{# HTMX partial: Edit Student Profile — injected into #main-content #}
+<div class="max-w-3xl mx-auto space-y-6" id="edit-profile-content">
+
+  {# ── Page Header ── #}
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-xl font-bold text-slate-900">Edit Profile</h1>
+      <p class="text-sm text-slate-500 mt-0.5">Update your personal information</p>
+    </div>
+    <a href="{{ url_for('student.profile') }}"
+       hx-get="{{ url_for('student.profile') }}"
+       hx-target="#main-content"
+       hx-push-url="true"
+       hx-indicator="#page-spinner"
+       class="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+      </svg>
+      Back to Profile
+    </a>
+  </div>
+
+  {% if student %}
+  {# ── Edit Form ── #}
+  <form method="POST" action="{{ url_for('student.edit_profile') }}" class="space-y-6">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+    {# ── Personal Information ── #}
+    <div class="paper-card overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-100 bg-slate-50">
+        <h2 class="font-semibold text-slate-700 text-sm uppercase tracking-widest">Personal Information</h2>
+      </div>
+      <div class="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
+
+        {# Full Name — spans both columns #}
+        <div class="sm:col-span-2">
+          <label for="full_name" class="block text-xs font-medium text-slate-500 uppercase tracking-widest mb-1.5">
+            Full Name <span class="text-red-500">*</span>
+          </label>
+          <input type="text" id="full_name" name="full_name"
+                 value="{{ student.full_name or '' }}"
+                 required
+                 class="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm text-slate-800
+                        placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-maroon/40
+                        focus:border-maroon transition"
+                 placeholder="e.g. Juan Dela Cruz">
+        </div>
+
+        {# Age #}
+        <div>
+          <label for="age" class="block text-xs font-medium text-slate-500 uppercase tracking-widest mb-1.5">Age</label>
+          <input type="number" id="age" name="age"
+                 value="{{ student.age or '' }}"
+                 min="1" max="100"
+                 class="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm text-slate-800
+                        placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-maroon/40
+                        focus:border-maroon transition"
+                 placeholder="e.g. 20">
+        </div>
+
+        {# Year Level #}
+        <div>
+          <label for="year_level" class="block text-xs font-medium text-slate-500 uppercase tracking-widest mb-1.5">Year Level</label>
+          <select id="year_level" name="year_level"
+                  class="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm text-slate-800
+                         focus:outline-none focus:ring-2 focus:ring-maroon/40 focus:border-maroon
+                         transition bg-white">
+            <option value="">— Select —</option>
+            {% for yr in [1, 2, 3, 4] %}
+              <option value="{{ yr }}" {% if student.year_level == yr %}selected{% endif %}>
+                {{ yr }}{{ 'st' if yr == 1 else ('nd' if yr == 2 else ('rd' if yr == 3 else 'th')) }} Year
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        {# Contact Number #}
+        <div>
+          <label for="contact_number" class="block text-xs font-medium text-slate-500 uppercase tracking-widest mb-1.5">Contact Number</label>
+          <input type="tel" id="contact_number" name="contact_number"
+                 value="{{ student.contact_number or '' }}"
+                 class="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm text-slate-800
+                        placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-maroon/40
+                        focus:border-maroon transition"
+                 placeholder="+63 9XX XXX XXXX">
+        </div>
+
+        {# Gmail #}
+        <div>
+          <label for="gmail" class="block text-xs font-medium text-slate-500 uppercase tracking-widest mb-1.5">Gmail</label>
+          <input type="email" id="gmail" name="gmail"
+                 value="{{ student.gmail or '' }}"
+                 class="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm text-slate-800
+                        placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-maroon/40
+                        focus:border-maroon transition"
+                 placeholder="your.name@gmail.com">
+        </div>
+
+        {# Address — spans both columns #}
+        <div class="sm:col-span-2">
+          <label for="address" class="block text-xs font-medium text-slate-500 uppercase tracking-widest mb-1.5">Address</label>
+          <textarea id="address" name="address" rows="3"
+                    class="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm text-slate-800
+                           placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-maroon/40
+                           focus:border-maroon transition resize-none"
+                    placeholder="Street, Barangay, City, Province">{{ student.address or '' }}</textarea>
+        </div>
+
+      </div>
+    </div>
+
+    {# ── Academic Information (read-only) ── #}
+    <div class="paper-card overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+        <h2 class="font-semibold text-slate-700 text-sm uppercase tracking-widest">Academic Information</h2>
+        <span class="text-xs text-slate-400 italic">Managed by registrar</span>
+      </div>
+      <div class="px-6 py-5 grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div class="bg-slate-50 rounded-lg px-4 py-3 border border-slate-200">
+          <div class="text-slate-400 text-xs mb-1">Student ID</div>
+          <div class="text-slate-700 font-mono font-semibold text-sm">{{ student.student_id }}</div>
+        </div>
+        <div class="bg-slate-50 rounded-lg px-4 py-3 border border-slate-200">
+          <div class="text-slate-400 text-xs mb-1">Section</div>
+          <div class="font-mono text-maroon font-bold text-sm">{{ student.section or '—' }}</div>
+        </div>
+        <div class="bg-slate-50 rounded-lg px-4 py-3 border border-slate-200">
+          <div class="text-slate-400 text-xs mb-1">Curriculum Year</div>
+          <div class="font-mono text-slate-700 font-semibold text-sm">{{ student.curriculum_year or '—' }}</div>
+        </div>
+      </div>
+    </div>
+
+    {# ── Action Buttons ── #}
+    <div class="flex items-center justify-end gap-3 pb-4">
+      <a href="{{ url_for('student.profile') }}"
+         hx-get="{{ url_for('student.profile') }}"
+         hx-target="#main-content"
+         hx-push-url="true"
+         hx-indicator="#page-spinner"
+         class="px-5 py-2.5 rounded-lg text-sm font-medium text-slate-600 bg-white border border-slate-300
+                hover:bg-slate-50 transition">
+        Cancel
+      </a>
+      <button type="submit"
+              class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold
+                     text-white bg-maroon hover:bg-maroon/90 transition shadow-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M5 13l4 4L19 7"/>
+        </svg>
+        Save Changes
+      </button>
+    </div>
+
+  </form>
+  {% else %}
+  <div class="bg-yellow-50 border border-yellow-200 rounded-xl px-5 py-4 text-yellow-800 text-sm">
+    Profile not yet set up. Please contact your registrar.
+  </div>
+  {% endif %}
+
+</div>

@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template, request, redirect, url_for, flash, make_response
 from flask_login import login_required, current_user
 from app.utils.security import role_required
 from app.services import student_service, gwa_service
@@ -51,6 +51,42 @@ def profile():
     if _is_htmx():
         return render_template('partials/profile.html', **context)
     return render_template('student/pages/profile.html', **context)
+
+
+@student_bp.route('/profile/edit', methods=['GET', 'POST'])
+@login_required
+@role_required('student')
+def edit_profile():
+    student = student_service.get_student_profile(current_user.id)
+
+    if request.method == 'POST':
+        full_name = request.form.get('full_name', '').strip()
+        if not full_name:
+            flash('Full name is required.', 'error')
+        else:
+            data = {
+                'full_name': full_name,
+                'age': request.form.get('age', type=int) or None,
+                'address': request.form.get('address', '').strip() or None,
+                'contact_number': request.form.get('contact_number', '').strip() or None,
+                'gmail': request.form.get('gmail', '').strip() or None,
+                'year_level': request.form.get('year_level', type=int) or None,
+            }
+            student_service.update_student_profile(current_user.id, data)
+            flash('Profile updated successfully.', 'success')
+            if _is_htmx():
+                resp = make_response('', 204)
+                resp.headers['HX-Redirect'] = url_for('student.profile')
+                return resp
+            return redirect(url_for('student.profile'))
+
+    context = {
+        'student': student,
+        'active_page': 'profile',
+    }
+    if _is_htmx():
+        return render_template('partials/edit_profile.html', **context)
+    return render_template('student/pages/edit_profile.html', **context)
 
 
 @student_bp.route('/subjects')
