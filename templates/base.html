@@ -24,8 +24,8 @@
   <meta property="og:image" content="{{ url_for('static', filename='img/og-preview.jpg') }}" />
 
   {# ── PWA Manifest ────────────────────────────────────────── #}
-  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}" />
-  <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/icon-192.png') }}" />
+  <link rel="apple-touch-icon" sizes="192x192" href="{{ url_for('static', filename='img/icon-192.png') }}" />
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}" />
 
   {# ── Fonts ───────────────────────────────────────────────── #}
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -87,12 +87,11 @@
 
   {# ── AI Chatbot (only for authenticated users) ────────────── #}
   {% if current_user.is_authenticated %}
-  <div id="chatbot-root" class="fixed bottom-6 right-6 z-[100] flex flex-col items-end gap-3" style="font-family: Inter, sans-serif;">
+  <div id="chatbot-root" class="fixed bottom-6 right-6 z-[100] flex flex-col items-end gap-3 font-sans">
 
     {# ── Chat Window ── #}
     <div id="chatbot-window"
-         class="hidden flex-col w-[360px] max-w-[calc(100vw-3rem)] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden"
-         style="height:520px; max-height:calc(100vh - 120px);">
+         class="hidden flex-col w-[360px] max-w-[calc(100vw-3rem)] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden h-[520px] max-h-[calc(100vh-120px)]">
 
       {# Header #}
       <div class="flex items-center gap-3 px-4 py-3 bg-[#800000] text-white flex-shrink-0">
@@ -116,8 +115,7 @@
 
       {# Messages #}
       <div id="chatbot-messages"
-           class="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-slate-50"
-           style="scroll-behavior: smooth;">
+           class="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-slate-50 scroll-smooth">
         {# Welcome message #}
         <div class="flex gap-2 items-start">
           <div class="w-7 h-7 rounded-full bg-[#800000] flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -145,9 +143,9 @@
           </div>
           <div class="bg-white rounded-2xl rounded-tl-sm px-3 py-2 shadow-sm border border-slate-100">
             <div class="flex gap-1 items-center h-4">
-              <span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style="animation-delay:0ms"></span>
-              <span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style="animation-delay:150ms"></span>
-              <span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style="animation-delay:300ms"></span>
+              <span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:0ms]"></span>
+              <span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:150ms]"></span>
+              <span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:300ms]"></span>
             </div>
           </div>
         </div>
@@ -162,8 +160,7 @@
                     class="flex-1 resize-none rounded-xl border border-slate-200 bg-slate-50
                            px-3 py-2 text-sm text-slate-800 placeholder-slate-400
                            focus:outline-none focus:ring-2 focus:ring-[#800000]/30 focus:border-[#800000]/60
-                           transition-colors leading-relaxed"
-                    style="max-height: 100px; overflow-y: auto;"></textarea>
+                           transition-colors leading-relaxed max-h-[100px] overflow-y-auto"></textarea>
           <button type="submit" id="chatbot-send"
                   class="w-9 h-9 rounded-xl bg-[#800000] hover:bg-[#6b0000] active:scale-95
                          flex items-center justify-center flex-shrink-0 transition-all

@@ -7,7 +7,7 @@ const PRECACHE_ASSETS = [
   '/',
   '/auth/login',
   '/static/css/main.css',
-  '/static/manifest.json',
+  '/static/manifest.webmanifest',
 ];
 
 // Install: pre-cache core assets

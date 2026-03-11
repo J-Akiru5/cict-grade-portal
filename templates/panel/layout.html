@@ -422,47 +422,52 @@
 {# ═══════════════════════════════════════════════════
    SCRIPTS: Nav highlight + Fuse.js Search
 ══════════════════════════════════════════════════════ #}
+{# ── Search data (Jinja-rendered, not linted as JS) ── #}
+<script id="search-data" type="application/json">
+[
+  {"name": "Dashboard", "url": "{{ url_for('panel.dashboard') }}", "icon": "\ud83c\udfe0", "keywords": "home overview"},
+  {"name": "My Subjects", "url": "{{ url_for('panel.my_subjects') }}", "icon": "\ud83d\udcda", "keywords": "courses subjects teaching"},
+  {"name": "Students", "url": "{{ url_for('panel.students') }}", "icon": "\ud83d\udc65", "keywords": "class list enrollment"},
+  {"name": "My Schedule", "url": "{{ url_for('panel.faculty_schedule') }}", "icon": "\ud83d\udcc5", "keywords": "timetable calendar weekly"},
+  {"name": "Audit Log", "url": "{{ url_for('panel.audit_log') }}", "icon": "\ud83d\udccb", "keywords": "log history changes"},
+  {% if current_user.role == 'admin' %}
+  {"name": "Users", "url": "{{ url_for('panel.admin_users') }}", "icon": "\ud83d\udc64", "keywords": "accounts faculty admin"},
+  {"name": "Students (CRUD)", "url": "{{ url_for('panel.admin_students') }}", "icon": "\ud83c\udf93", "keywords": "manage add edit student"},
+  {"name": "Subjects", "url": "{{ url_for('panel.admin_subjects') }}", "icon": "\ud83d\udcd6", "keywords": "manage add edit courses"},
+  {"name": "Enrollments", "url": "{{ url_for('panel.admin_enrollments') }}", "icon": "\ud83d\udcdd", "keywords": "enroll assign section"},
+  {"name": "Grade Import", "url": "{{ url_for('panel.admin_grade_import') }}", "icon": "\ud83d\udce4", "keywords": "upload csv import grades"},
+  {"name": "Full Audit Log", "url": "{{ url_for('panel.admin_audit_log') }}", "icon": "\ud83d\udd0d", "keywords": "all history full log"},
+  {"name": "Settings", "url": "{{ url_for('panel.admin_settings') }}", "icon": "\u2699\ufe0f", "keywords": "config configuration semester year"},
+  {% endif %}
+  {"name": "Logout", "url": "{{ url_for('auth.logout') }}", "icon": "\ud83d\udeaa", "keywords": "sign out exit"}
+]
+</script>
 <script>
   // ── Active nav highlight on HTMX swap ──
   document.body.addEventListener('htmx:afterSettle', function() {
-    const path = window.location.pathname;
-    document.querySelectorAll('.nav-link').forEach(link => {
-      const href = link.getAttribute('href');
+    var path = window.location.pathname;
+    document.querySelectorAll('.nav-link').forEach(function(link) {
+      var href = link.getAttribute('href');
       link.classList.toggle('active', href && path.startsWith(href));
       link.setAttribute('aria-current', href && path.startsWith(href) ? 'page' : 'false');
     });
-    document.querySelectorAll('.bottom-nav-item, .bottom-nav-hero').forEach(link => {
-      const href = link.getAttribute('href');
+    document.querySelectorAll('.bottom-nav-item, .bottom-nav-hero').forEach(function(link) {
+      var href = link.getAttribute('href');
       if (link.classList.contains('bottom-nav-hero')) {
-        const btn = link.querySelector('.bottom-nav-hero-btn');
+        var btn = link.querySelector('.bottom-nav-hero-btn');
         if (btn) { btn.classList.toggle('ring-2', href && path.startsWith(href)); btn.classList.toggle('ring-gold', href && path.startsWith(href)); }
       } else {
         link.classList.toggle('active', href && path.startsWith(href));
       }
     });
-    document.getElementById('app-shell')?.classList.remove('drawer-open');
+    var appShell = document.getElementById('app-shell');
+    if (appShell) appShell.classList.remove('drawer-open');
   });
 
   // ── Fuse.js Search ──
-  const searchData = [
-    { name: 'Dashboard', url: '{{ url_for("panel.dashboard") }}', icon: '🏠', keywords: 'home overview' },
-    { name: 'My Subjects', url: '{{ url_for("panel.my_subjects") }}', icon: '📚', keywords: 'courses subjects teaching' },
-    { name: 'Students', url: '{{ url_for("panel.students") }}', icon: '👥', keywords: 'class list enrollment' },
-    { name: 'My Schedule', url: '{{ url_for("panel.faculty_schedule") }}', icon: '📅', keywords: 'timetable calendar weekly' },
-    { name: 'Audit Log', url: '{{ url_for("panel.audit_log") }}', icon: '📋', keywords: 'log history changes' },
-    {% if current_user.role == 'admin' %}
-    { name: 'Users', url: '{{ url_for("panel.admin_users") }}', icon: '👤', keywords: 'accounts faculty admin' },
-    { name: 'Students (CRUD)', url: '{{ url_for("panel.admin_students") }}', icon: '🎓', keywords: 'manage add edit student' },
-    { name: 'Subjects', url: '{{ url_for("panel.admin_subjects") }}', icon: '📖', keywords: 'manage add edit courses' },
-    { name: 'Enrollments', url: '{{ url_for("panel.admin_enrollments") }}', icon: '📝', keywords: 'enroll assign section' },
-    { name: 'Grade Import', url: '{{ url_for("panel.admin_grade_import") }}', icon: '📤', keywords: 'upload csv import grades' },
-    { name: 'Full Audit Log', url: '{{ url_for("panel.admin_audit_log") }}', icon: '🔍', keywords: 'all history full log' },
-    { name: 'Settings', url: '{{ url_for("panel.admin_settings") }}', icon: '⚙️', keywords: 'config configuration semester year' },
-    {% endif %}
-    { name: 'Logout', url: '{{ url_for("auth.logout") }}', icon: '🚪', keywords: 'sign out exit' },
-  ];
+  var searchData = JSON.parse(document.getElementById('search-data').textContent);
 
-  let fuse;
+  var fuse;
   document.addEventListener('DOMContentLoaded', function() {
     if (typeof Fuse !== 'undefined') {
       fuse = new Fuse(searchData, { keys: ['name', 'keywords'], threshold: 0.4, includeScore: true });
@@ -470,30 +475,30 @@
   });
 
   function handleSearch(query, resultsContainerId) {
-    const container = document.getElementById(resultsContainerId);
+    var container = document.getElementById(resultsContainerId);
     if (!container || !fuse) return;
     if (!query.trim()) { container.innerHTML = ''; container.classList.add('hidden'); return; }
-    const results = fuse.search(query);
+    var results = fuse.search(query);
     if (results.length === 0) {
       container.innerHTML = '<div class="px-4 py-3 text-slate-400 text-sm">No results found</div>';
       container.classList.remove('hidden');
       return;
     }
-    container.innerHTML = results.map(r =>
-      `<a href="${r.item.url}" hx-get="${r.item.url}" hx-target="#main-content" hx-push-url="true"
-          class="search-result-item"
-          onclick="document.getElementById('search-overlay')?.classList.remove('open'); this.closest('[id$=search-results]')?.classList.add('hidden');">
-        <span class="text-lg">${r.item.icon}</span>
-        <span>${r.item.name}</span>
-      </a>`
-    ).join('');
+    container.innerHTML = results.map(function(r) {
+      return '<a href="' + r.item.url + '" hx-get="' + r.item.url + '" hx-target="#main-content" hx-push-url="true"' +
+          ' class="search-result-item"' +
+          ' onclick="var o=document.getElementById(\'search-overlay\');if(o)o.classList.remove(\'open\');var p=this.closest(\'[id$=search-results]\');if(p)p.classList.add(\'hidden\');">' +
+        '<span class="text-lg">' + r.item.icon + '</span>' +
+        '<span>' + r.item.name + '</span>' +
+      '</a>';
+    }).join('');
     container.classList.remove('hidden');
     if (typeof htmx !== 'undefined') htmx.process(container);
   }
 
   document.addEventListener('click', function(e) {
-    const dr = document.getElementById('desktop-search-results');
-    const di = document.getElementById('desktop-search-input');
+    var dr = document.getElementById('desktop-search-results');
+    var di = document.getElementById('desktop-search-input');
     if (dr && di && !dr.contains(e.target) && e.target !== di) dr.classList.add('hidden');
   });
 </script>
