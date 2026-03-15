@@ -44,7 +44,12 @@ def send_resend_email(to_email: str, subject: str, html: str, text: str | None =
             logging.warning('Resend email failed with status %s.', status_code)
             return False
     except error.HTTPError as exc:
-        logging.warning('Resend email HTTP error %s: %s', exc.code, exc.reason)
+        body = ''
+        try:
+            body = exc.read().decode('utf-8', errors='replace')
+        except Exception:
+            pass
+        logging.warning('Resend email HTTP error %s (%s): %s', exc.code, exc.reason, body)
         return False
     except Exception as exc:
         logging.warning('Resend email error: %s', exc)

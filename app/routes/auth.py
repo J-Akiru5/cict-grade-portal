@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from flask_login import login_user, logout_user, current_user, login_required
 from app.services import auth_service, email_service
 from app.models.user import User
@@ -141,17 +141,12 @@ def register():
             return render_template('auth/register.html')
 
         try:
-            base_url = (current_app.config.get('APP_BASE_URL') or '').rstrip('/')
-            redirect_to = f'{base_url}/auth/login' if base_url else None
-
             response = auth_service.sign_up(
                 email,
                 password,
                 role=role,
-                redirect_to=redirect_to,
             )
             sb_user = response.user
-            action_link = getattr(getattr(response, 'properties', None), 'action_link', None)
 
             if sb_user is None:
                 flash('Registration could not be completed right now. Please try again shortly.', 'error')
@@ -182,7 +177,6 @@ def register():
                         department='CICT',
                     )
                     db.session.add(profile)
-                success_msg = 'Registration submitted. Please wait for admin approval before logging in.'
             else:
                 from app.models.student import Student
                 if not user.student_profile:
@@ -192,40 +186,29 @@ def register():
                         student_id=student_id,
                     )
                     db.session.add(profile)
-                success_msg = 'Registration submitted. Please wait for admin approval before logging in.'
 
             db.session.commit()
 
-            if action_link:
-                html = (
-                    '<p>Hello,</p>'
-                    '<p>Click the link below to confirm your CICT Grade Portal account:</p>'
-                    f'<p><a href="{action_link}">Confirm your email</a></p>'
-                    '<p>After confirming your email, your account will still require admin approval before login.</p>'
-                )
-                text = (
-                    'Hello,\n\n'
-                    f'Confirm your CICT Grade Portal account: {action_link}\n\n'
-                    'After confirming your email, your account will still require admin approval before login.'
-                )
-                email_sent = email_service.send_resend_email(
-                    to_email=email,
-                    subject='Confirm your CICT Grade Portal signup',
-                    html=html,
-                    text=text,
-                )
-                if email_sent:
-                    success_msg = (
-                        'Registration submitted. Check your email to confirm your account, '
-                        'then wait for admin approval before logging in.'
-                    )
-                else:
-                    success_msg = (
-                        'Registration submitted, but confirmation email was not sent. '
-                        'Please contact the administrator.'
-                    )
+            # Best-effort notification — does not block registration if email fails
+            notification_html = (
+                '<p>Hello,</p>'
+                '<p>Your registration for the <strong>CICT Grade Portal</strong> has been received.</p>'
+                '<p>Your account is currently pending admin approval. '
+                'You will be notified once your account has been activated.</p>'
+            )
+            notification_text = (
+                'Hello,\n\nYour CICT Grade Portal registration has been received.\n'
+                'Your account is pending admin approval.'
+                ' You will be notified once activated.'
+            )
+            email_service.send_resend_email(
+                to_email=email,
+                subject='CICT Grade Portal – Registration Received',
+                html=notification_html,
+                text=notification_text,
+            )
 
-            flash(success_msg, 'success')
+            flash('Registration submitted. Please wait for admin approval before logging in.', 'success')
             return redirect(url_for('auth.login'))
 
         except IntegrityError:

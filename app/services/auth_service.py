@@ -59,19 +59,18 @@ def get_supabase_user(access_token: str):
 
 def sign_up(email: str, password: str, role: str = 'student', redirect_to: str | None = None):
     """
-    Register a new user by generating a signup confirmation link.
-    The caller is responsible for sending the returned action_link via email.
+    Register a new user via Supabase Admin API.
+
+    Email is pre-confirmed (email_confirm=True) so users are never blocked waiting
+    for a confirmation link.  Admin approval (is_active flag) is the only login gate.
+    The redirect_to parameter is accepted for interface compatibility but unused.
     """
     client = _get_admin_client()
 
-    options = {'data': {'role': role}}
-    if redirect_to:
-        options['redirect_to'] = redirect_to
-
-    response = client.auth.admin.generate_link({
-        'type': 'signup',
+    response = client.auth.admin.create_user({
         'email': email,
         'password': password,
-        'options': options,
+        'email_confirm': True,
+        'user_metadata': {'role': role},
     })
     return response
