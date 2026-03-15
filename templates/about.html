@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}About{% endblock %}
+{% block robots %}<meta name="robots" content="index, follow" />{% endblock %}
+
+{% block jsonld %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "CICT Grade Portal",
+  "url": "{{ url_for('main.about', _external=True) }}",
+  "about": {
+    "@type": "EducationalOrganization",
+    "name": "ISUFST - CICT Dingle Campus"
+  }
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen relative overflow-hidden bg-[radial-gradient(circle_at_top_right,_#800000_0%,_#1e1e2e_42%,_#0b1020_100%)] text-white">
+  <div class="absolute inset-0 opacity-[0.06] bg-[linear-gradient(rgba(255,255,255,0.12)_1px,_transparent_1px),linear-gradient(90deg,_rgba(255,255,255,0.12)_1px,_transparent_1px)] bg-[size:42px_42px]"></div>
+  <div class="absolute -top-16 right-0 h-72 w-72 rounded-full bg-gold/20 blur-3xl"></div>
+  <div class="absolute bottom-0 left-0 h-80 w-80 rounded-full bg-maroon/40 blur-3xl"></div>
+
+  <div class="relative z-10 mx-auto flex min-h-screen max-w-7xl flex-col px-4 py-6 sm:px-6 lg:px-8">
+    <header class="rounded-2xl border border-white/15 bg-white/8 px-5 py-4 backdrop-blur-md sm:px-6">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <a href="{{ url_for('main.about') }}" class="inline-flex items-center gap-3">
+            <span class="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-gold/40 bg-white/10 shadow-lg shadow-black/20">
+              <img src="{{ url_for('static', filename='img/cict-logo.png') }}" alt="CICT logo" class="h-7 w-7 object-contain" />
+            </span>
+            <span>
+              <span class="block text-lg font-semibold tracking-tight">CICT Grade Portal</span>
+              <span class="block text-sm text-white/60">ISUFST Dingle Campus</span>
+            </span>
+          </a>
+        </div>
+        <nav class="flex flex-wrap items-center gap-2 text-sm font-medium text-white/75">
+          <a href="{{ url_for('main.about') }}" class="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white transition hover:bg-white/15">About</a>
+          <a href="{{ url_for('main.retention_policies') }}" class="rounded-full border border-white/10 px-4 py-2 transition hover:border-gold/50 hover:bg-white/10 hover:text-white">Retention Policies</a>
+          {% if current_user.is_authenticated %}
+          <a href="{{ url_for('main.index') }}" class="rounded-full border border-gold/30 bg-gold/15 px-4 py-2 text-gold transition hover:bg-gold/20">Open Portal</a>
+          {% else %}
+          <a href="{{ url_for('auth.login') }}" class="rounded-full border border-gold/30 bg-gold/15 px-4 py-2 text-gold transition hover:bg-gold/20">Sign In</a>
+          <a href="{{ url_for('auth.register') }}" class="rounded-full border border-white/10 px-4 py-2 transition hover:border-gold/50 hover:bg-white/10 hover:text-white">Register</a>
+          {% endif %}
+        </nav>
+      </div>
+    </header>
+
+    <main class="flex-1 py-8 sm:py-10">
+      <section class="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.9fr)] lg:items-start">
+        <div class="rounded-[2rem] border border-white/15 bg-white/10 p-6 shadow-2xl shadow-black/25 backdrop-blur-md sm:p-8 lg:p-10">
+          <div class="inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-gold">
+            Academic Information Portal
+          </div>
+          <h1 class="mt-5 max-w-3xl text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
+            A central portal for grades, schedules, records, and academic standing.
+          </h1>
+          <p class="mt-5 max-w-2xl text-base leading-7 text-white/72 sm:text-lg">
+            The CICT Grade Portal gives students, faculty, and administrators a single place to review academic records, monitor progress, and manage core academic workflows for the BSIT program.
+          </p>
+
+          <div class="mt-8 flex flex-wrap gap-3">
+            <a href="{{ url_for('main.retention_policies') }}" class="inline-flex items-center gap-2 rounded-2xl bg-maroon px-5 py-3 font-semibold text-white shadow-lg shadow-maroon/30 transition hover:bg-maroon-dark">
+              View Retention Policies
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+            </a>
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('main.index') }}" class="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/10 px-5 py-3 font-semibold text-white transition hover:bg-white/15">
+              Go to Dashboard
+            </a>
+            {% else %}
+            <a href="{{ url_for('auth.login') }}" class="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/10 px-5 py-3 font-semibold text-white transition hover:bg-white/15">
+              Sign In to Portal
+            </a>
+            {% endif %}
+          </div>
+        </div>
+
+        <aside class="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+          <article class="rounded-[1.75rem] border border-white/15 bg-slate-950/45 p-6 shadow-xl shadow-black/20">
+            <p class="text-sm font-semibold uppercase tracking-[0.22em] text-gold/80">What the portal supports</p>
+            <ul class="mt-4 space-y-3 text-sm leading-6 text-white/72">
+              <li>Student access to grades, subject loads, schedules, and profile information.</li>
+              <li>Faculty workflows for class records, grading, and student monitoring.</li>
+              <li>Administrative oversight for users, subjects, settings, and audit trails.</li>
+            </ul>
+          </article>
+          <article class="rounded-[1.75rem] border border-white/15 bg-white/10 p-6 backdrop-blur-md">
+            <p class="text-sm font-semibold uppercase tracking-[0.22em] text-gold/80">Retention standards</p>
+            <p class="mt-4 text-sm leading-6 text-white/72">
+              BSIT students are expected to maintain academic improvement, protect a semester GWA of 3.0, and avoid repeated failures in major and general education courses.
+            </p>
+            <a href="{{ url_for('main.retention_policies') }}" class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-gold transition hover:text-gold/80">
+              Read the full policy
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7-7 7M3 12h18"/>
+              </svg>
+            </a>
+          </article>
+        </aside>
+      </section>
+
+      <section class="mt-8 grid gap-4 md:grid-cols-3">
+        <article class="rounded-[1.75rem] border border-white/12 bg-white/8 p-6 backdrop-blur-sm">
+          <span class="text-xs font-semibold uppercase tracking-[0.24em] text-gold/75">Transparency</span>
+          <h2 class="mt-3 text-xl font-bold">Academic standing stays visible</h2>
+          <p class="mt-3 text-sm leading-6 text-white/68">
+            The portal is intended to make key academic information easier to review so students can respond early to grade or enrollment risks.
+          </p>
+        </article>
+        <article class="rounded-[1.75rem] border border-white/12 bg-white/8 p-6 backdrop-blur-sm">
+          <span class="text-xs font-semibold uppercase tracking-[0.24em] text-gold/75">Support</span>
+          <h2 class="mt-3 text-xl font-bold">Clear next steps for students</h2>
+          <p class="mt-3 text-sm leading-6 text-white/68">
+            Retention, probation, and re-enrollment guidance can now be read on a dedicated public page before students sign in or register.
+          </p>
+        </article>
+        <article class="rounded-[1.75rem] border border-white/12 bg-white/8 p-6 backdrop-blur-sm">
+          <span class="text-xs font-semibold uppercase tracking-[0.24em] text-gold/75">Access</span>
+          <h2 class="mt-3 text-xl font-bold">Useful before login</h2>
+          <p class="mt-3 text-sm leading-6 text-white/68">
+            Public informational pages make the portal easier to understand for applicants, current students, faculty, and parents reviewing program expectations.
+          </p>
+        </article>
+      </section>
+    </main>
+  </div>
+</div>
+{% endblock %}

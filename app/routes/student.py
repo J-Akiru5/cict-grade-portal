@@ -2,11 +2,15 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import login_required, current_user
 from app.utils.security import role_required
 from app.services import student_service, gwa_service
+from app.models.academic_settings import AcademicSettings
 
 student_bp = Blueprint('student', __name__, template_folder='../../templates/student')
 
-CURRENT_SEMESTER = '1st'
-CURRENT_YEAR = '2024-2025'
+
+def _get_academic_period():
+    """Read the current semester & academic year from the DB (set by admin)."""
+    settings = AcademicSettings.get_current()
+    return settings.current_semester, settings.current_year
 
 
 def _is_htmx() -> bool:
@@ -17,6 +21,7 @@ def _is_htmx() -> bool:
 @login_required
 @role_required('student')
 def dashboard():
+    CURRENT_SEMESTER, CURRENT_YEAR = _get_academic_period()
     student = student_service.get_student_profile(current_user.id)
     grades = student_service.get_grades(
         student.id, semester=CURRENT_SEMESTER, academic_year=CURRENT_YEAR
@@ -93,6 +98,7 @@ def edit_profile():
 @login_required
 @role_required('student')
 def subjects():
+    CURRENT_SEMESTER, CURRENT_YEAR = _get_academic_period()
     student = student_service.get_student_profile(current_user.id)
     semester = request.args.get('semester', CURRENT_SEMESTER)
     year = request.args.get('year', CURRENT_YEAR)
@@ -113,6 +119,7 @@ def subjects():
 @login_required
 @role_required('student')
 def schedule():
+    CURRENT_SEMESTER, CURRENT_YEAR = _get_academic_period()
     student = student_service.get_student_profile(current_user.id)
     semester = request.args.get('semester', CURRENT_SEMESTER)
     year = request.args.get('year', CURRENT_YEAR)
@@ -138,6 +145,7 @@ def schedule():
 @login_required
 @role_required('student')
 def grades():
+    CURRENT_SEMESTER, CURRENT_YEAR = _get_academic_period()
     student = student_service.get_student_profile(current_user.id)
     semester = request.args.get('semester', CURRENT_SEMESTER)
     year = request.args.get('year', CURRENT_YEAR)

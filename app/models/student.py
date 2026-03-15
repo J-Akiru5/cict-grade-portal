@@ -17,6 +17,7 @@ class Student(db.Model):
     age = db.Column(db.Integer, nullable=True)
     address = db.Column(db.Text, nullable=True)
     contact_number = db.Column(db.String(20), nullable=True)
+    gender = db.Column(db.String(10), nullable=True)  # 'Male' or 'Female'
     gmail = db.Column(db.String(255), nullable=True)
     curriculum_year = db.Column(db.String(20), nullable=True)  # e.g. 2024-2025
     year_level = db.Column(db.Integer, nullable=True)          # 1, 2, 3, 4

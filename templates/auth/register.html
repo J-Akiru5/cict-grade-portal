@@ -32,11 +32,7 @@
   </div>
 
   {# ── Grid overlay ── #}
-  <div class="absolute inset-0 opacity-[0.04]"
-       style="background-image: linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
-              background-size: 40px 40px;">
-  </div>
+  <div class="absolute inset-0 opacity-[0.04] bg-[linear-gradient(rgba(255,255,255,0.1)_1px,_transparent_1px),linear-gradient(90deg,_rgba(255,255,255,0.1)_1px,_transparent_1px)] bg-[size:40px_40px]"></div>
 
   {# ── Gold orb ── #}
   <div class="absolute top-1/4 right-1/4 w-96 h-96 rounded-full opacity-10 blur-3xl
@@ -217,6 +213,11 @@
           Already have an account?
           <a href="{{ url_for('auth.login') }}" class="text-gold hover:text-gold/80 font-medium transition">Sign in</a>
         </p>
+
+        <div class="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-white/55">
+          <a href="{{ url_for('main.about') }}" class="hover:text-gold transition">About the portal</a>
+          <a href="{{ url_for('main.retention_policies') }}" class="hover:text-gold transition">BSIT retention policies</a>
+        </div>
       </div>
     </div>
   </div>

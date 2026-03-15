@@ -15,7 +15,7 @@ class AcademicSettings(db.Model):
         nullable=False,
         default='1st',
     )
-    current_year = db.Column(db.String(20), nullable=False, default='2024-2025')
+    current_year = db.Column(db.String(20), nullable=False, default='2025-2026')
     updated_by_id = db.Column(
         db.String(36), db.ForeignKey('users.id'), nullable=True
     )
@@ -32,7 +32,7 @@ class AcademicSettings(db.Model):
         """Return the single settings row, creating defaults if none exist."""
         settings = cls.query.first()
         if settings is None:
-            settings = cls(current_semester='1st', current_year='2024-2025')
+            settings = cls(current_semester='1st', current_year='2025-2026')
             db.session.add(settings)
             db.session.commit()
         return settings
