@@ -2,7 +2,10 @@ import csv
 import io
 import os
 import logging
+import secrets
+import string
 from datetime import datetime, timezone
+from flask import current_app
 
 from app.extensions import db
 from app.models.user import User
@@ -13,6 +16,7 @@ from app.models.enrollment import Enrollment
 from app.models.grade import Grade
 from app.models.audit import GradeAudit
 from app.models.academic_settings import AcademicSettings
+from app.services import email_service
 
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -99,6 +103,95 @@ def toggle_user_active(user_id: str) -> User:
     return user
 
 
+def send_account_approved_email(user: User, temporary_password: str | None = None) -> bool:
+    """Notify the user that their account can now be used."""
+    base_url = (current_app.config.get('APP_BASE_URL') or '').rstrip('/')
+    login_url = f'{base_url}/auth/login' if base_url else '/auth/login'
+
+    subject = 'Your CICT Grade Portal account is approved'
+    html_lines = [
+        '<p>Hello,</p>',
+        '<p>Your CICT Grade Portal account has been approved and is now active.</p>',
+        f'<p>You can sign in here: <a href="{login_url}">{login_url}</a></p>',
+    ]
+    text_lines = [
+        'Hello,',
+        'Your CICT Grade Portal account has been approved and is now active.',
+        f'Sign in here: {login_url}',
+    ]
+
+    if temporary_password:
+        html_lines.append(f'<p>Temporary password: <strong>{temporary_password}</strong></p>')
+        text_lines.append(f'Temporary password: {temporary_password}')
+
+    html_lines.append('<p>If you did not request this account, please contact the administrator.</p>')
+    text_lines.append('If you did not request this account, please contact the administrator.')
+
+    return email_service.send_resend_email(
+        to_email=user.email,
+        subject=subject,
+        html='\n'.join(html_lines),
+        text='\n'.join(text_lines),
+    )
+
+
+def _generate_temporary_password(length: int = 14) -> str:
+    alphabet = string.ascii_letters + string.digits + '!@#$%^&*()_-+='  # noqa: S105
+    while True:
+        password = ''.join(secrets.choice(alphabet) for _ in range(length))
+        if (
+            any(c.islower() for c in password)
+            and any(c.isupper() for c in password)
+            and any(c.isdigit() for c in password)
+            and any(c in '!@#$%^&*()_-+=' for c in password)
+        ):
+            return password
+
+
+def create_account_for_student_profile(student_db_id: int) -> tuple[Student, User, str | None]:
+    """Create or attach a login account for an existing profile-only student."""
+    student = db.session.get(Student, student_db_id)
+    if not student:
+        raise ValueError(f'Student {student_db_id} not found.')
+    if student.user_id:
+        raise ValueError('This student profile already has a linked account.')
+
+    email = (student.gmail or '').strip().lower()
+    if not email:
+        raise ValueError('Student email is missing. Add Gmail in the student profile first.')
+
+    existing_user = User.query.filter_by(email=email).first()
+    temp_password = None
+
+    if existing_user:
+        # Existing account: link it if not already tied to another student profile.
+        if existing_user.role != 'student':
+            raise ValueError('This email is already used by a non-student account.')
+        if existing_user.student_profile and existing_user.student_profile.id != student.id:
+            raise ValueError('This email is already linked to another student profile.')
+        existing_user.role = 'student'
+        existing_user.is_active = True
+        student.user_id = existing_user.id
+        user = existing_user
+    else:
+        temp_password = _generate_temporary_password()
+        client = _get_admin_supabase()
+        response = client.auth.admin.create_user({
+            'email': email,
+            'password': temp_password,
+            'email_confirm': True,
+            'user_metadata': {'role': 'student'},
+        })
+        sb_user = response.user
+
+        user = User(id=str(sb_user.id), email=email, role='student', is_active=True)
+        db.session.add(user)
+        student.user_id = str(sb_user.id)
+
+    db.session.commit()
+    return student, user, temp_password
+
+
 def get_all_faculty(search: str = None, page: int = 1, per_page: int = 25):
     q = Faculty.query.join(User).order_by(Faculty.full_name)
     if search:
@@ -147,7 +240,7 @@ def get_all_students(search: str = None, page: int = 1, per_page: int = 25):
 
 
 def create_student(
-    user_id: str,
+    user_id: str | None,
     student_id: str,
     full_name: str,
     section: str = None,

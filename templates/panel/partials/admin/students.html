@@ -18,6 +18,7 @@
       <form method="POST" action="{{ url_for('panel.admin_create_student') }}"
             class="grid grid-cols-2 gap-3">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <input type="hidden" name="mode" value="create_with_account"/>
         <div>
           <label class="block text-xs font-medium text-slate-600 mb-1">Email *</label>
           <input name="email" type="email" required placeholder="student@isufst.edu.ph"
@@ -75,6 +76,7 @@
       <p class="text-xs text-slate-500 mb-3">Students who self-registered but have no academic profile yet.</p>
       <form method="POST" action="{{ url_for('panel.admin_create_student') }}" class="grid grid-cols-2 gap-3">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <input type="hidden" name="mode" value="attach_existing"/>
         <div class="col-span-2">
           <label class="block text-xs font-medium text-slate-600 mb-1">User Account *</label>
           <select name="user_id" required class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40">
@@ -121,6 +123,57 @@
   </details>
   {% endif %}
 
+  {# ── Create Profile Only (No Login Account) ── #}
+  <details class="paper-card">
+    <summary class="p-4 cursor-pointer font-semibold text-slate-700 select-none">
+      + Create Student Profile (No Login)
+    </summary>
+    <div class="px-5 pb-5 border-t border-slate-100 pt-4">
+      <p class="text-xs text-slate-500 mb-3">Use this when you need a record for grading/enrollment but no portal account yet.</p>
+      <form method="POST" action="{{ url_for('panel.admin_create_student') }}" class="grid grid-cols-2 gap-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <input type="hidden" name="mode" value="profile_only"/>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Student ID *</label>
+          <input name="student_id" required placeholder="e.g. 2024-00001"
+                 class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Full Name *</label>
+          <input name="full_name" required
+                 class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Section</label>
+          <input name="section" placeholder="e.g. BSIT-2A"
+                 class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Year Level</label>
+          <select name="year_level" class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40">
+            <option value="">—</option>
+            {% for y in [1,2,3,4] %}<option value="{{ y }}">{{ y }}</option>{% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Curriculum Year</label>
+          <input name="curriculum_year" placeholder="e.g. 2024-2025"
+                 class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Gmail *</label>
+          <input name="gmail" type="email" required placeholder="student@isufst.edu.ph"
+                 class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+        </div>
+        <div class="col-span-2 flex justify-end">
+          <button type="submit" class="px-4 py-1.5 bg-amber-700 text-white text-sm font-semibold rounded-lg hover:bg-amber-800 transition">
+            Create Profile Only
+          </button>
+        </div>
+      </form>
+    </div>
+  </details>
+
   {# ── Student Table ── #}
   {% if students %}
   <div class="paper-card overflow-hidden">
@@ -131,6 +184,7 @@
           <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Student ID</th>
           <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Section</th>
           <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Year</th>
+          <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Account</th>
           <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Actions</th>
         </tr>
       </thead>
@@ -142,7 +196,26 @@
           <td class="px-4 py-3 text-center text-slate-600">{{ student.section or '—' }}</td>
           <td class="px-4 py-3 text-center text-slate-600">{{ student.year_level or '—' }}</td>
           <td class="px-4 py-3 text-center">
+            {% if student.user_id %}
+              <span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-semibold">Linked</span>
+            {% else %}
+              <span class="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-semibold">Profile Only</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3 text-center">
             <div class="flex items-center justify-center gap-2">
+              {% if not student.user_id %}
+              <form method="POST" action="{{ url_for('panel.admin_create_student_account', student_db_id=student.id) }}"
+                    data-confirm-message="Create login account for {{ student.full_name }} using Gmail {{ student.gmail|default('(missing)', true) }}?"
+                    onsubmit="return confirm(this.dataset.confirmMessage);">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <button type="submit"
+                        class="text-xs px-3 py-1 bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-100 transition {{ 'opacity-50 cursor-not-allowed hover:bg-amber-50' if not student.gmail else '' }}"
+                        {% if not student.gmail %}disabled title="Set student Gmail first to create account."{% endif %}>
+                  Create Account
+                </button>
+              </form>
+              {% endif %}
               <a href="{{ url_for('panel.admin_edit_student', student_db_id=student.id) }}"
                  class="text-xs px-3 py-1 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition">Edit</a>
               <form method="POST" action="{{ url_for('panel.admin_delete_student', student_db_id=student.id) }}"

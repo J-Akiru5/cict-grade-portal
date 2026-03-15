@@ -18,6 +18,11 @@ class Config:
     # Gemini AI Chatbot
     GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 
+    # Email notifications (Resend)
+    RESEND_API_KEY = os.environ.get('RESEND_API_KEY')
+    RESEND_FROM_EMAIL = os.environ.get('RESEND_FROM_EMAIL', 'CICT Portal <no-reply@isufstcict.com>')
+    APP_BASE_URL = os.environ.get('APP_BASE_URL', '')
+
     # Session security
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'

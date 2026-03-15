@@ -10,7 +10,7 @@ class Student(db.Model):
     __tablename__ = 'students'
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.String(36), db.ForeignKey('users.id'), unique=True, nullable=False)
+    user_id = db.Column(db.String(36), db.ForeignKey('users.id'), unique=True, nullable=True)
     student_id = db.Column(db.String(50), unique=True, nullable=False, index=True)
     full_name = db.Column(db.String(255), nullable=False)
     section = db.Column(db.String(50), nullable=True)       # e.g. BSIT-2A

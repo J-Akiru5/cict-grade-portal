@@ -357,8 +357,14 @@ def admin_update_role(user_id):
 def admin_toggle_user(user_id):
     try:
         user = admin_service.toggle_user_active(user_id)
-        status = 'activated' if user.is_active else 'deactivated'
-        flash(f'User {user.email} {status}.', 'success')
+        if user.is_active:
+            sent = admin_service.send_account_approved_email(user)
+            if sent:
+                flash(f'User {user.email} activated. Approval email sent.', 'success')
+            else:
+                flash(f'User {user.email} activated. Approval email not sent (check Resend config).', 'warning')
+        else:
+            flash(f'User {user.email} deactivated.', 'success')
     except Exception as e:
         flash(str(e), 'error')
     return redirect(url_for('panel.admin_users'))
@@ -421,10 +427,12 @@ def admin_students():
 @role_required('admin')
 def admin_create_student():
     try:
+        mode = request.form.get('mode', '').strip()
         email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '').strip()
+        created = False
 
-        if email and password:
+        if mode == 'create_with_account' or (email and password):
             admin_service.create_student_with_account(
                 email=email,
                 password=password,
@@ -438,10 +446,11 @@ def admin_create_student():
                 contact_number=request.form.get('contact_number') or None,
                 gmail=request.form.get('gmail') or None,
             )
-        else:
+            created = True
+        elif mode == 'attach_existing' or request.form.get('user_id', '').strip():
             user_id = request.form.get('user_id', '').strip()
             if not user_id:
-                flash('Provide email + password, or select an existing user account.', 'error')
+                flash('Please select a user account to attach.', 'error')
                 return redirect(url_for('panel.admin_students'))
             admin_service.create_student(
                 user_id=user_id,
@@ -455,7 +464,26 @@ def admin_create_student():
                 contact_number=request.form.get('contact_number') or None,
                 gmail=request.form.get('gmail') or None,
             )
-        flash('Student profile created.', 'success')
+            created = True
+        elif mode == 'profile_only':
+            admin_service.create_student(
+                user_id=None,
+                student_id=request.form['student_id'],
+                full_name=request.form['full_name'],
+                section=request.form.get('section') or None,
+                year_level=int(request.form['year_level']) if request.form.get('year_level') else None,
+                curriculum_year=request.form.get('curriculum_year') or None,
+                age=int(request.form['age']) if request.form.get('age') else None,
+                address=request.form.get('address') or None,
+                contact_number=request.form.get('contact_number') or None,
+                gmail=request.form.get('gmail') or None,
+            )
+            created = True
+        else:
+            flash('Provide account details, attach an existing user, or choose profile-only mode.', 'error')
+
+        if created:
+            flash('Student profile created.', 'success')
     except Exception as e:
         flash(f'Error: {e}', 'error')
     return redirect(url_for('panel.admin_students'))
@@ -503,6 +531,35 @@ def admin_delete_student(student_db_id):
         flash('Student deleted.', 'success')
     except Exception as e:
         flash(f'Error: {e}', 'error')
+    return redirect(url_for('panel.admin_students'))
+
+
+@panel_bp.route('/admin/students/<int:student_db_id>/create-account', methods=['POST'])
+@login_required
+@role_required('admin')
+def admin_create_student_account(student_db_id):
+    try:
+        student, user, temp_password = admin_service.create_account_for_student_profile(student_db_id)
+        email_sent = admin_service.send_account_approved_email(user, temporary_password=temp_password)
+
+        if temp_password and email_sent:
+            flash(
+                f'Account created for {student.full_name} ({user.email}). Temporary password sent via email.',
+                'success'
+            )
+        elif temp_password and not email_sent:
+            flash(
+                f'Account created for {student.full_name} ({user.email}). '
+                f'Temporary password: {temp_password}. Email not sent (check Resend config).',
+                'warning'
+            )
+        elif email_sent:
+            flash(f'Existing account linked to {student.full_name} and approval email sent.', 'success')
+        else:
+            flash(f'Existing account linked to {student.full_name}. Email not sent (check Resend config).', 'warning')
+    except Exception as e:
+        flash(f'Error: {e}', 'error')
+
     return redirect(url_for('panel.admin_students'))
 
 

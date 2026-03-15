@@ -39,6 +39,16 @@ def login():
                 )
                 db.session.add(user)
 
+            # Registration requires admin approval before first login.
+            if not user.is_active:
+                if session_data and getattr(session_data, 'access_token', None):
+                    try:
+                        auth_service.sign_out(session_data.access_token)
+                    except Exception:
+                        pass
+                flash('Your account is pending admin approval.', 'warning')
+                return render_template('auth/login.html')
+
             user.last_login_at = datetime.now(timezone.utc)
             db.session.commit()
 
@@ -129,7 +139,7 @@ def register():
                 id=str(sb_user.id),
                 email=sb_user.email,
                 role=role,
-                is_active=True,
+                is_active=False,
             )
             db.session.add(user)
 
@@ -142,7 +152,7 @@ def register():
                     department='CICT',
                 )
                 db.session.add(profile)
-                success_msg = 'Registration successful! Please check your email to confirm your account, then log in.'
+                success_msg = 'Registration submitted. Please wait for admin approval before logging in.'
             else:
                 from app.models.student import Student
                 profile = Student(
@@ -151,7 +161,7 @@ def register():
                     student_id=student_id,
                 )
                 db.session.add(profile)
-                success_msg = 'Registration successful! You can now log in.'
+                success_msg = 'Registration submitted. Please wait for admin approval before logging in.'
 
             db.session.commit()
             flash(success_msg, 'success')
