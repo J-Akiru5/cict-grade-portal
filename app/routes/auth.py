@@ -215,6 +215,12 @@ def register():
             err = str(e).lower()
             if 'rate limit' in err:
                 flash('Too many registration attempts. Please wait a few minutes and try again.', 'error')
+            elif 'invalid api key' in err:
+                flash(
+                    'Registration service misconfigured: invalid Supabase service key. '
+                    'Please contact admin to update SUPABASE_SERVICE_KEY.',
+                    'error'
+                )
             elif 'already registered' in err:
                 flash('Registration failed. This email is already registered.', 'error')
             else:
