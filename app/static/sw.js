@@ -1,11 +1,9 @@
-// CICT Grade Portal — Service Worker (PWA Cache)
-const CACHE_NAME = 'cict-portal-v1';
-const OFFLINE_URL = '/auth/login';
+// CICT Grade Portal — Service Worker (static assets only)
+// IMPORTANT: Do not cache HTML pages with CSRF tokens.
+const CACHE_NAME = 'cict-portal-static-v2';
 
-// Assets to pre-cache for offline support
+// Pre-cache static assets only.
 const PRECACHE_ASSETS = [
-  '/',
-  '/auth/login',
   '/static/css/main.css',
   '/static/manifest.webmanifest',
 ];
@@ -34,13 +32,21 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch: network-first with cache fallback
+// Fetch: cache static files only, never dynamic HTML routes.
 self.addEventListener('fetch', (event) => {
   // Skip non-GET requests
   if (event.request.method !== 'GET') return;
 
-  // Skip HTMX partial requests (they have HX-Request header)
-  if (event.request.headers.get('HX-Request')) return;
+  const url = new URL(event.request.url);
+
+  // Ignore cross-origin requests.
+  if (url.origin !== self.location.origin) return;
+
+  // Never cache navigation/document requests (dynamic pages, forms, CSRF pages).
+  if (event.request.mode === 'navigate') return;
+
+  // Cache only static assets under /static/.
+  if (!url.pathname.startsWith('/static/')) return;
 
   event.respondWith(
     fetch(event.request)
@@ -55,10 +61,8 @@ self.addEventListener('fetch', (event) => {
         return response;
       })
       .catch(() => {
-        // Serve from cache or fallback to offline page
-        return caches.match(event.request).then((cached) => {
-          return cached || caches.match(OFFLINE_URL);
-        });
+        // Serve static asset from cache when offline.
+        return caches.match(event.request).then((cached) => cached || Response.error());
       })
   );
 });

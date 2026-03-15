@@ -1,5 +1,5 @@
 import os
-from flask import Flask
+from flask import Flask, request
 from .config import config
 from .extensions import db, migrate, login_manager, csrf
 
@@ -61,5 +61,14 @@ def create_app(config_name: str | None = None) -> Flask:
     # Register CLI commands
     from .utils.seed import register_cli
     register_cli(app)
+
+    @app.after_request
+    def add_no_store_headers(response):
+        # Prevent caching of dynamic pages that contain session-bound CSRF tokens.
+        if not request.path.startswith('/static/'):
+            response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+            response.headers['Pragma'] = 'no-cache'
+            response.headers['Expires'] = '0'
+        return response
 
     return app

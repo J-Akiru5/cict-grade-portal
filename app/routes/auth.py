@@ -88,7 +88,7 @@ def _redirect_by_role(role: str):
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
-    """Faculty self-registration."""
+    """Student/faculty self-registration."""
     if current_user.is_authenticated:
         return _redirect_by_role(current_user.role)
 
