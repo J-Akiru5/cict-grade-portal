@@ -4,6 +4,7 @@ from app.services import auth_service, email_service
 from app.models.user import User
 from app.extensions import db
 from datetime import datetime, timezone
+from sqlalchemy.exc import IntegrityError
 import logging
 
 auth_bp = Blueprint('auth', __name__, template_folder='../../templates/auth')
@@ -30,14 +31,17 @@ def login():
             # Sync with local User record
             user = db.session.get(User, str(sb_user.id))
             if user is None:
-                # First-time login: create local User record
                 role = (sb_user.user_metadata or {}).get('role', 'student')
-                user = User(
-                    id=str(sb_user.id),
-                    email=sb_user.email,
-                    role=role,
-                )
-                db.session.add(user)
+                # If local email exists (legacy/mismatched id), reuse it.
+                user = User.query.filter_by(email=sb_user.email).first()
+                if user is None:
+                    # First-time login: create local User record
+                    user = User(
+                        id=str(sb_user.id),
+                        email=sb_user.email,
+                        role=role,
+                    )
+                    db.session.add(user)
 
             # Registration requires admin approval before first login.
             if not user.is_active:
@@ -131,6 +135,11 @@ def register():
             flash('Password must be at least 8 characters.', 'error')
             return render_template('auth/register.html')
 
+        existing_local_user = User.query.filter_by(email=email).first()
+        if existing_local_user and existing_local_user.is_active:
+            flash('This email is already registered. Please log in instead.', 'error')
+            return render_template('auth/register.html')
+
         try:
             base_url = (current_app.config.get('APP_BASE_URL') or '').rstrip('/')
             redirect_to = f'{base_url}/auth/login' if base_url else None
@@ -148,32 +157,41 @@ def register():
                 flash('Registration could not be completed right now. Please try again shortly.', 'error')
                 return render_template('auth/register.html')
 
-            user = User(
-                id=str(sb_user.id),
-                email=sb_user.email,
-                role=role,
-                is_active=False,
-            )
-            db.session.add(user)
+            user = User.query.filter_by(email=sb_user.email).first()
+            if user is None:
+                user = User(
+                    id=str(sb_user.id),
+                    email=sb_user.email,
+                    role=role,
+                    is_active=False,
+                )
+                db.session.add(user)
+            else:
+                if user.role != role:
+                    flash(f'This email is already registered as {user.role}.', 'error')
+                    return render_template('auth/register.html')
+                user.is_active = False
 
             if role == 'faculty':
                 from app.models.faculty import Faculty
-                profile = Faculty(
-                    user_id=str(sb_user.id),
-                    full_name=full_name,
-                    employee_id=employee_id,
-                    department='CICT',
-                )
-                db.session.add(profile)
+                if not user.faculty_profile:
+                    profile = Faculty(
+                        user_id=user.id,
+                        full_name=full_name,
+                        employee_id=employee_id,
+                        department='CICT',
+                    )
+                    db.session.add(profile)
                 success_msg = 'Registration submitted. Please wait for admin approval before logging in.'
             else:
                 from app.models.student import Student
-                profile = Student(
-                    user_id=str(sb_user.id),
-                    full_name=full_name,
-                    student_id=student_id,
-                )
-                db.session.add(profile)
+                if not user.student_profile:
+                    profile = Student(
+                        user_id=user.id,
+                        full_name=full_name,
+                        student_id=student_id,
+                    )
+                    db.session.add(profile)
                 success_msg = 'Registration submitted. Please wait for admin approval before logging in.'
 
             db.session.commit()
@@ -210,7 +228,11 @@ def register():
             flash(success_msg, 'success')
             return redirect(url_for('auth.login'))
 
+        except IntegrityError:
+            db.session.rollback()
+            flash('This email is already registered. Please log in instead.', 'error')
         except Exception as e:
+            db.session.rollback()
             logging.warning(f'Registration failure for {email} ({role}): {e}')
             err = str(e).lower()
             if 'rate limit' in err:
