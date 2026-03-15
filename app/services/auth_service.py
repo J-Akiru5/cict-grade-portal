@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 _supabase: Client | None = None
+_supabase_admin: Client | None = None
 
 
 def _get_client() -> Client:
@@ -14,6 +15,15 @@ def _get_client() -> Client:
         key = os.environ['SUPABASE_KEY']
         _supabase = create_client(url, key)
     return _supabase
+
+
+def _get_admin_client() -> Client:
+    global _supabase_admin
+    if _supabase_admin is None:
+        url = os.environ['SUPABASE_URL']
+        service_key = os.environ['SUPABASE_SERVICE_KEY']
+        _supabase_admin = create_client(url, service_key)
+    return _supabase_admin
 
 
 def sign_in(email: str, password: str) -> dict:
@@ -47,16 +57,21 @@ def get_supabase_user(access_token: str):
         return None
 
 
-def sign_up(email: str, password: str, role: str = 'student') -> dict:
+def sign_up(email: str, password: str, role: str = 'student', redirect_to: str | None = None):
     """
-    Register a new user in Supabase Auth with user_metadata for role.
+    Register a new user by generating a signup confirmation link.
+    The caller is responsible for sending the returned action_link via email.
     """
-    client = _get_client()
-    response = client.auth.sign_up({
+    client = _get_admin_client()
+
+    options = {'data': {'role': role}}
+    if redirect_to:
+        options['redirect_to'] = redirect_to
+
+    response = client.auth.admin.generate_link({
+        'type': 'signup',
         'email': email,
         'password': password,
-        'options': {
-            'data': {'role': role}
-        }
+        'options': options,
     })
     return response

@@ -1,6 +1,6 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app
 from flask_login import login_user, logout_user, current_user, login_required
-from app.services import auth_service
+from app.services import auth_service, email_service
 from app.models.user import User
 from app.extensions import db
 from datetime import datetime, timezone
@@ -132,8 +132,21 @@ def register():
             return render_template('auth/register.html')
 
         try:
-            response = auth_service.sign_up(email, password, role=role)
+            base_url = (current_app.config.get('APP_BASE_URL') or '').rstrip('/')
+            redirect_to = f'{base_url}/auth/login' if base_url else None
+
+            response = auth_service.sign_up(
+                email,
+                password,
+                role=role,
+                redirect_to=redirect_to,
+            )
             sb_user = response.user
+            action_link = getattr(getattr(response, 'properties', None), 'action_link', None)
+
+            if sb_user is None:
+                flash('Registration could not be completed right now. Please try again shortly.', 'error')
+                return render_template('auth/register.html')
 
             user = User(
                 id=str(sb_user.id),
@@ -164,11 +177,47 @@ def register():
                 success_msg = 'Registration submitted. Please wait for admin approval before logging in.'
 
             db.session.commit()
+
+            if action_link:
+                html = (
+                    '<p>Hello,</p>'
+                    '<p>Click the link below to confirm your CICT Grade Portal account:</p>'
+                    f'<p><a href="{action_link}">Confirm your email</a></p>'
+                    '<p>After confirming your email, your account will still require admin approval before login.</p>'
+                )
+                text = (
+                    'Hello,\n\n'
+                    f'Confirm your CICT Grade Portal account: {action_link}\n\n'
+                    'After confirming your email, your account will still require admin approval before login.'
+                )
+                email_sent = email_service.send_resend_email(
+                    to_email=email,
+                    subject='Confirm your CICT Grade Portal signup',
+                    html=html,
+                    text=text,
+                )
+                if email_sent:
+                    success_msg = (
+                        'Registration submitted. Check your email to confirm your account, '
+                        'then wait for admin approval before logging in.'
+                    )
+                else:
+                    success_msg = (
+                        'Registration submitted, but confirmation email was not sent. '
+                        'Please contact the administrator.'
+                    )
+
             flash(success_msg, 'success')
             return redirect(url_for('auth.login'))
 
         except Exception as e:
             logging.warning(f'Registration failure for {email} ({role}): {e}')
-            flash('Registration failed. This email may already be registered.', 'error')
+            err = str(e).lower()
+            if 'rate limit' in err:
+                flash('Too many registration attempts. Please wait a few minutes and try again.', 'error')
+            elif 'already registered' in err:
+                flash('Registration failed. This email is already registered.', 'error')
+            else:
+                flash(f'Registration failed: {e}', 'error')
 
     return render_template('auth/register.html')
