@@ -54,15 +54,24 @@ def get_grades(student_id: int, semester: str | None = None, academic_year: str 
 def get_schedule_matrix(student_id: int, semester: str | None = None, academic_year: str | None = None) -> dict:
     """
     Build a dict mapping day → list of schedule entries for the weekly matrix view.
+    Includes both student-individual and section-level schedules.
     Returns: {'Mon': [...], 'Tue': [...], ..., 'Sun': [...]}
-    Each entry: {time_start, time_end, subject_code, subject_title, room}
     """
     DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
     matrix: dict = {day: [] for day in DAYS}
 
+    student = db.session.get(Student, student_id)
+    if not student:
+        return matrix
+
+    # Query student-individual schedules + section-level schedules
+    conditions = [Schedule.student_id == student_id]
+    if student.section_id:
+        conditions.append(Schedule.section_id == student.section_id)
+
     query = (
         Schedule.query
-        .filter_by(student_id=student_id)
+        .filter(db.or_(*conditions))
         .join(Subject, Schedule.subject_id == Subject.id)
     )
     if semester:

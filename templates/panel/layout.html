@@ -68,33 +68,48 @@
     <nav class="flex-1 px-3 mt-4 space-y-1" aria-label="Panel navigation">
       <p class="px-3 pt-2 pb-1 text-white/30 text-[10px] uppercase tracking-widest font-semibold">Menu</p>
 
-      {% set shared_nav = [
-        ('panel.dashboard', 'dashboard', 'Dashboard',
-         'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6'),
-        ('panel.my_subjects', 'subjects', 'My Subjects',
-         'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253'),
-        ('panel.students', 'students', 'Students',
-         'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z'),
-        ('panel.faculty_schedule', 'schedule', 'My Schedule',
-         'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'),
-        ('panel.audit_log', 'audit_log', 'Audit Log',
-         'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2'),
-      ] %}
+      {# Dashboard — shown to everyone #}
+      <a href="{{ url_for('panel.dashboard') }}"
+         hx-get="{{ url_for('panel.dashboard') }}"
+         hx-target="#main-content" hx-push-url="true" hx-indicator="#page-spinner"
+         class="nav-link {{ 'active' if active_page == 'dashboard' else '' }}"
+         aria-current="{{ 'page' if active_page == 'dashboard' else 'false' }}"
+         id="nav-dashboard"
+         onclick="document.getElementById('app-shell').classList.remove('drawer-open')">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+        </svg>
+        <span>Dashboard</span>
+      </a>
 
-      {% for endpoint, page_name, label, icon_path in shared_nav %}
-        <a href="{{ url_for(endpoint) }}"
-           hx-get="{{ url_for(endpoint) }}"
-           hx-target="#main-content" hx-push-url="true" hx-indicator="#page-spinner"
-           class="nav-link {{ 'active' if active_page == page_name else '' }}"
-           aria-current="{{ 'page' if active_page == page_name else 'false' }}"
-           id="nav-{{ page_name }}"
-           onclick="document.getElementById('app-shell').classList.remove('drawer-open')">
-          <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ icon_path }}" />
-          </svg>
-          <span>{{ label }}</span>
-        </a>
-      {% endfor %}
+      {# Faculty-only nav items #}
+      {% if current_user.role == 'faculty' %}
+        {% set faculty_nav = [
+          ('panel.my_subjects', 'subjects', 'My Subjects',
+           'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253'),
+          ('panel.students', 'students', 'Students',
+           'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z'),
+          ('panel.faculty_schedule', 'schedule', 'My Schedule',
+           'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'),
+          ('panel.audit_log', 'audit_log', 'Audit Log',
+           'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2'),
+        ] %}
+        {% for endpoint, page_name, label, icon_path in faculty_nav %}
+          <a href="{{ url_for(endpoint) }}"
+             hx-get="{{ url_for(endpoint) }}"
+             hx-target="#main-content" hx-push-url="true" hx-indicator="#page-spinner"
+             class="nav-link {{ 'active' if active_page == page_name else '' }}"
+             aria-current="{{ 'page' if active_page == page_name else 'false' }}"
+             id="nav-{{ page_name }}"
+             onclick="document.getElementById('app-shell').classList.remove('drawer-open')">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ icon_path }}" />
+            </svg>
+            <span>{{ label }}</span>
+          </a>
+        {% endfor %}
+      {% endif %}
 
       {# ── Admin-only section ── #}
       {% if current_user.role == 'admin' %}
@@ -138,8 +153,12 @@
         {% set admin_nav = [
           ('panel.admin_students', 'admin_students', 'Students (CRUD)',
            'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'),
+          ('panel.admin_sections', 'admin_sections', 'Sections',
+           'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10'),
           ('panel.admin_subjects', 'admin_subjects', 'Subjects',
            'M4 6h16M4 10h16M4 14h16M4 18h16'),
+          ('panel.admin_schedules', 'admin_schedules', 'Schedules',
+           'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'),
           ('panel.admin_enrollments', 'admin_enrollments', 'Enrollments',
            'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4'),
           ('panel.admin_grade_import', 'admin_grade_import', 'Grade Import',
@@ -467,7 +486,9 @@
   {"name": "Users", "url": "{{ url_for('panel.admin_users') }}", "icon": "\ud83d\udc64", "keywords": "accounts faculty admin"},
   {"name": "Faculty", "url": "{{ url_for('panel.admin_faculty') }}", "icon": "\ud83d\udc68\u200d\ud83c\udfeb", "keywords": "manage instructors faculty profiles"},
   {"name": "Students (CRUD)", "url": "{{ url_for('panel.admin_students') }}", "icon": "\ud83c\udf93", "keywords": "manage add edit student"},
+  {"name": "Sections", "url": "{{ url_for('panel.admin_sections') }}", "icon": "\ud83c\udfeb", "keywords": "manage class section groups"},
   {"name": "Subjects", "url": "{{ url_for('panel.admin_subjects') }}", "icon": "\ud83d\udcd6", "keywords": "manage add edit courses"},
+  {"name": "Schedules", "url": "{{ url_for('panel.admin_schedules') }}", "icon": "\ud83d\uddd3\ufe0f", "keywords": "class timetable schedule section"},
   {"name": "Enrollments", "url": "{{ url_for('panel.admin_enrollments') }}", "icon": "\ud83d\udcdd", "keywords": "enroll assign section"},
   {"name": "Grade Import", "url": "{{ url_for('panel.admin_grade_import') }}", "icon": "\ud83d\udce4", "keywords": "upload csv import grades"},
   {"name": "Full Audit Log", "url": "{{ url_for('panel.admin_audit_log') }}", "icon": "\ud83d\udd0d", "keywords": "all history full log"},

@@ -12,10 +12,12 @@ from app.models.user import User
 from app.models.student import Student
 from app.models.faculty import Faculty
 from app.models.subject import Subject
+from app.models.section import Section
 from app.models.enrollment import Enrollment
 from app.models.grade import Grade
 from app.models.audit import GradeAudit
 from app.models.academic_settings import AcademicSettings
+from app.models.schedule import Schedule
 from app.services import email_service
 
 
@@ -653,3 +655,139 @@ def update_academic_settings(semester: str, year: str, actor_user) -> AcademicSe
     settings.updated_by_id = actor_user.id
     db.session.commit()
     return settings
+
+
+# ─── Section Management ───────────────────────────────────────────────────────
+
+def get_all_sections(search: str = None) -> list:
+    q = Section.query.order_by(Section.program, Section.year_level, Section.section_letter)
+    if search:
+        q = q.filter(
+            db.or_(
+                Section.program.ilike(f'%{search}%'),
+                Section.section_letter.ilike(f'%{search}%'),
+            )
+        )
+    return q.all()
+
+
+def create_section(program: str, year_level: int, section_letter: str) -> Section:
+    letter = section_letter.strip().upper()
+    section = Section(
+        program=program.strip().upper(),
+        year_level=year_level,
+        section_letter=letter,
+    )
+    db.session.add(section)
+    db.session.commit()
+    return section
+
+
+def update_section(section_id: int, program: str = None, year_level: int = None, section_letter: str = None) -> Section:
+    section = db.session.get(Section, section_id)
+    if not section:
+        raise ValueError(f'Section {section_id} not found.')
+    if program:
+        section.program = program.strip().upper()
+    if year_level:
+        section.year_level = year_level
+    if section_letter:
+        section.section_letter = section_letter.strip().upper()
+    db.session.commit()
+    return section
+
+
+def delete_section(section_id: int) -> None:
+    section = db.session.get(Section, section_id)
+    if not section:
+        raise ValueError(f'Section {section_id} not found.')
+    db.session.delete(section)
+    db.session.commit()
+
+
+def assign_student_section(student_db_id: int, section_id: int | None) -> Student:
+    """Set the section_id FK on a student record."""
+    student = db.session.get(Student, student_db_id)
+    if not student:
+        raise ValueError(f'Student {student_db_id} not found.')
+    if section_id is not None:
+        section = db.session.get(Section, section_id)
+        if not section:
+            raise ValueError(f'Section {section_id} not found.')
+        # Also sync the legacy text field
+        student.section = section.display_name
+    else:
+        section = None
+    student.section_id = section_id
+    db.session.commit()
+    return student
+
+
+# ─── Admin Schedule Management ────────────────────────────────────────────────
+
+def get_all_admin_schedules(
+    section_id: int = None,
+    semester: str = None,
+    academic_year: str = None,
+) -> list:
+    """Return section-level schedules (section_id is set), filterable."""
+    q = (
+        Schedule.query
+        .filter(Schedule.section_id.isnot(None))
+        .options(
+            db.joinedload(Schedule.section_obj),
+            db.joinedload(Schedule.subject),
+            db.joinedload(Schedule.faculty),
+        )
+        .order_by(Schedule.section_id, Schedule.day_of_week, Schedule.time_start)
+    )
+    if section_id:
+        q = q.filter(Schedule.section_id == section_id)
+    if semester:
+        q = q.filter(Schedule.semester == semester)
+    if academic_year:
+        q = q.filter(Schedule.academic_year == academic_year)
+    return q.all()
+
+
+def create_admin_schedule(
+    section_id: int,
+    subject_id: int,
+    faculty_id: int,
+    day_of_week: str,
+    time_start,
+    time_end,
+    room: str,
+    semester: str,
+    academic_year: str,
+) -> Schedule:
+    from app.models.section import Section as Sec
+    section = db.session.get(Sec, section_id)
+    subject = db.session.get(Subject, subject_id)
+    faculty = db.session.get(Faculty, faculty_id)
+    if not section or not subject or not faculty:
+        raise ValueError('Section, Subject, or Faculty not found.')
+    schedule = Schedule(
+        section_id=section_id,
+        faculty_id=faculty_id,
+        subject_id=subject_id,
+        day_of_week=day_of_week,
+        time_start=time_start,
+        time_end=time_end,
+        room=room or None,
+        semester=semester,
+        academic_year=academic_year,
+    )
+    db.session.add(schedule)
+    db.session.commit()
+    return schedule
+
+
+def delete_admin_schedule(schedule_id: int) -> None:
+    schedule = db.session.get(Schedule, schedule_id)
+    if not schedule:
+        raise ValueError(f'Schedule {schedule_id} not found.')
+    if schedule.section_id is None:
+        raise ValueError('This is not an admin-managed schedule.')
+    db.session.delete(schedule)
+    db.session.commit()

@@ -13,7 +13,8 @@ class Student(db.Model):
     user_id = db.Column(db.String(36), db.ForeignKey('users.id'), unique=True, nullable=True)
     student_id = db.Column(db.String(50), unique=True, nullable=False, index=True)
     full_name = db.Column(db.String(255), nullable=False)
-    section = db.Column(db.String(50), nullable=True)       # e.g. BSIT-2A
+    section = db.Column(db.String(50), nullable=True)       # e.g. BSIT-2A (legacy text)
+    section_id = db.Column(db.Integer, db.ForeignKey('sections.id'), nullable=True, index=True)
     age = db.Column(db.Integer, nullable=True)
     address = db.Column(db.Text, nullable=True)
     contact_number = db.Column(db.String(20), nullable=True)
@@ -30,6 +31,7 @@ class Student(db.Model):
 
     # Relationships
     user = db.relationship('User', back_populates='student_profile')
+    section_obj = db.relationship('Section', back_populates='students', foreign_keys=[section_id])
     enrollments = db.relationship('Enrollment', back_populates='student', lazy='dynamic')
     schedules = db.relationship('Schedule', back_populates='student', lazy='dynamic')
 

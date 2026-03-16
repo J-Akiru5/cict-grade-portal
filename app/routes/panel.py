@@ -274,6 +274,8 @@ def delete_schedule(schedule_id):
 @login_required
 @role_required('faculty', 'admin')
 def audit_log():
+    if current_user.role == 'admin':
+        return redirect(url_for('panel.admin_audit_log'))
     entries = faculty_service.get_faculty_audit_log(current_user.id)
     context = {
         'entries': entries,
@@ -890,3 +892,170 @@ def admin_settings():
     if _is_htmx():
         return render_template('panel/partials/admin/settings.html', **context)
     return render_template('panel/pages/admin/settings.html', **context)
+
+
+# ── Admin Sections ───────────────────────────────────────────────────
+
+@panel_bp.route('/admin/sections')
+@login_required
+@role_required('admin')
+def admin_sections():
+    search = request.args.get('q', '').strip()
+    sections = admin_service.get_all_sections(search=search or None)
+    from app.models.student import Student
+    all_students = Student.query.order_by(Student.full_name).all()
+    context = {
+        'sections': sections,
+        'search': search,
+        'all_students': all_students,
+        'active_page': 'admin_sections',
+    }
+    if _is_htmx():
+        return render_template('panel/partials/admin/sections.html', **context)
+    return render_template('panel/pages/admin/sections.html', **context)
+
+
+@panel_bp.route('/admin/sections/create', methods=['POST'])
+@login_required
+@role_required('admin')
+def admin_create_section():
+    try:
+        admin_service.create_section(
+            program=request.form.get('program', 'BSIT').strip(),
+            year_level=int(request.form['year_level']),
+            section_letter=request.form['section_letter'].strip(),
+        )
+        flash('Section created.', 'success')
+    except Exception as e:
+        flash(f'Error: {e}', 'error')
+    return redirect(url_for('panel.admin_sections'))
+
+
+@panel_bp.route('/admin/sections/<int:section_id>/edit', methods=['POST'])
+@login_required
+@role_required('admin')
+def admin_edit_section(section_id):
+    try:
+        admin_service.update_section(
+            section_id,
+            program=request.form.get('program') or None,
+            year_level=int(request.form['year_level']) if request.form.get('year_level') else None,
+            section_letter=request.form.get('section_letter') or None,
+        )
+        flash('Section updated.', 'success')
+    except Exception as e:
+        flash(f'Error: {e}', 'error')
+    return redirect(url_for('panel.admin_sections'))
+
+
+@panel_bp.route('/admin/sections/<int:section_id>/delete', methods=['POST'])
+@login_required
+@role_required('admin')
+def admin_delete_section(section_id):
+    try:
+        admin_service.delete_section(section_id)
+        flash('Section deleted.', 'success')
+    except Exception as e:
+        flash(f'Error: {e}', 'error')
+    return redirect(url_for('panel.admin_sections'))
+
+
+@panel_bp.route('/admin/sections/assign-student', methods=['POST'])
+@login_required
+@role_required('admin')
+def admin_assign_student_section():
+    try:
+        student_id = int(request.form['student_db_id'])
+        section_id = request.form.get('section_id')
+        admin_service.assign_student_section(
+            student_id,
+            int(section_id) if section_id else None,
+        )
+        flash('Student section assigned.', 'success')
+    except Exception as e:
+        flash(f'Error: {e}', 'error')
+    return redirect(url_for('panel.admin_sections'))
+
+
+# ── Admin Schedules ──────────────────────────────────────────────────
+
+@panel_bp.route('/admin/schedules')
+@login_required
+@role_required('admin')
+def admin_schedules():
+    from app.models.section import Section
+    from app.models.subject import Subject
+    from app.models.faculty import Faculty
+
+    section_filter = request.args.get('section_id', type=int)
+    semester, year = _current_period()
+    semester = request.args.get('semester', semester)
+    year = request.args.get('year', year)
+
+    schedules = admin_service.get_all_admin_schedules(
+        section_id=section_filter,
+        semester=semester,
+        academic_year=year,
+    )
+    sections = admin_service.get_all_sections()
+    subjects = Subject.query.order_by(Subject.subject_code).all()
+    all_faculty = admin_service.get_all_faculty(page=1, per_page=200).items
+
+    context = {
+        'schedules': schedules,
+        'sections': sections,
+        'subjects': subjects,
+        'all_faculty': all_faculty,
+        'section_filter': section_filter,
+        'current_semester': semester,
+        'current_year': year,
+        'active_page': 'admin_schedules',
+    }
+    if _is_htmx():
+        return render_template('panel/partials/admin/schedules.html', **context)
+    return render_template('panel/pages/admin/schedules.html', **context)
+
+
+@panel_bp.route('/admin/schedules/create', methods=['POST'])
+@login_required
+@role_required('admin')
+def admin_create_schedule():
+    from datetime import time as dt_time
+    try:
+        ts = request.form['time_start']
+        te = request.form['time_end']
+        h, m = map(int, ts.split(':'))
+        time_start = dt_time(h, m)
+        h, m = map(int, te.split(':'))
+        time_end = dt_time(h, m)
+
+        admin_service.create_admin_schedule(
+            section_id=int(request.form['section_id']),
+            subject_id=int(request.form['subject_id']),
+            faculty_id=int(request.form['faculty_id']),
+            day_of_week=request.form['day_of_week'],
+            time_start=time_start,
+            time_end=time_end,
+            room=request.form.get('room', '').strip() or None,
+            semester=request.form['semester'],
+            academic_year=request.form['year'],
+        )
+        flash('Schedule entry created.', 'success')
+    except Exception as e:
+        logging.error(f'Admin schedule create error: {e}')
+        flash(f'Error: {e}', 'error')
+    return redirect(url_for('panel.admin_schedules',
+                            semester=request.form.get('semester'),
+                            year=request.form.get('year')))
+
+
+@panel_bp.route('/admin/schedules/<int:schedule_id>/delete', methods=['POST'])
+@login_required
+@role_required('admin')
+def admin_delete_schedule(schedule_id):
+    try:
+        admin_service.delete_admin_schedule(schedule_id)
+        flash('Schedule entry deleted.', 'success')
+    except Exception as e:
+        flash(f'Error: {e}', 'error')
+    return redirect(url_for('panel.admin_schedules'))

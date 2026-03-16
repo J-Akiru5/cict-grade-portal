@@ -40,7 +40,7 @@ def create_app(config_name: str | None = None) -> Flask:
 
     # Import models so Alembic can detect them
     with app.app_context():
-        from .models import user, student, faculty, subject, enrollment, grade, schedule, audit, academic_settings  # noqa: F401
+        from .models import user, student, faculty, subject, enrollment, grade, schedule, audit, academic_settings, section  # noqa: F401
 
     # Register Blueprints
     from .routes.auth import auth_bp
