@@ -74,3 +74,10 @@ def register_cli(app):
     def seed_admin_cmd(email, password):
         """Bootstrap the first admin account."""
         create_admin(email, password)
+
+    @app.cli.command('seed-curriculum')
+    def seed_curriculum_cmd():
+        """Seed curriculum subjects, students, enrollments & mock grades."""
+        from app.utils.seed_curriculum import seed_all
+        seed_all()
+

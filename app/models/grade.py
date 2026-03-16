@@ -53,28 +53,40 @@ class Grade(db.Model):
 def grade_after_insert(mapper, connection, target):
     """Writes a GradeAudit record the first time a grade is encoded."""
     from app.models.audit import GradeAudit
-    from flask_login import current_user
 
     if target.grade_value is None and target.remarks is None:
         return
 
-    audit = GradeAudit(
-        grade_id=target.id,
-        actor_id=current_user.id if current_user and current_user.is_authenticated else None,
-        target_student_id=target.enrollment.student_id if target.enrollment else None,
-        old_grade=None,
-        new_grade=target.grade_value,
-        old_remarks=None,
-        new_remarks=target.remarks,
-    )
-    db.session.add(audit)
+    try:
+        from flask_login import current_user
+        actor_id = current_user.id if current_user and current_user.is_authenticated else None
+    except Exception:
+        actor_id = None
+
+    try:
+        student_id = target.enrollment.student_id if target.enrollment else None
+    except Exception:
+        student_id = None
+
+    try:
+        audit = GradeAudit(
+            grade_id=target.id,
+            actor_id=actor_id,
+            target_student_id=student_id,
+            old_grade=None,
+            new_grade=target.grade_value,
+            old_remarks=None,
+            new_remarks=target.remarks,
+        )
+        db.session.add(audit)
+    except Exception:
+        pass  # Skip audit in non-request contexts (e.g. CLI seed)
 
 
 @event.listens_for(Grade, 'after_update')
 def grade_after_update(mapper, connection, target):
     """Writes a GradeAudit record after every grade update."""
     from app.models.audit import GradeAudit
-    from flask_login import current_user
 
     insp = db.inspect(target).attrs
     grade_history = insp.grade_value.history
@@ -88,13 +100,28 @@ def grade_after_update(mapper, connection, target):
     old_rem = remarks_history.deleted[0] if remarks_history.deleted else None
     new_rem = remarks_history.added[0] if remarks_history.added else None
 
-    audit = GradeAudit(
-        grade_id=target.id,
-        actor_id=current_user.id if current_user and current_user.is_authenticated else None,
-        target_student_id=target.enrollment.student_id if target.enrollment else None,
-        old_grade=old_val,
-        new_grade=new_val,
-        old_remarks=old_rem,
-        new_remarks=new_rem,
-    )
-    db.session.add(audit)
+    try:
+        from flask_login import current_user
+        actor_id = current_user.id if current_user and current_user.is_authenticated else None
+    except Exception:
+        actor_id = None
+
+    try:
+        student_id = target.enrollment.student_id if target.enrollment else None
+    except Exception:
+        student_id = None
+
+    try:
+        audit = GradeAudit(
+            grade_id=target.id,
+            actor_id=actor_id,
+            target_student_id=student_id,
+            old_grade=old_val,
+            new_grade=new_val,
+            old_remarks=old_rem,
+            new_remarks=new_rem,
+        )
+        db.session.add(audit)
+    except Exception:
+        pass  # Skip audit in non-request contexts (e.g. CLI seed)
+

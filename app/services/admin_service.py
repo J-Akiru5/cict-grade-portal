@@ -250,6 +250,7 @@ def create_student(
     address: str = None,
     contact_number: str = None,
     gmail: str = None,
+    gender: str = None,
 ) -> Student:
     student = Student(
         user_id=user_id,
@@ -262,6 +263,7 @@ def create_student(
         address=address,
         contact_number=contact_number,
         gmail=gmail,
+        gender=gender,
     )
     db.session.add(student)
     db.session.commit()
@@ -274,7 +276,7 @@ def update_student(student_db_id: int, **data) -> Student:
         raise ValueError(f'Student {student_db_id} not found.')
     allowed = {
         'full_name', 'section', 'year_level', 'curriculum_year',
-        'age', 'address', 'contact_number', 'gmail', 'student_id',
+        'age', 'address', 'contact_number', 'gmail', 'student_id', 'gender',
     }
     for key, val in data.items():
         if key in allowed:
