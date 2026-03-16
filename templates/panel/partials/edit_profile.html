@@ -1,0 +1,177 @@
+{# HTMX partial: Faculty / Admin — Edit Profile #}
+<div class="max-w-3xl mx-auto space-y-6" id="edit-profile-content">
+
+  {# ── Header ── #}
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-xl font-bold text-slate-900">Edit Profile</h1>
+      <p class="text-sm text-slate-500 mt-0.5">Update your personal information</p>
+    </div>
+    <a href="{{ url_for('panel.panel_profile') }}"
+       hx-get="{{ url_for('panel.panel_profile') }}"
+       hx-target="#main-content" hx-push-url="true" hx-indicator="#page-spinner"
+       class="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+      </svg>
+      Back to Profile
+    </a>
+  </div>
+
+  <form method="POST" action="{{ url_for('panel.panel_edit_profile') }}"
+        enctype="multipart/form-data" class="space-y-6">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+    {# ── Avatar Upload ── #}
+    <div class="paper-card overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-100 bg-slate-50">
+        <h2 class="font-semibold text-slate-700 text-sm uppercase tracking-widest">Profile Photo</h2>
+      </div>
+      <div class="px-6 py-5">
+        <div class="flex items-center gap-5">
+          {% if current_user.avatar_url %}
+            <img src="{{ current_user.avatar_url }}" alt="Current photo"
+                 class="w-16 h-16 rounded-full object-cover border-2 border-slate-200 shadow-sm bg-surface-dark"
+                 id="avatar-preview">
+          {% else %}
+            <div class="w-16 h-16 rounded-full border-2 border-slate-200 shadow-sm
+                        {% if current_user.role == 'admin' %}bg-gold{% else %}bg-blue-700{% endif %}
+                        flex items-center justify-center font-bold text-white text-xl font-mono"
+                 id="avatar-preview-placeholder">
+              {{ (faculty.full_name[0] if faculty and faculty.full_name else current_user.email[0]).upper() }}
+            </div>
+          {% endif %}
+          <div class="flex-1">
+            <label for="avatar"
+                   class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
+                          text-slate-700 bg-white border border-slate-300 hover:bg-slate-50
+                          cursor-pointer transition shadow-sm">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+              Choose Photo
+            </label>
+            <input type="file" id="avatar" name="avatar" accept="image/jpeg,image/png"
+                   class="hidden" onchange="previewAvatar(this)">
+            <p class="text-xs text-slate-400 mt-1.5">JPG or PNG, max 2 MB</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# ── Personal Information ── #}
+    {% if faculty %}
+    <div class="paper-card overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-100 bg-slate-50">
+        <h2 class="font-semibold text-slate-700 text-sm uppercase tracking-widest">Personal Information</h2>
+      </div>
+      <div class="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
+
+        {# Full Name #}
+        <div class="sm:col-span-2">
+          <label for="full_name" class="block text-xs font-medium text-slate-500 uppercase tracking-widest mb-1.5">
+            Full Name <span class="text-red-500">*</span>
+          </label>
+          <input type="text" id="full_name" name="full_name"
+                 value="{{ faculty.full_name or '' }}" required
+                 class="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm text-slate-800
+                        placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-maroon/40
+                        focus:border-maroon transition"
+                 placeholder="e.g. Juan Dela Cruz">
+        </div>
+
+        {# Employee ID #}
+        <div>
+          <label for="employee_id" class="block text-xs font-medium text-slate-500 uppercase tracking-widest mb-1.5">
+            Employee ID
+          </label>
+          <input type="text" id="employee_id" name="employee_id"
+                 value="{{ faculty.employee_id or '' }}"
+                 class="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm text-slate-800
+                        placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-maroon/40
+                        focus:border-maroon transition font-mono"
+                 placeholder="e.g. EMP-0001">
+        </div>
+
+        {# Department #}
+        <div>
+          <label for="department" class="block text-xs font-medium text-slate-500 uppercase tracking-widest mb-1.5">
+            Department
+          </label>
+          <input type="text" id="department" name="department"
+                 value="{{ faculty.department or '' }}"
+                 class="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm text-slate-800
+                        placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-maroon/40
+                        focus:border-maroon transition"
+                 placeholder="e.g. CICT">
+        </div>
+
+        {# Email — read-only #}
+        <div class="sm:col-span-2">
+          <label class="block text-xs font-medium text-slate-500 uppercase tracking-widest mb-1.5">
+            Email <span class="text-slate-300 text-[10px]">(managed by admin)</span>
+          </label>
+          <div class="w-full rounded-lg border border-slate-100 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-500">
+            {{ current_user.email }}
+          </div>
+        </div>
+
+      </div>
+    </div>
+    {% else %}
+    <div class="bg-yellow-50 border border-yellow-200 rounded-xl px-5 py-4 text-yellow-800 text-sm">
+      No faculty profile linked to this account.
+      {% if current_user.role in ('faculty', 'admin') %}
+        Contact an administrator to create one, or change your role away and back to auto-create.
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {# ── Action Buttons ── #}
+    <div class="flex items-center justify-end gap-3 pb-4">
+      <a href="{{ url_for('panel.panel_profile') }}"
+         hx-get="{{ url_for('panel.panel_profile') }}"
+         hx-target="#main-content" hx-push-url="true" hx-indicator="#page-spinner"
+         class="px-5 py-2.5 rounded-lg text-sm font-medium text-slate-600 bg-white border border-slate-300
+                hover:bg-slate-50 transition">
+        Cancel
+      </a>
+      <button type="submit"
+              class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold
+                     text-white bg-maroon hover:bg-maroon/90 transition shadow-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+        Save Changes
+      </button>
+    </div>
+  </form>
+
+</div>
+
+<script>
+function previewAvatar(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      // Replace placeholder or existing img
+      const placeholder = document.getElementById('avatar-preview-placeholder');
+      const existing = document.getElementById('avatar-preview');
+      if (placeholder) {
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        img.alt = 'Preview';
+        img.id = 'avatar-preview';
+        img.className = 'w-16 h-16 rounded-full object-cover border-2 border-slate-200 shadow-sm';
+        placeholder.replaceWith(img);
+      } else if (existing) {
+        existing.src = e.target.result;
+      }
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+</script>

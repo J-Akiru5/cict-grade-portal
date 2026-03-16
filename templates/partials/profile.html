@@ -3,14 +3,19 @@
 
   {# ── Profile Header Card ── #}
   <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-    <div class="h-20 bg-[radial-gradient(circle_at_left,_#800000_0%,_#5B0000_100%)]"></div>
+    <div class="h-24 bg-[radial-gradient(circle_at_left,_#800000_0%,_#5B0000_100%)]"></div>
     <div class="px-6 pb-6">
-      <div class="-mt-10 flex items-end justify-between">
+      <div class="-mt-12 flex items-end justify-between">
         {# Avatar #}
-        <div class="w-20 h-20 rounded-full bg-surface-dark border-4 border-white
-                    flex items-center justify-center font-bold text-white text-2xl font-mono shadow-lg">
-          {{ student.full_name[0].upper() if student and student.full_name else 'S' }}
-        </div>
+        {% if current_user.avatar_url %}
+          <img src="{{ current_user.avatar_url }}" alt="Profile photo"
+               class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg bg-surface-dark">
+        {% else %}
+          <div class="w-24 h-24 rounded-full bg-surface-dark border-4 border-white
+                      flex items-center justify-center font-bold text-white text-3xl font-mono shadow-lg">
+            {{ student.full_name[0].upper() if student and student.full_name else 'S' }}
+          </div>
+        {% endif %}
         <div class="mb-1 flex items-center gap-2">
           <span class="inline-flex items-center gap-1 bg-maroon/10 text-maroon
                        text-xs font-semibold px-3 py-1 rounded-full">
@@ -56,13 +61,14 @@
 
       {% set fields = [
         ('Full Name', student.full_name, 'text-slate-800 font-semibold'),
-        ('Section', student.section or '—', 'font-mono text-maroon font-semibold'),
-        ('Age', student.age|string if student.age else '—', 'text-slate-700'),
-        ('Year Level', (student.year_level|string + ' Year') if student.year_level else '—', 'text-slate-700'),
-        ('Address', student.address or '—', 'text-slate-700'),
-        ('Contact Number', student.contact_number or '—', 'font-mono text-slate-700'),
-        ('Gmail', student.gmail or '—', 'text-blue-600'),
-        ('Curriculum Year', student.curriculum_year or '—', 'font-mono text-slate-700'),
+        ('Gender', student.gender or '---', 'text-slate-700'),
+        ('Section', student.section or '---', 'font-mono text-maroon font-semibold'),
+        ('Age', student.age|string if student.age else '---', 'text-slate-700'),
+        ('Year Level', (student.year_level|string + ' Year') if student.year_level else '---', 'text-slate-700'),
+        ('Address', student.address or '---', 'text-slate-700'),
+        ('Contact Number', student.contact_number or '---', 'font-mono text-slate-700'),
+        ('Gmail', student.gmail or '---', 'text-blue-600'),
+        ('Curriculum Year', student.curriculum_year or '---', 'font-mono text-slate-700'),
       ] %}
 
       {% for label, value, value_cls in fields %}
@@ -87,11 +93,11 @@
       </div>
       <div class="bg-slate-50 rounded-lg px-4 py-3 border border-slate-200">
         <div class="text-slate-400 text-xs mb-1">Section</div>
-        <div class="font-mono text-maroon font-bold text-sm">{{ student.section or '—' }}</div>
+        <div class="font-mono text-maroon font-bold text-sm">{{ student.section or '---' }}</div>
       </div>
       <div class="bg-slate-50 rounded-lg px-4 py-3 border border-slate-200">
         <div class="text-slate-400 text-xs mb-1">Curriculum Year</div>
-        <div class="font-mono text-slate-700 font-semibold text-sm">{{ student.curriculum_year or '—' }}</div>
+        <div class="font-mono text-slate-700 font-semibold text-sm">{{ student.curriculum_year or '---' }}</div>
       </div>
     </div>
   </div>

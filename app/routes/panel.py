@@ -1,7 +1,7 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, make_response
 from flask_login import login_required, current_user
 from app.utils.security import role_required
-from app.services import faculty_service, admin_service
+from app.services import faculty_service, admin_service, storage_service
 from app.models.academic_settings import AcademicSettings
 from app.extensions import db
 import logging
@@ -17,6 +17,73 @@ def _current_period():
     """Return (semester, year) from AcademicSettings."""
     settings = AcademicSettings.get_current()
     return settings.current_semester, settings.current_year
+
+
+# ═══════════════════════════════════════════════════════════════════
+#  PROFILE: Faculty + Admin self-service profile
+# ═══════════════════════════════════════════════════════════════════
+
+@panel_bp.route('/profile')
+@login_required
+@role_required('faculty', 'admin')
+def panel_profile():
+    faculty = current_user.faculty_profile
+    context = {
+        'faculty': faculty,
+        'active_page': 'profile',
+    }
+    if _is_htmx():
+        return render_template('panel/partials/profile.html', **context)
+    return render_template('panel/pages/profile.html', **context)
+
+
+@panel_bp.route('/profile/edit', methods=['GET', 'POST'])
+@login_required
+@role_required('faculty', 'admin')
+def panel_edit_profile():
+    from datetime import datetime, timezone
+
+    faculty = current_user.faculty_profile
+
+    if request.method == 'POST':
+        # Handle avatar upload
+        avatar_file = request.files.get('avatar')
+        if avatar_file and avatar_file.filename:
+            file_bytes = avatar_file.read()
+            content_type = avatar_file.content_type or 'image/jpeg'
+            url = storage_service.upload_avatar(current_user.id, file_bytes, content_type)
+            if url:
+                current_user.avatar_url = url
+
+        # Update faculty profile fields
+        if faculty:
+            full_name = request.form.get('full_name', '').strip()
+            if full_name:
+                faculty.full_name = full_name
+            emp_id = request.form.get('employee_id', '').strip()
+            if emp_id:
+                faculty.employee_id = emp_id
+            dept = request.form.get('department', '').strip()
+            if dept:
+                faculty.department = dept
+            faculty.updated_at = datetime.now(timezone.utc)
+
+        db.session.commit()
+        flash('Profile updated.', 'success')
+
+        if _is_htmx():
+            resp = make_response('', 204)
+            resp.headers['HX-Redirect'] = url_for('panel.panel_profile')
+            return resp
+        return redirect(url_for('panel.panel_profile'))
+
+    context = {
+        'faculty': faculty,
+        'active_page': 'profile',
+    }
+    if _is_htmx():
+        return render_template('panel/partials/edit_profile.html', **context)
+    return render_template('panel/pages/edit_profile.html', **context)
 
 
 # ═══════════════════════════════════════════════════════════════════

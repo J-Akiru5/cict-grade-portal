@@ -110,7 +110,7 @@ def update_student_profile(user_id: str, data: dict) -> Student | None:
     student = Student.query.filter_by(user_id=user_id).first()
     if not student:
         return None
-    allowed_fields = ['full_name', 'age', 'address', 'contact_number', 'gmail', 'year_level']
+    allowed_fields = ['full_name', 'age', 'address', 'contact_number', 'gmail', 'year_level', 'gender']
     for field in allowed_fields:
         if field in data:
             setattr(student, field, data[field])

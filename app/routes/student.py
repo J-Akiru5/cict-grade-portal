@@ -1,8 +1,9 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, make_response
 from flask_login import login_required, current_user
 from app.utils.security import role_required
-from app.services import student_service, gwa_service
+from app.services import student_service, gwa_service, storage_service
 from app.models.academic_settings import AcademicSettings
+from app.extensions import db
 
 student_bp = Blueprint('student', __name__, template_folder='../../templates/student')
 
@@ -65,6 +66,16 @@ def edit_profile():
     student = student_service.get_student_profile(current_user.id)
 
     if request.method == 'POST':
+        # Handle avatar upload
+        avatar_file = request.files.get('avatar')
+        if avatar_file and avatar_file.filename:
+            file_bytes = avatar_file.read()
+            content_type = avatar_file.content_type or 'image/jpeg'
+            url = storage_service.upload_avatar(current_user.id, file_bytes, content_type)
+            if url:
+                current_user.avatar_url = url
+                db.session.commit()
+
         full_name = request.form.get('full_name', '').strip()
         if not full_name:
             flash('Full name is required.', 'error')
@@ -76,6 +87,7 @@ def edit_profile():
                 'contact_number': request.form.get('contact_number', '').strip() or None,
                 'gmail': request.form.get('gmail', '').strip() or None,
                 'year_level': request.form.get('year_level', type=int) or None,
+                'gender': request.form.get('gender', '').strip() or None,
             }
             student_service.update_student_profile(current_user.id, data)
             flash('Profile updated successfully.', 'success')
