@@ -100,9 +100,42 @@
       {% if current_user.role == 'admin' %}
         <p class="px-3 pt-4 pb-1 text-white/30 text-[10px] uppercase tracking-widest font-semibold">Administration</p>
 
+        {# Users — standalone so we can attach the pending badge #}
+        <a href="{{ url_for('panel.admin_users') }}"
+           hx-get="{{ url_for('panel.admin_users') }}"
+           hx-target="#main-content" hx-push-url="true" hx-indicator="#page-spinner"
+           class="nav-link {{ 'active' if active_page == 'admin_users' else '' }}"
+           aria-current="{{ 'page' if active_page == 'admin_users' else 'false' }}"
+           id="nav-admin_users"
+           onclick="document.getElementById('app-shell').classList.remove('drawer-open')">
+          <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+          </svg>
+          <span>Users</span>
+          {% if pending_approval_count > 0 %}
+          <span class="ml-auto text-[10px] bg-red-500 text-white rounded-full px-1.5 py-0.5 font-bold leading-none">
+            {{ pending_approval_count }}
+          </span>
+          {% endif %}
+        </a>
+
+        {# Faculty Management #}
+        <a href="{{ url_for('panel.admin_faculty') }}"
+           hx-get="{{ url_for('panel.admin_faculty') }}"
+           hx-target="#main-content" hx-push-url="true" hx-indicator="#page-spinner"
+           class="nav-link {{ 'active' if active_page == 'admin_faculty' else '' }}"
+           aria-current="{{ 'page' if active_page == 'admin_faculty' else 'false' }}"
+           id="nav-admin_faculty"
+           onclick="document.getElementById('app-shell').classList.remove('drawer-open')">
+          <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+          </svg>
+          <span>Faculty</span>
+        </a>
+
         {% set admin_nav = [
-          ('panel.admin_users', 'admin_users', 'Users',
-           'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z'),
           ('panel.admin_students', 'admin_students', 'Students (CRUD)',
            'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'),
           ('panel.admin_subjects', 'admin_subjects', 'Subjects',
@@ -432,6 +465,7 @@
   {"name": "Audit Log", "url": "{{ url_for('panel.audit_log') }}", "icon": "\ud83d\udccb", "keywords": "log history changes"},
   {% if current_user.role == 'admin' %}
   {"name": "Users", "url": "{{ url_for('panel.admin_users') }}", "icon": "\ud83d\udc64", "keywords": "accounts faculty admin"},
+  {"name": "Faculty", "url": "{{ url_for('panel.admin_faculty') }}", "icon": "\ud83d\udc68\u200d\ud83c\udfeb", "keywords": "manage instructors faculty profiles"},
   {"name": "Students (CRUD)", "url": "{{ url_for('panel.admin_students') }}", "icon": "\ud83c\udf93", "keywords": "manage add edit student"},
   {"name": "Subjects", "url": "{{ url_for('panel.admin_subjects') }}", "icon": "\ud83d\udcd6", "keywords": "manage add edit courses"},
   {"name": "Enrollments", "url": "{{ url_for('panel.admin_enrollments') }}", "icon": "\ud83d\udcdd", "keywords": "enroll assign section"},

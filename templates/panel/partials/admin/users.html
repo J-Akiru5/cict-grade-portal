@@ -11,6 +11,46 @@
     </form>
   </div>
 
+  {# ── Pending Approvals Banner ── #}
+  {% if pending_users %}
+  <div class="paper-card border-l-4 border-amber-400">
+    <div class="p-4 pb-2">
+      <div class="flex items-center gap-2 mb-3">
+        <svg class="w-5 h-5 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        </svg>
+        <span class="font-semibold text-amber-700">Pending Approvals ({{ pending_users | length }})</span>
+        <span class="text-xs text-slate-500">— These users registered and are waiting for activation</span>
+      </div>
+      <div class="divide-y divide-slate-100">
+        {% for u in pending_users %}
+        <div class="py-2 flex items-center justify-between flex-wrap gap-2">
+          <div class="flex items-center gap-3 min-w-0">
+            <span class="text-sm font-medium text-slate-700 truncate">{{ u.email }}</span>
+            <span class="text-xs font-semibold px-2 py-0.5 rounded-full capitalize
+                         {% if u.role == 'faculty' %}bg-blue-100 text-blue-800
+                         {% else %}bg-slate-100 text-slate-600{% endif %}">
+              {{ u.role }}
+            </span>
+            <span class="text-xs text-slate-400 font-mono">
+              Registered {{ u.created_at.strftime('%b %d, %Y') if u.created_at else '—' }}
+            </span>
+          </div>
+          <form method="POST" action="{{ url_for('panel.admin_toggle_user', user_id=u.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <button type="submit"
+                    class="text-xs px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold transition">
+              Approve
+            </button>
+          </form>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
   {# ── Create User Form ── #}
   <details class="paper-card">
     <summary class="p-4 cursor-pointer font-semibold text-slate-800 select-none">+ Create New User</summary>
@@ -71,7 +111,12 @@
       <tbody class="divide-y divide-slate-100">
         {% for user in users %}
         <tr class="hover:bg-slate-50 transition-colors">
-          <td class="px-4 py-3 text-slate-800 font-medium">{{ user.email }}</td>
+          <td class="px-4 py-3 text-slate-800 font-medium">
+            {{ user.email }}
+            {% if user.faculty_profile %}
+            <div class="text-xs text-slate-400">{{ user.faculty_profile.full_name }}</div>
+            {% endif %}
+          </td>
           <td class="px-4 py-3 text-center">
             <span class="text-xs font-semibold px-2 py-0.5 rounded-full capitalize
                          {% if user.role == 'admin' %}bg-yellow-100 text-yellow-800
@@ -82,15 +127,22 @@
           </td>
           <td class="px-4 py-3 text-center">
             <span class="text-xs font-semibold px-2 py-0.5 rounded-full
-                         {{ 'bg-green-100 text-green-700' if user.is_active else 'bg-red-100 text-red-600' }}">
-              {{ 'Active' if user.is_active else 'Inactive' }}
+                         {{ 'bg-green-100 text-green-700' if user.is_active else 'bg-amber-100 text-amber-700' if not user.last_login_at else 'bg-red-100 text-red-600' }}">
+              {% if user.is_active %}Active
+              {% elif not user.last_login_at %}Pending
+              {% else %}Inactive{% endif %}
             </span>
           </td>
           <td class="px-4 py-3 text-center text-xs text-slate-500 font-mono">
             {{ user.created_at.strftime('%Y-%m-%d') if user.created_at else '—' }}
           </td>
           <td class="px-4 py-3 text-center">
-            <div class="flex items-center justify-center gap-2">
+            <div class="flex items-center justify-center gap-1 flex-wrap">
+              {# Edit #}
+              <a href="{{ url_for('panel.admin_edit_user', user_id=user.id) }}"
+                 class="text-xs px-2 py-0.5 bg-slate-100 text-slate-700 rounded hover:bg-slate-200 transition">
+                Edit
+              </a>
               {# Change Role #}
               <form method="POST" action="{{ url_for('panel.admin_update_role', user_id=user.id) }}" class="flex gap-1">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
@@ -107,7 +159,7 @@
                 <button type="submit"
                         class="text-xs px-2 py-0.5 rounded transition
                                {{ 'bg-red-50 text-red-600 hover:bg-red-100' if user.is_active else 'bg-green-50 text-green-700 hover:bg-green-100' }}">
-                  {{ 'Deactivate' if user.is_active else 'Activate' }}
+                  {{ 'Deactivate' if user.is_active else 'Approve' if not user.last_login_at else 'Activate' }}
                 </button>
               </form>
             </div>
@@ -120,7 +172,7 @@
           <tr class="bg-blue-50/50">
             <td colspan="5" class="px-6 py-2">
               <div class="flex items-center gap-3 flex-wrap text-xs">
-                <span class="text-blue-700 font-medium">Assigned: </span>
+                <span class="text-blue-700 font-medium">Subjects: </span>
                 {% for s in fp.subjects %}
                   <span class="inline-flex items-center gap-1 bg-white border border-blue-200 text-blue-700 px-2 py-0.5 rounded-full">
                     {{ s.subject_code }}

@@ -1,5 +1,6 @@
 import os
 from flask import Flask, request
+from flask_login import current_user
 from .config import config
 from .extensions import db, migrate, login_manager, csrf
 
@@ -70,5 +71,14 @@ def create_app(config_name: str | None = None) -> Flask:
             response.headers['Pragma'] = 'no-cache'
             response.headers['Expires'] = '0'
         return response
+
+    @app.context_processor
+    def inject_pending_approvals():
+        """Inject pending approval count for admin sidebar badge."""
+        if current_user.is_authenticated and current_user.role == 'admin':
+            from .models.user import User
+            pending = User.query.filter_by(is_active=False).count()
+            return {'pending_approval_count': pending}
+        return {'pending_approval_count': 0}
 
     return app

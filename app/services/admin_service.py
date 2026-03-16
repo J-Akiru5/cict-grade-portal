@@ -83,6 +83,16 @@ def update_user_role(user_id: str, new_role: str) -> User:
         raise ValueError(f'Invalid role: {new_role}')
     user.role = new_role
 
+    # Auto-create Faculty profile when role is elevated to faculty/admin
+    if new_role in ('faculty', 'admin') and not user.faculty_profile:
+        name = None
+        if user.student_profile:
+            name = user.student_profile.full_name
+        if not name:
+            name = user.email.split('@')[0]
+        faculty = Faculty(user_id=user.id, full_name=name, department='CICT')
+        db.session.add(faculty)
+
     # Sync metadata in Supabase
     try:
         client = _get_admin_supabase()
@@ -99,6 +109,38 @@ def toggle_user_active(user_id: str) -> User:
     if not user:
         raise ValueError(f'User {user_id} not found.')
     user.is_active = not user.is_active
+    db.session.commit()
+    return user
+
+
+def update_user(
+    user_id: str,
+    email: str = None,
+    full_name: str = None,
+    employee_id: str = None,
+    department: str = None,
+) -> User:
+    """Update a user's email (via Supabase) and their faculty profile fields."""
+    user = db.session.get(User, user_id)
+    if not user:
+        raise ValueError(f'User {user_id} not found.')
+
+    if email and email != user.email:
+        try:
+            client = _get_admin_supabase()
+            client.auth.admin.update_user_by_id(user_id, {'email': email})
+        except Exception as e:
+            raise ValueError(f'Failed to update email in Supabase: {e}')
+        user.email = email
+
+    if user.faculty_profile:
+        if full_name:
+            user.faculty_profile.full_name = full_name
+        if employee_id is not None:
+            user.faculty_profile.employee_id = employee_id or None
+        if department:
+            user.faculty_profile.department = department
+
     db.session.commit()
     return user
 
@@ -204,6 +246,34 @@ def get_all_faculty(search: str = None, page: int = 1, per_page: int = 25):
     return q.paginate(page=page, per_page=per_page, error_out=False)
 
 
+def update_faculty(
+    faculty_id: int,
+    full_name: str = None,
+    employee_id: str = None,
+    department: str = None,
+) -> Faculty:
+    faculty = db.session.get(Faculty, faculty_id)
+    if not faculty:
+        raise ValueError(f'Faculty {faculty_id} not found.')
+    if full_name:
+        faculty.full_name = full_name
+    if employee_id is not None:
+        faculty.employee_id = employee_id or None
+    if department:
+        faculty.department = department
+    db.session.commit()
+    return faculty
+
+
+def delete_faculty_profile(faculty_id: int) -> None:
+    """Remove the Faculty profile record without deleting the linked User account."""
+    faculty = db.session.get(Faculty, faculty_id)
+    if not faculty:
+        raise ValueError(f'Faculty {faculty_id} not found.')
+    db.session.delete(faculty)
+    db.session.commit()
+
+
 def assign_subject_to_faculty(faculty_id: int, subject_id: int) -> None:
     faculty = db.session.get(Faculty, faculty_id)
     subject = db.session.get(Subject, subject_id)
@@ -211,6 +281,9 @@ def assign_subject_to_faculty(faculty_id: int, subject_id: int) -> None:
         raise ValueError('Faculty or Subject not found.')
     if subject not in faculty.subjects:
         faculty.subjects.append(subject)
+        # Sync instructor_name to first assigned faculty
+        if not subject.instructor_name:
+            subject.instructor_name = faculty.full_name
         db.session.commit()
 
 
@@ -221,6 +294,10 @@ def remove_subject_from_faculty(faculty_id: int, subject_id: int) -> None:
         raise ValueError('Faculty or Subject not found.')
     if subject in faculty.subjects:
         faculty.subjects.remove(subject)
+        # Update instructor_name to next remaining assigned faculty, or clear it
+        if subject.instructor_name == faculty.full_name:
+            remaining = [f for f in subject.faculty if f.id != faculty_id]
+            subject.instructor_name = remaining[0].full_name if remaining else None
         db.session.commit()
 
 

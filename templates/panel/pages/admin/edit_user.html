@@ -1,0 +1,93 @@
+{% extends "panel/layout.html" %}
+{% block page_title %}Edit User{% endblock %}
+{% block main_content %}
+<div class="max-w-xl mx-auto space-y-6">
+  <div class="paper-card p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-bold text-slate-800">Edit User</h2>
+      <span class="text-xs font-semibold px-2 py-0.5 rounded-full capitalize
+                   {% if user.role == 'admin' %}bg-yellow-100 text-yellow-800
+                   {% elif user.role == 'faculty' %}bg-blue-100 text-blue-800
+                   {% else %}bg-slate-100 text-slate-600{% endif %}">
+        {{ user.role }}
+      </span>
+    </div>
+
+    <form method="POST" action="{{ url_for('panel.admin_edit_user', user_id=user.id) }}" class="space-y-4">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+      {# Account section #}
+      <div>
+        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Account</p>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Email Address</label>
+          <input name="email" type="email" value="{{ user.email }}" required
+                 class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+          <p class="text-xs text-amber-600 mt-1">Changing email updates both the portal database and Supabase Auth. The user must use the new email to log in.</p>
+        </div>
+      </div>
+
+      {# Faculty profile section #}
+      {% if user.faculty_profile %}
+      <div class="border-t border-slate-100 pt-4">
+        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Faculty Profile</p>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="col-span-2">
+            <label class="block text-xs font-medium text-slate-600 mb-1">Full Name</label>
+            <input name="full_name" value="{{ user.faculty_profile.full_name }}" required
+                   class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">Employee ID</label>
+            <input name="employee_id" value="{{ user.faculty_profile.employee_id or '' }}"
+                   class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">Department</label>
+            <input name="department" value="{{ user.faculty_profile.department or 'CICT' }}"
+                   class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <div class="border-t border-slate-100 pt-4">
+        <p class="text-xs text-slate-400 italic">
+          No faculty profile linked to this user.
+          {% if user.role in ('faculty', 'admin') %}
+            Try changing the role away and back to auto-create one.
+          {% endif %}
+        </p>
+      </div>
+      {% endif %}
+
+      <div class="flex gap-3 pt-2">
+        <button type="submit"
+                class="px-4 py-2 bg-maroon text-white text-sm font-semibold rounded-lg hover:bg-maroon/90 transition">
+          Save Changes
+        </button>
+        <a href="{{ url_for('panel.admin_users') }}"
+           class="px-4 py-2 bg-slate-100 text-slate-700 text-sm font-semibold rounded-lg hover:bg-slate-200 transition">
+          Cancel
+        </a>
+      </div>
+    </form>
+  </div>
+
+  {# Read-only metadata #}
+  <div class="paper-card p-4 text-xs text-slate-400 space-y-1">
+    <div><span class="font-semibold text-slate-500">User ID:</span> {{ user.id }}</div>
+    <div><span class="font-semibold text-slate-500">Joined:</span> {{ user.created_at.strftime('%b %d, %Y %I:%M %p') if user.created_at else '—' }}</div>
+    <div><span class="font-semibold text-slate-500">Last login:</span> {{ user.last_login_at.strftime('%b %d, %Y %I:%M %p') if user.last_login_at else 'Never' }}</div>
+    <div>
+      <span class="font-semibold text-slate-500">Status:</span>
+      {% if user.is_active %}
+        <span class="text-green-600 font-semibold">Active</span>
+      {% elif not user.last_login_at %}
+        <span class="text-amber-600 font-semibold">Pending Approval</span>
+      {% else %}
+        <span class="text-red-600 font-semibold">Inactive</span>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

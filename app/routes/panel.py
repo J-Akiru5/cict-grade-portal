@@ -295,18 +295,22 @@ def admin_users():
     search = request.args.get('q', '').strip()
     page = request.args.get('page', 1, type=int)
     pagination = admin_service.get_all_users(search=search or None, page=page)
-    all_faculty = admin_service.get_all_faculty(page=1, per_page=200).items
-    all_subjects = db.session.execute(
-        db.select(db.text('*')).select_from(db.text('subjects ORDER BY subject_code'))
-    ).fetchall() if False else []  # fetched in template via service
     from app.models.subject import Subject
+    from app.models.user import User
     subjects = Subject.query.order_by(Subject.subject_code).all()
+    # Users awaiting approval: inactive and never logged in
+    pending_users = (
+        User.query.filter_by(is_active=False)
+        .filter(User.last_login_at.is_(None))
+        .order_by(User.created_at.asc())
+        .all()
+    )
     context = {
         'pagination': pagination,
         'users': pagination.items,
         'search': search,
-        'all_faculty': all_faculty,
         'subjects': subjects,
+        'pending_users': pending_users,
         'active_page': 'admin_users',
     }
     if _is_htmx():
@@ -393,6 +397,112 @@ def admin_remove_subject(faculty_id, subject_id):
     except Exception as e:
         flash(str(e), 'error')
     return redirect(url_for('panel.admin_users'))
+
+
+@panel_bp.route('/admin/users/<user_id>/edit', methods=['GET', 'POST'])
+@login_required
+@role_required('admin')
+def admin_edit_user(user_id):
+    from app.models.user import User
+    user = db.session.get(User, user_id)
+    if not user:
+        flash('User not found.', 'error')
+        return redirect(url_for('panel.admin_users'))
+
+    if request.method == 'POST':
+        try:
+            new_email = request.form.get('email', '').strip().lower() or None
+            admin_service.update_user(
+                user_id,
+                email=new_email if new_email != user.email else None,
+                full_name=request.form.get('full_name', '').strip() or None,
+                employee_id=request.form.get('employee_id', '').strip(),
+                department=request.form.get('department', '').strip() or None,
+            )
+            flash('User updated successfully.', 'success')
+            return redirect(url_for('panel.admin_users'))
+        except Exception as e:
+            flash(f'Error: {e}', 'error')
+
+    context = {'user': user, 'active_page': 'admin_users'}
+    return render_template('panel/pages/admin/edit_user.html', **context)
+
+
+# ── Admin Faculty Management ─────────────────────────────────────────
+
+@panel_bp.route('/admin/faculty')
+@login_required
+@role_required('admin')
+def admin_faculty():
+    search = request.args.get('q', '').strip()
+    page = request.args.get('page', 1, type=int)
+    pagination = admin_service.get_all_faculty(search=search or None, page=page)
+    from app.models.subject import Subject
+    subjects = Subject.query.order_by(Subject.subject_code).all()
+    context = {
+        'pagination': pagination,
+        'faculty_list': pagination.items,
+        'search': search,
+        'subjects': subjects,
+        'active_page': 'admin_faculty',
+    }
+    if _is_htmx():
+        return render_template('panel/partials/admin/faculty.html', **context)
+    return render_template('panel/pages/admin/faculty.html', **context)
+
+
+@panel_bp.route('/admin/faculty/<int:faculty_id>/edit', methods=['POST'])
+@login_required
+@role_required('admin')
+def admin_edit_faculty(faculty_id):
+    try:
+        admin_service.update_faculty(
+            faculty_id,
+            full_name=request.form.get('full_name', '').strip() or None,
+            employee_id=request.form.get('employee_id', '').strip(),
+            department=request.form.get('department', '').strip() or None,
+        )
+        flash('Faculty profile updated.', 'success')
+    except Exception as e:
+        flash(f'Error: {e}', 'error')
+    return redirect(url_for('panel.admin_faculty'))
+
+
+@panel_bp.route('/admin/faculty/<int:faculty_id>/delete', methods=['POST'])
+@login_required
+@role_required('admin')
+def admin_delete_faculty(faculty_id):
+    try:
+        admin_service.delete_faculty_profile(faculty_id)
+        flash('Faculty profile removed. The user account still exists.', 'success')
+    except Exception as e:
+        flash(f'Error: {e}', 'error')
+    return redirect(url_for('panel.admin_faculty'))
+
+
+@panel_bp.route('/admin/faculty/<int:faculty_id>/assign-subject', methods=['POST'])
+@login_required
+@role_required('admin')
+def admin_faculty_assign_subject(faculty_id):
+    subject_id = request.form.get('subject_id', type=int)
+    try:
+        admin_service.assign_subject_to_faculty(faculty_id, subject_id)
+        flash('Subject assigned.', 'success')
+    except Exception as e:
+        flash(str(e), 'error')
+    return redirect(url_for('panel.admin_faculty'))
+
+
+@panel_bp.route('/admin/faculty/<int:faculty_id>/subjects/<int:subject_id>/unassign', methods=['POST'])
+@login_required
+@role_required('admin')
+def admin_faculty_remove_subject(faculty_id, subject_id):
+    try:
+        admin_service.remove_subject_from_faculty(faculty_id, subject_id)
+        flash('Subject removed.', 'success')
+    except Exception as e:
+        flash(str(e), 'error')
+    return redirect(url_for('panel.admin_faculty'))
 
 
 # ── Admin Students ──────────────────────────────────────────────────
