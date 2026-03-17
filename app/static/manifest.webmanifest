@@ -34,12 +34,12 @@
     {
       "name": "Dashboard",
       "url": "/student/dashboard",
-      "icons": []
+      "icons": [{"src": "/static/img/icon-96.png", "sizes": "96x96", "type": "image/png"}]
     },
     {
       "name": "Grades",
       "url": "/student/grades",
-      "icons": []
+      "icons": [{"src": "/static/img/icon-96.png", "sizes": "96x96", "type": "image/png"}]
     }
   ]
 }
