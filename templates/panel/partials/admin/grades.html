@@ -160,8 +160,11 @@
   {% if pagination.pages > 1 %}
   <div class="flex items-center justify-between">
     <div class="text-sm text-slate-500">
-      Showing {{ ((pagination.page - 1) * pagination.per_page) + 1 }} -
-      {{ min(pagination.page * pagination.per_page, pagination.total) }}
+      {% set start_index = ((pagination.page - 1) * pagination.per_page) + 1 %}
+      {% set page_end = pagination.page * pagination.per_page %}
+      {% set end_index = page_end if page_end <= pagination.total else pagination.total %}
+      Showing {{ start_index }} -
+      {{ end_index }}
       of {{ pagination.total }} entries
     </div>
     <div class="flex items-center gap-1">
