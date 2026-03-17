@@ -57,6 +57,19 @@ def get_supabase_user(access_token: str):
         return None
 
 
+def reset_password(email: str, redirect_to: str) -> None:
+    """Send a password reset email via Supabase Auth."""
+    client = _get_client()
+    client.auth.reset_password_email(email, {"redirect_to": redirect_to})
+
+
+def update_password(access_token: str, new_password: str) -> None:
+    """Update the user's password using a valid access token from the reset flow."""
+    client = _get_client()
+    client.auth.set_session(access_token, "")
+    client.auth.update_user({"password": new_password})
+
+
 def sign_up(email: str, password: str, role: str = 'student', redirect_to: str | None = None):
     """
     Register a new user via Supabase Admin API.

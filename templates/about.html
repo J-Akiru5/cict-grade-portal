@@ -19,118 +19,357 @@
 {% endblock %}
 
 {% block content %}
-<div class="min-h-screen relative overflow-hidden bg-[radial-gradient(circle_at_top_right,_#800000_0%,_#1e1e2e_42%,_#0b1020_100%)] text-white">
-  <div class="absolute inset-0 opacity-[0.06] bg-[linear-gradient(rgba(255,255,255,0.12)_1px,_transparent_1px),linear-gradient(90deg,_rgba(255,255,255,0.12)_1px,_transparent_1px)] bg-[size:42px_42px]"></div>
-  <div class="absolute -top-16 right-0 h-72 w-72 rounded-full bg-gold/20 blur-3xl"></div>
-  <div class="absolute bottom-0 left-0 h-80 w-80 rounded-full bg-maroon/40 blur-3xl"></div>
+<div class="min-h-screen bg-white font-sans text-slate-900">
 
-  <div class="relative z-10 mx-auto flex min-h-screen max-w-7xl flex-col px-4 py-6 sm:px-6 lg:px-8">
-    <header class="rounded-2xl border border-white/15 bg-white/8 px-5 py-4 backdrop-blur-md sm:px-6">
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+  {# ── Fixed Header ── #}
+  <header class="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur-md">
+    <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+      <a href="{{ url_for('main.about') }}" class="flex items-center gap-3">
+        <div class="flex items-center gap-2">
+          <img src="{{ url_for('static', filename='img/isufst-logo.png') }}" alt="ISUFST" class="h-9 w-9 object-contain"/>
+          <img src="{{ url_for('static', filename='img/cict-logo.png') }}" alt="CICT" class="h-9 w-9 object-contain"/>
+        </div>
         <div>
-          <a href="{{ url_for('main.about') }}" class="inline-flex items-center gap-3">
-            <span class="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-gold/40 bg-white/10 shadow-lg shadow-black/20">
-              <img src="{{ url_for('static', filename='img/cict-logo.png') }}" alt="CICT logo" class="h-7 w-7 object-contain" />
-            </span>
-            <span>
-              <span class="block text-lg font-semibold tracking-tight">CICT Grade Portal</span>
-              <span class="block text-sm text-white/60">ISUFST Dingle Campus</span>
-            </span>
-          </a>
+          <span class="block text-sm font-bold tracking-tight text-slate-900">CICT Grade Portal</span>
+          <span class="block text-xs text-slate-500">ISUFST Dingle Campus</span>
         </div>
-        <nav class="flex flex-wrap items-center gap-2 text-sm font-medium text-white/75">
-          <a href="{{ url_for('main.about') }}" class="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-white transition hover:bg-white/15">About</a>
-          <a href="{{ url_for('main.retention_policies') }}" class="rounded-full border border-white/10 px-4 py-2 transition hover:border-gold/50 hover:bg-white/10 hover:text-white">Retention Policies</a>
-          {% if current_user.is_authenticated %}
-          <a href="{{ url_for('main.index') }}" class="rounded-full border border-gold/30 bg-gold/15 px-4 py-2 text-gold transition hover:bg-gold/20">Open Portal</a>
-          {% else %}
-          <a href="{{ url_for('auth.login') }}" class="rounded-full border border-gold/30 bg-gold/15 px-4 py-2 text-gold transition hover:bg-gold/20">Sign In</a>
-          <a href="{{ url_for('auth.register') }}" class="rounded-full border border-white/10 px-4 py-2 transition hover:border-gold/50 hover:bg-white/10 hover:text-white">Register</a>
-          {% endif %}
-        </nav>
+      </a>
+      <nav class="flex flex-wrap items-center gap-2 text-sm font-medium">
+        <a href="{{ url_for('main.about') }}" class="rounded-full bg-maroon/10 px-4 py-1.5 text-maroon transition hover:bg-maroon/15">About</a>
+        <a href="{{ url_for('main.retention_policies') }}" class="rounded-full px-4 py-1.5 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900">Retention Policies</a>
+        {% if current_user.is_authenticated %}
+        <a href="{{ url_for('main.index') }}" class="rounded-full border border-maroon bg-maroon px-4 py-1.5 text-white transition hover:bg-maroon-dark">Open Portal</a>
+        {% else %}
+        <a href="{{ url_for('auth.login') }}" class="rounded-full border border-maroon bg-maroon px-4 py-1.5 text-white transition hover:bg-maroon-dark">Sign In</a>
+        <a href="{{ url_for('auth.register') }}" class="hidden rounded-full border border-slate-300 px-4 py-1.5 text-slate-600 transition hover:bg-slate-50 sm:inline-flex">Register</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+
+  {# ── Hero Section ── #}
+  <section class="relative overflow-hidden bg-gradient-to-b from-gray-900 via-[#4a0000] to-gray-900 py-20 text-white md:py-28 lg:py-36">
+    {# Diagonal stripe overlay #}
+    <div class="pointer-events-none absolute inset-0 opacity-[0.04]" style="background:repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(255,255,255,0.05) 2px,rgba(255,255,255,0.05) 4px)"></div>
+    {# Radial glow #}
+    <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.08)_0%,transparent_70%)]"></div>
+    {# Gold blur orb #}
+    <div class="pointer-events-none absolute -top-20 right-1/4 h-80 w-80 rounded-full bg-gold/15 blur-3xl"></div>
+    <div class="pointer-events-none absolute bottom-0 left-1/4 h-64 w-64 rounded-full bg-maroon/30 blur-3xl"></div>
+
+    <div class="relative z-10 mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
+      <div class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-gold backdrop-blur-sm">
+        Academic Information Portal
       </div>
-    </header>
+      <h1 class="mt-6 text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl">
+        About the <span class="text-gold">CICT Grade Portal</span>
+      </h1>
+      <p class="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-white/70 md:text-xl">
+        A central platform for grades, schedules, records, and academic standing for the BSIT program at ISUFST Dingle Campus.
+      </p>
+      <div class="mt-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm font-mono text-white/60 backdrop-blur-sm">
+        College of ICT — Dingle Campus
+      </div>
+    </div>
+  </section>
 
-    <main class="flex-1 py-8 sm:py-10">
-      <section class="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.9fr)] lg:items-start">
-        <div class="rounded-[2rem] border border-white/15 bg-white/10 p-6 shadow-2xl shadow-black/25 backdrop-blur-md sm:p-8 lg:p-10">
-          <div class="inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-gold">
-            Academic Information Portal
-          </div>
-          <h1 class="mt-5 max-w-3xl text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
-            A central portal for grades, schedules, records, and academic standing.
-          </h1>
-          <p class="mt-5 max-w-2xl text-base leading-7 text-white/72 sm:text-lg">
-            The CICT Grade Portal gives students, faculty, and administrators a single place to review academic records, monitor progress, and manage core academic workflows for the BSIT program.
-          </p>
-
-          <div class="mt-8 flex flex-wrap gap-3">
-            <a href="{{ url_for('main.retention_policies') }}" class="inline-flex items-center gap-2 rounded-2xl bg-maroon px-5 py-3 font-semibold text-white shadow-lg shadow-maroon/30 transition hover:bg-maroon-dark">
-              View Retention Policies
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+  {# ── Mission / Purpose Section ── #}
+  <section class="py-16 md:py-20">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="grid gap-12 lg:grid-cols-2 lg:items-start">
+        <div>
+          <div class="flex items-center gap-3 mb-6">
+            <div class="flex h-10 w-10 items-center justify-center rounded-full bg-maroon/10">
+              <svg class="h-5 w-5 text-maroon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
               </svg>
-            </a>
-            {% if current_user.is_authenticated %}
-            <a href="{{ url_for('main.index') }}" class="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/10 px-5 py-3 font-semibold text-white transition hover:bg-white/15">
-              Go to Dashboard
-            </a>
-            {% else %}
-            <a href="{{ url_for('auth.login') }}" class="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/10 px-5 py-3 font-semibold text-white transition hover:bg-white/15">
-              Sign In to Portal
-            </a>
-            {% endif %}
+            </div>
+            <h2 class="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">Empowering Academic Transparency</h2>
+          </div>
+          <p class="text-base leading-relaxed text-slate-600">
+            The CICT Grade Portal is designed to give students, faculty, and administrators a single place to review academic records, monitor progress, and manage core academic workflows for the BSIT program.
+          </p>
+          <p class="mt-4 text-base leading-relaxed text-slate-600">
+            By centralizing grades, subject loads, schedules, and profile information, the portal aims to make key academic data easier to access so that students and faculty can respond early to grade or enrollment risks.
+          </p>
+          <div class="mt-6 rounded-xl border-l-4 border-gold bg-gold/5 p-5">
+            <p class="text-sm font-medium text-slate-700">
+              The portal serves the <strong>College of Information and Communications Technology (CICT)</strong> at the Iloilo State University of Fisheries Science and Technology, Dingle Campus.
+            </p>
           </div>
         </div>
 
-        <aside class="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
-          <article class="rounded-[1.75rem] border border-white/15 bg-slate-950/45 p-6 shadow-xl shadow-black/20">
-            <p class="text-sm font-semibold uppercase tracking-[0.22em] text-gold/80">What the portal supports</p>
-            <ul class="mt-4 space-y-3 text-sm leading-6 text-white/72">
-              <li>Student access to grades, subject loads, schedules, and profile information.</li>
-              <li>Faculty workflows for class records, grading, and student monitoring.</li>
-              <li>Administrative oversight for users, subjects, settings, and audit trails.</li>
-            </ul>
-          </article>
-          <article class="rounded-[1.75rem] border border-white/15 bg-white/10 p-6 backdrop-blur-md">
-            <p class="text-sm font-semibold uppercase tracking-[0.22em] text-gold/80">Retention standards</p>
-            <p class="mt-4 text-sm leading-6 text-white/72">
-              BSIT students are expected to maintain academic improvement, protect a semester GWA of 3.0, and avoid repeated failures in major and general education courses.
-            </p>
-            <a href="{{ url_for('main.retention_policies') }}" class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-gold transition hover:text-gold/80">
-              Read the full policy
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7-7 7M3 12h18"/>
+        <div>
+          <div class="flex items-center gap-3 mb-6">
+            <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gold/15">
+              <svg class="h-5 w-5 text-gold-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
               </svg>
-            </a>
-          </article>
-        </aside>
-      </section>
+            </div>
+            <h2 class="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">Data Privacy & Security</h2>
+          </div>
+          <p class="text-base leading-relaxed text-slate-600">
+            All student and faculty data is handled with strict confidentiality. The portal uses Supabase-backed authentication with role-based access, ensuring that academic records are only visible to authorized users.
+          </p>
+          <p class="mt-4 text-base leading-relaxed text-slate-600">
+            New account registrations require admin approval before access is granted, and account activities are tracked via an audit trail for transparency and accountability.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
 
-      <section class="mt-8 grid gap-4 md:grid-cols-3">
-        <article class="rounded-[1.75rem] border border-white/12 bg-white/8 p-6 backdrop-blur-sm">
-          <span class="text-xs font-semibold uppercase tracking-[0.24em] text-gold/75">Transparency</span>
-          <h2 class="mt-3 text-xl font-bold">Academic standing stays visible</h2>
-          <p class="mt-3 text-sm leading-6 text-white/68">
-            The portal is intended to make key academic information easier to review so students can respond early to grade or enrollment risks.
+  {# ── Feature Cards Section ── #}
+  <section class="border-t border-slate-100 bg-slate-50 py-16 md:py-20">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-12">
+        <span class="text-xs font-bold uppercase tracking-[0.2em] text-maroon/60">What the Portal Supports</span>
+        <h2 class="mt-3 text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">Built for Everyone in CICT</h2>
+      </div>
+
+      <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {# Card 1 #}
+        <article class="rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm transition-all hover:border-maroon/20 hover:shadow-lg">
+          <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-maroon/10">
+            <svg class="h-6 w-6 text-maroon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+            </svg>
+          </div>
+          <h3 class="font-semibold text-slate-900">Grades & Records</h3>
+          <p class="mt-2 text-sm text-slate-500">Real-time access to grades, GWA tracking, and full academic history.</p>
+        </article>
+
+        {# Card 2 #}
+        <article class="rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm transition-all hover:border-gold/30 hover:shadow-lg">
+          <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gold/15">
+            <svg class="h-6 w-6 text-gold-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+          </div>
+          <h3 class="font-semibold text-slate-900">Schedules</h3>
+          <p class="mt-2 text-sm text-slate-500">Section-based class schedules viewable in a weekly matrix format.</p>
+        </article>
+
+        {# Card 3 #}
+        <article class="rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm transition-all hover:border-maroon/20 hover:shadow-lg">
+          <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-maroon/10">
+            <svg class="h-6 w-6 text-maroon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+          </div>
+          <h3 class="font-semibold text-slate-900">Faculty Workflows</h3>
+          <p class="mt-2 text-sm text-slate-500">Grade encoding, class records, and student monitoring tools.</p>
+        </article>
+
+        {# Card 4 #}
+        <article class="rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm transition-all hover:border-gold/30 hover:shadow-lg">
+          <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gold/15">
+            <svg class="h-6 w-6 text-gold-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+          </div>
+          <h3 class="font-semibold text-slate-900">Admin Oversight</h3>
+          <p class="mt-2 text-sm text-slate-500">User management, subject administration, and audit trails.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  {# ── Two-Column Info Cards ── #}
+  <section class="py-16 md:py-20">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="grid gap-6 md:grid-cols-2">
+        <article class="rounded-2xl border border-slate-200 border-l-4 border-l-maroon bg-white p-8 shadow-sm transition-all hover:shadow-lg">
+          <div class="mb-4 flex items-center gap-3">
+            <svg class="h-5 w-5 text-maroon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <h3 class="text-lg font-bold text-slate-900">Open Access for Students</h3>
+          </div>
+          <p class="text-sm leading-relaxed text-slate-600">
+            Students can review their grades, subject loads, class schedules, and profile information at any time. The portal is accessible on mobile and desktop devices as a progressive web app.
           </p>
         </article>
-        <article class="rounded-[1.75rem] border border-white/12 bg-white/8 p-6 backdrop-blur-sm">
-          <span class="text-xs font-semibold uppercase tracking-[0.24em] text-gold/75">Support</span>
-          <h2 class="mt-3 text-xl font-bold">Clear next steps for students</h2>
-          <p class="mt-3 text-sm leading-6 text-white/68">
-            Retention, probation, and re-enrollment guidance can now be read on a dedicated public page before students sign in or register.
+
+        <article class="rounded-2xl border border-slate-200 border-l-4 border-l-gold bg-white p-8 shadow-sm transition-all hover:shadow-lg">
+          <div class="mb-4 flex items-center gap-3">
+            <svg class="h-5 w-5 text-gold-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+            <h3 class="text-lg font-bold text-slate-900">Retention Policy Awareness</h3>
+          </div>
+          <p class="text-sm leading-relaxed text-slate-600">
+            Public informational pages help applicants, current students, faculty, and parents understand BSIT program requirements, probation rules, and re-enrollment processes before signing in.
           </p>
         </article>
-        <article class="rounded-[1.75rem] border border-white/12 bg-white/8 p-6 backdrop-blur-sm">
-          <span class="text-xs font-semibold uppercase tracking-[0.24em] text-gold/75">Access</span>
-          <h2 class="mt-3 text-xl font-bold">Useful before login</h2>
-          <p class="mt-3 text-sm leading-6 text-white/68">
-            Public informational pages make the portal easier to understand for applicants, current students, faculty, and parents reviewing program expectations.
+      </div>
+    </div>
+  </section>
+
+  {# ── Contact Section ── #}
+  <section class="border-t border-slate-100">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="grid min-h-[50vh] md:grid-cols-2">
+        {# Left: Contact Info #}
+        <div class="relative overflow-hidden bg-gradient-to-br from-gray-900 via-[#4a0000] to-gray-900 px-8 py-16 text-white md:px-12 md:py-20">
+          <div class="pointer-events-none absolute inset-0 opacity-[0.04]" style="background:repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(255,255,255,0.05) 2px,rgba(255,255,255,0.05) 4px)"></div>
+          <div class="relative z-10">
+            <h2 class="text-2xl font-bold tracking-tight md:text-3xl">Contact Us</h2>
+            <p class="mt-2 text-white/60">Get in touch with the CICT Office.</p>
+
+            <div class="mt-10 space-y-8">
+              <div class="flex items-start gap-4">
+                <div class="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-gold/15">
+                  <svg class="h-5 w-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
+                </div>
+                <div>
+                  <span class="text-xs font-semibold uppercase tracking-widest text-white/50">Address</span>
+                  <p class="mt-1 text-sm text-white/80">Brgy. San Juan, Dingle, Iloilo 5035, Philippines</p>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-4">
+                <div class="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-gold/15">
+                  <svg class="h-5 w-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                  </svg>
+                </div>
+                <div>
+                  <span class="text-xs font-semibold uppercase tracking-widest text-white/50">Email</span>
+                  <p class="mt-1 text-sm font-mono text-white/80">cict.dingle@isufst.edu.ph</p>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-4">
+                <div class="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-gold/15">
+                  <svg class="h-5 w-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+                  </svg>
+                </div>
+                <div>
+                  <span class="text-xs font-semibold uppercase tracking-widest text-white/50">Website</span>
+                  <p class="mt-1 text-sm font-mono text-white/80">isufst.edu.ph</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {# Right: Map #}
+        <div class="min-h-[300px] md:min-h-0">
+          <iframe
+            title="ISUFST Dingle Campus Location"
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3897.1!2d122.661!3d11.001!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x33ae6e7b7b7b7b7b%3A0x0!2sISUFST%20Dingle%20Campus!5e0!3m2!1sen!2sph!4v1"
+            class="h-full w-full border-0"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            allowfullscreen>
+          </iframe>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {# ── CTA Banner ── #}
+  <section class="bg-maroon/5 py-12 md:py-16">
+    <div class="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
+      <h2 class="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">Ready to check your academic records?</h2>
+      <p class="mx-auto mt-3 max-w-xl text-slate-600">Sign in to view your grades, schedule, and profile. New students can register for an account.</p>
+      <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
+        {% if current_user.is_authenticated %}
+        <a href="{{ url_for('main.index') }}" class="inline-flex items-center gap-2 rounded-xl bg-maroon px-6 py-3 font-semibold text-white shadow-lg shadow-maroon/20 transition hover:bg-maroon-dark hover:shadow-gold">
+          Open Portal
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+          </svg>
+        </a>
+        {% else %}
+        <a href="{{ url_for('auth.login') }}" class="inline-flex items-center gap-2 rounded-xl bg-maroon px-6 py-3 font-semibold text-white shadow-lg shadow-maroon/20 transition hover:bg-maroon-dark hover:shadow-gold">
+          Sign In
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+          </svg>
+        </a>
+        <a href="{{ url_for('auth.register') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-6 py-3 font-semibold text-slate-700 transition hover:bg-slate-50">
+          Create Account
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+  {# ── Footer ── #}
+  <footer class="relative overflow-hidden border-t border-white/10 bg-[#5c0202] text-white">
+    {# Decorative overlays #}
+    <div class="pointer-events-none absolute inset-0 opacity-20" style="background:repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(255,255,255,0.05) 2px,rgba(255,255,255,0.05) 4px)"></div>
+    <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.08)_0%,transparent_70%)]"></div>
+    <div class="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/20 to-black/40"></div>
+    <div class="pointer-events-none absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+
+    <div class="relative z-10 mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <div class="grid gap-8 md:grid-cols-4">
+        {# Brand Column (spans 2) #}
+        <div class="md:col-span-2">
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 rounded-xl bg-white/10 p-2 backdrop-blur-sm">
+              <img src="{{ url_for('static', filename='img/isufst-logo.png') }}" alt="ISUFST" class="h-8 w-8 object-contain"/>
+              <img src="{{ url_for('static', filename='img/cict-logo.png') }}" alt="CICT" class="h-8 w-8 object-contain"/>
+            </div>
+            <div>
+              <span class="block text-sm font-bold">CICT Grade Portal</span>
+              <span class="block text-xs text-white/60">ISUFST Dingle Campus</span>
+            </div>
+          </div>
+          <p class="mt-4 max-w-md text-sm leading-relaxed text-white/60">
+            The official academic grading and performance monitoring platform for the College of Information and Communications Technology, ISUFST Dingle Campus.
           </p>
-        </article>
-      </section>
-    </main>
-  </div>
+          <div class="mt-4 flex flex-wrap gap-2">
+            <a href="https://isufst.edu.ph" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-white/20">
+              <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+              ISUFST
+            </a>
+          </div>
+        </div>
+
+        {# Quick Links #}
+        <div>
+          <h3 class="text-xs font-bold uppercase tracking-widest text-white/50">Quick Links</h3>
+          <ul class="mt-4 space-y-3 text-sm">
+            <li><a href="{{ url_for('main.about') }}" class="inline-block text-white/70 transition-all hover:translate-x-1 hover:text-white">About</a></li>
+            <li><a href="{{ url_for('main.retention_policies') }}" class="inline-block text-white/70 transition-all hover:translate-x-1 hover:text-white">Retention Policies</a></li>
+            <li><a href="{{ url_for('auth.login') }}" class="inline-block text-white/70 transition-all hover:translate-x-1 hover:text-white">Sign In</a></li>
+            <li><a href="{{ url_for('auth.register') }}" class="inline-block text-white/70 transition-all hover:translate-x-1 hover:text-white">Register</a></li>
+          </ul>
+        </div>
+
+        {# Contact #}
+        <div>
+          <h3 class="text-xs font-bold uppercase tracking-widest text-white/50">Contact</h3>
+          <ul class="mt-4 space-y-3 text-sm text-white/70">
+            <li class="flex items-center gap-2">
+              <svg class="h-4 w-4 text-gold/70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+              <span class="font-mono text-xs">cict.dingle@isufst.edu.ph</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="h-4 w-4 text-gold/70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              <span>Dingle, Iloilo</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    {# Copyright Bar #}
+    <div class="relative z-10 border-t border-white/10">
+      <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-4 text-xs text-white/40 sm:flex-row sm:px-6 lg:px-8">
+        <p>&copy; 2026 ISUFST — CICT Dingle Campus. All rights reserved.</p>
+        <p>Powered by CICT-ISUFST</p>
+      </div>
+    </div>
+  </footer>
 </div>
 {% endblock %}

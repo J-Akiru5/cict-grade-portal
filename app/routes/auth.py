@@ -100,6 +100,70 @@ def _redirect_by_role(role: str):
     return redirect(url_for('main.index'))
 
 
+@auth_bp.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    """Request a password reset link."""
+    if current_user.is_authenticated:
+        return _redirect_by_role(current_user.role)
+
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip().lower()
+        if not email:
+            flash('Please enter your email address.', 'error')
+            return render_template('auth/forgot_password.html')
+
+        try:
+            redirect_to = url_for('auth.reset_password', _external=True)
+            auth_service.reset_password(email, redirect_to)
+        except Exception as e:
+            logging.warning(f'Password reset request failed for {email}: {e}')
+        # Always show success to prevent email enumeration
+        flash('If an account with that email exists, a password reset link has been sent.', 'success')
+        return redirect(url_for('auth.login'))
+
+    return render_template('auth/forgot_password.html')
+
+
+@auth_bp.route('/reset-password', methods=['GET', 'POST'])
+def reset_password():
+    """Set a new password using the token from the reset email."""
+    if current_user.is_authenticated:
+        return _redirect_by_role(current_user.role)
+
+    access_token = request.args.get('access_token') or request.form.get('access_token', '')
+
+    if request.method == 'POST':
+        password = request.form.get('password', '')
+        confirm = request.form.get('confirm_password', '')
+
+        if not access_token:
+            flash('Invalid or expired reset link. Please request a new one.', 'error')
+            return redirect(url_for('auth.forgot_password'))
+
+        if not password or len(password) < 8:
+            flash('Password must be at least 8 characters.', 'error')
+            return render_template('auth/reset_password.html', access_token=access_token)
+
+        if password != confirm:
+            flash('Passwords do not match.', 'error')
+            return render_template('auth/reset_password.html', access_token=access_token)
+
+        try:
+            auth_service.update_password(access_token, password)
+            flash('Your password has been reset. Please sign in.', 'success')
+            return redirect(url_for('auth.login'))
+        except Exception as e:
+            logging.warning(f'Password reset failed: {e}')
+            flash('Reset link is invalid or expired. Please request a new one.', 'error')
+            return redirect(url_for('auth.forgot_password'))
+
+    if not access_token:
+        flash('Invalid or expired reset link.', 'error')
+        return redirect(url_for('auth.forgot_password'))
+
+    return render_template('auth/reset_password.html', access_token=access_token)
+
+
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     """Student/faculty self-registration."""
