@@ -87,26 +87,27 @@ def register_cli(app):
         from seed_sections import seed_missing_sections
         seed_missing_sections()
 
-    @app.cli.command('seed-schedules')
+    @app.cli.command('seed-schedules-official')
     @click.option('--academic-year', default='2025-2026', show_default=True,
                   help='Academic year for schedules.')
     @click.option('--semester', default='2nd',
                   type=click.Choice(['1st', '2nd', 'Summer']),
                   show_default=True, help='Semester for schedules.')
-    def seed_schedules_cmd(academic_year, semester):
-        """Seed class schedules from the CICT schedule images."""
-        from seed_schedules_2025_2026 import seed_all_schedules, create_schedule_entry
+    def seed_schedules_official_cmd(academic_year, semester):
+        """Seed OFFICIAL class schedules from ISUFST CICT schedule documents."""
+        from seed_official_schedules_2025_2026 import seed_official_schedules, create_schedule_entry
         from app.extensions import db
 
-        click.echo(f"🚀 Seeding schedules for {semester} Semester, A.Y. {academic_year}")
+        click.echo(f"🚀 Seeding OFFICIAL schedules for {semester} Semester, A.Y. {academic_year}")
+        click.echo("📋 Source: Official ISUFST CICT Schedule Documents")
 
         try:
             # First ensure all sections exist
             from seed_sections import seed_missing_sections
             section_count = seed_missing_sections()
 
-            # Get all schedule data
-            schedules = seed_all_schedules()
+            # Get all OFFICIAL schedule data
+            schedules = seed_official_schedules()
 
             # Create all schedule entries
             created_count = 0
@@ -118,10 +119,10 @@ def register_cli(app):
             # Commit all changes
             db.session.commit()
 
-            click.echo(f"✅ Successfully created {created_count} schedule entries")
+            click.echo(f"✅ Successfully created {created_count} OFFICIAL schedule entries")
             if section_count > 0:
                 click.echo(f"✅ Created {section_count} missing sections")
-            click.echo("🎓 Schedule seeding completed!")
+            click.echo("🎓 OFFICIAL schedule seeding completed!")
 
         except Exception as e:
             db.session.rollback()

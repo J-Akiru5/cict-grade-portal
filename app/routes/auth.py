@@ -131,6 +131,18 @@ def reset_password():
         return _redirect_by_role(current_user.role)
 
     access_token = request.args.get('access_token') or request.form.get('access_token', '')
+    pkce_code = request.args.get('code')
+
+    # If PKCE code is present, exchange it for a session immediately
+    if pkce_code and not access_token:
+        try:
+            response = auth_service.exchange_code(pkce_code)
+            access_token = response.session.access_token
+            logging.info(f"Successfully exchanged PKCE code for access_token")
+        except Exception as e:
+            logging.warning(f"PKCE code exchange failed: {e}")
+            flash('Invalid or expired reset link. Please request a new one.', 'error')
+            return redirect(url_for('auth.forgot_password'))
 
     if request.method == 'POST':
         password = request.form.get('password', '')

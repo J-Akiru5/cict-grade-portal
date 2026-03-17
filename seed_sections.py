@@ -18,8 +18,8 @@ def seed_missing_sections():
         ("BSIT", 1, "C"),
 
         # 2nd Year
-        ("BSIT", 2, "A"),
-        ("BSIT", 2, "B"),
+        ("BSIT", 2, "A-WM"),  # Web/Mobile
+        ("BSIT", 2, "B-WM"),  # Web/Mobile
         ("BSIT", 2, "C-NT"),  # Non-Traditional
         ("BSIT", 2, "D-NT"),  # Non-Traditional
 

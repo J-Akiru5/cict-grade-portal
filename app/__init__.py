@@ -3,6 +3,7 @@ from flask import Flask, request
 from flask_login import current_user
 from .config import config
 from .extensions import db, migrate, login_manager, csrf
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 
 def create_app(config_name: str | None = None) -> Flask:
@@ -14,6 +15,9 @@ def create_app(config_name: str | None = None) -> Flask:
         template_folder='../templates',
         static_folder='static',
     )
+
+    # Trust the X-Forwarded-Proto header for HTTPS redirection on Vercel/Proxies
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
     # Load config
     app.config.from_object(config.get(config_name, config['default']))

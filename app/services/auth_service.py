@@ -70,6 +70,12 @@ def update_password(access_token: str, new_password: str) -> None:
     client.auth.update_user({"password": new_password})
 
 
+def exchange_code(code: str):
+    """Exchange a PKCE auth code for a session."""
+    client = _get_client()
+    return client.auth.exchange_code_for_session({"auth_code": code})
+
+
 def sign_up(email: str, password: str, role: str = 'student', redirect_to: str | None = None):
     """
     Register a new user via Supabase Admin API.
