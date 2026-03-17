@@ -1,77 +1,129 @@
-{# ── Shared Public Footer ── #}
-<footer class="relative overflow-hidden border-t border-white/10 bg-gray-900 text-white">
+{# ── Shared Public Footer (IRJICT Design System) ── #}
+<footer class="relative overflow-hidden bg-[#5c0202] text-white">
   {# Decorative overlays #}
   <div class="pointer-events-none absolute inset-0 opacity-20" style="background:repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(255,255,255,0.05) 2px,rgba(255,255,255,0.05) 4px)"></div>
   <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.08)_0%,transparent_70%)]"></div>
   <div class="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/20 to-black/40"></div>
   <div class="pointer-events-none absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
 
-  <div class="relative z-10 mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-    <div class="grid gap-8 md:grid-cols-4">
-      {# Brand Column (spans 2) #}
-      <div class="md:col-span-2">
-        <div class="flex items-center gap-3">
-          <div class="flex items-center gap-2 rounded-xl bg-white/10 p-2 backdrop-blur-sm">
-            <img src="{{ url_for('static', filename='img/isufst-logo.png') }}" alt="ISUFST" class="h-8 w-8 object-contain"/>
-            <img src="{{ url_for('static', filename='img/cict-logo.png') }}" alt="CICT" class="h-8 w-8 object-contain"/>
+  <div class="relative z-10 mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <div class="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+
+      {# Column 1: Brand #}
+      <div class="sm:col-span-2 lg:col-span-1">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 backdrop-blur-sm">
+            <img src="{{ url_for('static', filename='img/icon-192.png') }}" alt="Grade Portal" class="h-8 w-8 object-contain"/>
           </div>
-          <div>
-            <span class="block text-sm font-bold">CICT Grade Portal</span>
-            <span class="block text-xs text-white/60">Powered by CICT-ISUFST Dingle Campus</span>
+          <div class="flex items-center gap-2">
+            <img src="{{ url_for('static', filename='img/cict-logo.png') }}" alt="CICT" class="h-10 w-10 object-contain"/>
+            <img src="{{ url_for('static', filename='img/isufst-logo.png') }}" alt="ISUFST" class="h-12 w-12 object-contain"/>
           </div>
         </div>
-        <p class="mt-4 max-w-md text-sm leading-relaxed text-white/60">
-          The official academic grading and performance monitoring platform for the College of Information and Communications Technology, ISUFST Dingle Campus.
+        <h3 class="text-lg font-bold text-white">CICT Grade Portal</h3>
+        <p class="mt-1 text-sm text-gray-300">Academic Records & Performance Monitoring</p>
+        <p class="mt-3 text-sm leading-relaxed text-gray-300/80">
+          The official grading platform for the College of Information and Communications Technology, ISUFST Dingle Campus.
         </p>
-        <div class="mt-4 flex flex-wrap gap-2">
-          <a href="https://prism.jeffdev.studio/" target="_blank" rel="noopener"
-             class="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-white/20">
-            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-            </svg>
-            Built with Prism Context Engine
+
+        {# Buttons #}
+        <div class="mt-5 flex flex-wrap gap-2">
+          <a href="https://isufst.edu.ph/" target="_blank" rel="noopener"
+             class="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-4 py-2 text-xs font-medium text-white transition hover:bg-white/20">
+            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
+            ISUFST Website
+          </a>
+          <a href="https://cictstore.me/" target="_blank" rel="noopener"
+             class="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-4 py-2 text-xs font-medium text-white transition hover:bg-white/20">
+            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+            CICT Store
           </a>
         </div>
       </div>
 
-      {# Quick Links #}
+      {# Column 2: Quick Links #}
       <div>
-        <h3 class="text-xs font-bold uppercase tracking-widest text-white/50">Quick Links</h3>
-        <ul class="mt-4 space-y-3 text-sm">
-          <li><a href="{{ url_for('main.index') }}" class="inline-block text-white/70 transition-all hover:translate-x-1 hover:text-white">Home</a></li>
-          <li><a href="{{ url_for('main.retention_policies') }}" class="inline-block text-white/70 transition-all hover:translate-x-1 hover:text-white">Retention Policies</a></li>
-          <li><a href="{{ url_for('auth.login') }}" class="inline-block text-white/70 transition-all hover:translate-x-1 hover:text-white">Sign In</a></li>
-          <li><a href="{{ url_for('auth.register') }}" class="inline-block text-white/70 transition-all hover:translate-x-1 hover:text-white">Register</a></li>
+        <h3 class="text-xs font-bold uppercase tracking-widest text-white/50 mb-5">Quick Links</h3>
+        <ul class="space-y-3 text-sm">
+          <li>
+            <a href="{{ url_for('main.index') }}" class="inline-flex items-center gap-2 text-gray-300 transition-all hover:translate-x-1 hover:text-white">
+              <svg class="h-3 w-3 text-gold/60" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+              Home
+            </a>
+          </li>
+          <li>
+            <a href="{{ url_for('main.retention_policies') }}" class="inline-flex items-center gap-2 text-gray-300 transition-all hover:translate-x-1 hover:text-white">
+              <svg class="h-3 w-3 text-gold/60" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+              Retention Policies
+            </a>
+          </li>
+          <li>
+            <a href="{{ url_for('auth.login') }}" class="inline-flex items-center gap-2 text-gray-300 transition-all hover:translate-x-1 hover:text-white">
+              <svg class="h-3 w-3 text-gold/60" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+              Sign In
+            </a>
+          </li>
+          <li>
+            <a href="{{ url_for('auth.register') }}" class="inline-flex items-center gap-2 text-gray-300 transition-all hover:translate-x-1 hover:text-white">
+              <svg class="h-3 w-3 text-gold/60" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+              Register
+            </a>
+          </li>
         </ul>
       </div>
 
-      {# Connect / Social #}
+      {# Column 3: Resources #}
       <div>
-        <h3 class="text-xs font-bold uppercase tracking-widest text-white/50">Connect</h3>
-        <ul class="mt-4 space-y-3 text-sm">
+        <h3 class="text-xs font-bold uppercase tracking-widest text-white/50 mb-5">Resources</h3>
+        <ul class="space-y-3 text-sm">
           <li>
-            <a href="https://isufst.edu.ph/" target="_blank" rel="noopener" class="flex items-center gap-2 text-white/70 transition hover:text-white">
-              <svg class="h-4 w-4 flex-none text-gold/70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
-              ISUFST Website
+            <a href="https://irjict.isufstcict.com/" target="_blank" rel="noopener" class="inline-flex items-center gap-2 text-gray-300 transition-all hover:translate-x-1 hover:text-white">
+              <svg class="h-3 w-3 text-gold/60" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+              IRJICT Journal
             </a>
           </li>
           <li>
-            <a href="https://cictstore.me/" target="_blank" rel="noopener" class="flex items-center gap-2 text-white/70 transition hover:text-white">
-              <svg class="h-4 w-4 flex-none text-gold/70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-              CICT Store
+            <a href="https://portal.isufstcict.com/" target="_blank" rel="noopener" class="inline-flex items-center gap-2 text-gray-300 transition-all hover:translate-x-1 hover:text-white">
+              <svg class="h-3 w-3 text-gold/60" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+              CICT Tech Portal
             </a>
           </li>
           <li>
-            <a href="https://www.facebook.com/profile.php?id=100068849010766" target="_blank" rel="noopener" class="flex items-center gap-2 text-white/70 transition hover:text-white">
-              <svg class="h-4 w-4 flex-none text-gold/70" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-              Official FB Page
+            <a href="https://prism.jeffdev.studio/" target="_blank" rel="noopener" class="inline-flex items-center gap-2 text-gray-300 transition-all hover:translate-x-1 hover:text-white">
+              <svg class="h-3 w-3 text-gold/60" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+              Prism Context Engine
             </a>
           </li>
-          <li>
-            <a href="https://www.facebook.com/profile.php?id=61587106231483" target="_blank" rel="noopener" class="flex items-center gap-2 text-white/70 transition hover:text-white">
-              <svg class="h-4 w-4 flex-none text-gold/70" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-              Student Council FB
-            </a>
+        </ul>
+      </div>
+
+      {# Column 4: Get In Touch #}
+      <div>
+        <h3 class="text-xs font-bold uppercase tracking-widest text-white/50 mb-5">Get In Touch</h3>
+        <ul class="space-y-4 text-sm">
+          <li class="flex items-start gap-3">
+            <div class="flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-gold/20">
+              <svg class="h-4 w-4 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </div>
+            <div>
+              <span class="block text-gray-300">Brgy. San Juan, Dingle</span>
+              <span class="block text-gray-400 text-xs">Iloilo 5035, Philippines</span>
+            </div>
+          </li>
+          <li class="flex items-start gap-3">
+            <div class="flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-gold/20">
+              <svg class="h-4 w-4 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            </div>
+            <span class="text-gray-300 font-mono text-xs break-all">cict.dingle@isufst.edu.ph</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <div class="flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-gold/20">
+              <svg class="h-4 w-4 text-gold" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            </div>
+            <div class="space-y-1">
+              <a href="https://www.facebook.com/profile.php?id=100068849010766" target="_blank" rel="noopener" class="block text-gray-300 hover:text-white transition text-xs">CICT Official Page</a>
+              <a href="https://www.facebook.com/profile.php?id=61587106231483" target="_blank" rel="noopener" class="block text-gray-300 hover:text-white transition text-xs">CICT Student Council</a>
+            </div>
           </li>
         </ul>
       </div>
@@ -79,10 +131,21 @@
   </div>
 
   {# Copyright Bar #}
-  <div class="relative z-10 border-t border-white/10">
-    <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-4 text-xs text-white/40 sm:flex-row sm:px-6 lg:px-8">
-      <p>&copy; 2026 ISUFST &mdash; CICT Dingle Campus. All rights reserved.</p>
-      <p>Powered by CICT-ISUFST Dingle Campus</p>
+  <div class="relative z-10 border-t border-white/10 bg-black/20">
+    <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 py-5 sm:flex-row sm:px-6 lg:px-8">
+      <p class="text-xs text-gray-400">
+        &copy; 2026 ISUFST &mdash; CICT Dingle Campus. All rights reserved.
+      </p>
+      <div class="flex items-center gap-3">
+        <span class="text-xs text-gray-500">Powered by CICT-ISUFST Dingle Campus</span>
+        <a href="https://prism.jeffdev.studio/" target="_blank" rel="noopener"
+           class="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white/70 transition hover:bg-white/20 hover:text-white">
+          <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+          Built with Prism
+        </a>
+      </div>
     </div>
   </div>
 </footer>

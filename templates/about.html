@@ -36,6 +36,19 @@
     <div class="pointer-events-none absolute bottom-0 left-1/4 h-64 w-64 rounded-full bg-maroon/30 blur-3xl"></div>
 
     <div class="relative z-10 mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
+      {# Logos #}
+      <div class="mb-8 flex items-center justify-center gap-4">
+        <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm shadow-lg md:h-20 md:w-20">
+          <img src="{{ url_for('static', filename='img/icon-192.png') }}" alt="Grade Portal" class="h-10 w-10 object-contain md:h-14 md:w-14"/>
+        </div>
+        <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm shadow-lg md:h-20 md:w-20">
+          <img src="{{ url_for('static', filename='img/cict-logo.png') }}" alt="CICT" class="h-10 w-10 object-contain md:h-14 md:w-14"/>
+        </div>
+        <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm shadow-lg md:h-20 md:w-20">
+          <img src="{{ url_for('static', filename='img/isufst-logo.png') }}" alt="ISUFST" class="h-10 w-10 object-contain md:h-14 md:w-14"/>
+        </div>
+      </div>
+
       <div class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-gold backdrop-blur-sm">
         Academic Grade Portal
       </div>
@@ -201,69 +214,89 @@
     </div>
   </section>
 
-  {# ── Contact Section ── #}
+  {# ── Contact & Location Section ── #}
   <section class="border-t border-white/5">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div class="grid min-h-[50vh] md:grid-cols-2">
-        {# Left: Contact Info #}
-        <div class="relative overflow-hidden bg-gradient-to-br from-gray-900 via-[#4a0000] to-gray-900 px-8 py-16 text-white md:px-12 md:py-20">
-          <div class="pointer-events-none absolute inset-0 opacity-[0.04]" style="background:repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(255,255,255,0.05) 2px,rgba(255,255,255,0.05) 4px)"></div>
-          <div class="relative z-10">
-            <h2 class="text-2xl font-bold tracking-tight md:text-3xl">Contact Us</h2>
-            <p class="mt-2 text-white/60">Get in touch with the CICT Office.</p>
+    {# Section Header #}
+    <div class="bg-gray-900 py-12 text-center">
+      <span class="text-xs font-bold uppercase tracking-[0.2em] text-gold/60">Get In Touch</span>
+      <h2 class="mt-3 text-3xl font-bold tracking-tight text-white md:text-4xl">Contact & Location</h2>
+      <p class="mx-auto mt-3 max-w-xl text-white/60">Reach out to the CICT Office for inquiries, support, or campus visits.</p>
+    </div>
 
-            <div class="mt-10 space-y-8">
-              <div class="flex items-start gap-4">
-                <div class="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-gold/15">
-                  <svg class="h-5 w-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                  </svg>
-                </div>
-                <div>
-                  <span class="text-xs font-semibold uppercase tracking-widest text-white/50">Address</span>
-                  <p class="mt-1 text-sm text-white/80">Brgy. San Juan, Dingle, Iloilo 5035, Philippines</p>
-                </div>
-              </div>
+    <div class="flex flex-col md:flex-row">
+      {# Left: Contact Info #}
+      <div class="relative overflow-hidden bg-gradient-to-br from-gray-900 via-[#4a0000] to-gray-900 px-8 py-16 text-white md:w-1/2 md:px-12 md:py-20">
+        {# Circuit background #}
+        {% include 'partials/circuit_bg.html' %}
+        <div class="pointer-events-none absolute inset-0 opacity-[0.04]" style="background:repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(255,255,255,0.05) 2px,rgba(255,255,255,0.05) 4px)"></div>
 
-              <div class="flex items-start gap-4">
-                <div class="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-gold/15">
-                  <svg class="h-5 w-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                  </svg>
-                </div>
-                <div>
-                  <span class="text-xs font-semibold uppercase tracking-widest text-white/50">Email</span>
-                  <p class="mt-1 text-sm font-mono text-white/80">cict.dingle@isufst.edu.ph</p>
-                </div>
-              </div>
+        <div class="relative z-10 space-y-8">
+          {# Address #}
+          <div class="flex items-start gap-4">
+            <div class="flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-gold/20">
+              <svg class="h-5 w-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+            </div>
+            <div>
+              <span class="text-xs font-semibold uppercase tracking-widest text-white/50">Address</span>
+              <p class="mt-1 text-white/90">Brgy. San Juan, Dingle</p>
+              <p class="text-sm text-white/60">Iloilo 5035, Philippines</p>
+            </div>
+          </div>
 
-              <div class="flex items-start gap-4">
-                <div class="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-gold/15">
-                  <svg class="h-5 w-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
-                  </svg>
-                </div>
-                <div>
-                  <span class="text-xs font-semibold uppercase tracking-widest text-white/50">Website</span>
-                  <p class="mt-1 text-sm font-mono text-white/80">isufst.edu.ph</p>
-                </div>
-              </div>
+          {# Email #}
+          <div class="flex items-start gap-4">
+            <div class="flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-gold/20">
+              <svg class="h-5 w-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+              </svg>
+            </div>
+            <div>
+              <span class="text-xs font-semibold uppercase tracking-widest text-white/50">Email</span>
+              <p class="mt-1 font-mono text-sm text-white/90">cict.dingle@isufst.edu.ph</p>
+            </div>
+          </div>
+
+          {# Phone #}
+          <div class="flex items-start gap-4">
+            <div class="flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-gold/20">
+              <svg class="h-5 w-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+              </svg>
+            </div>
+            <div>
+              <span class="text-xs font-semibold uppercase tracking-widest text-white/50">Phone</span>
+              <p class="mt-1 font-mono text-sm text-white/90">(033) 123 - 4567</p>
+            </div>
+          </div>
+
+          {# Website #}
+          <div class="flex items-start gap-4">
+            <div class="flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-gold/20">
+              <svg class="h-5 w-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+              </svg>
+            </div>
+            <div>
+              <span class="text-xs font-semibold uppercase tracking-widest text-white/50">Website</span>
+              <a href="https://isufst.edu.ph/" target="_blank" rel="noopener" class="mt-1 block font-mono text-sm text-white/90 hover:text-gold transition">isufst.edu.ph</a>
             </div>
           </div>
         </div>
+      </div>
 
-        {# Right: Map #}
-        <div class="min-h-[300px] md:min-h-0">
-          <iframe
-            title="ISUFST Dingle Campus Location"
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1142.3101206086283!2d122.6621262161048!3d11.001688730609768!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x33af1776ffd9b7f1%3A0x2c4663ccaaf49fa8!2sIloilo%20State%20University%20of%20Fisheries%20Science%20and%20Technology%E2%80%93%20Dingle%20Campus!5e1!3m2!1sen!2sph!4v1773719665867!5m2!1sen!2sph"
-            class="h-full w-full border-0"
-            loading="lazy"
-            referrerpolicy="no-referrer-when-downgrade"
-            allowfullscreen>
-          </iframe>
-        </div>
+      {# Right: Map #}
+      <div class="min-h-[350px] md:w-1/2 md:min-h-0">
+        <iframe
+          title="ISUFST Dingle Campus Location"
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1142.3101206086283!2d122.6621262161048!3d11.001688730609768!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x33af1776ffd9b7f1%3A0x2c4663ccaaf49fa8!2sIloilo%20State%20University%20of%20Fisheries%20Science%20and%20Technology%E2%80%93%20Dingle%20Campus!5e1!3m2!1sen!2sph!4v1773719665867!5m2!1sen!2sph"
+          class="h-full w-full border-0"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          allowfullscreen>
+        </iframe>
       </div>
     </div>
   </section>
