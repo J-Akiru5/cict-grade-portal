@@ -65,10 +65,8 @@ def profile():
 def edit_profile():
     student = student_service.get_student_profile(current_user.id)
 
-    # If no student profile exists, show error and redirect
-    if not student:
-        flash('No student profile found. Please contact the registrar.', 'error')
-        return redirect(url_for('student.profile'))
+    # If no student profile exists, we allow them to create one
+    # by submitting the form.
 
     if request.method == 'POST':
         # Handle avatar upload
@@ -94,11 +92,24 @@ def edit_profile():
                 'year_level': request.form.get('year_level', type=int) or None,
                 'gender': request.form.get('gender', '').strip() or None,
             }
-            updated = student_service.update_student_profile(current_user.id, data)
-            if updated:
-                flash('Profile updated successfully.', 'success')
+            if not student:
+                import uuid
+                from app.models.student import Student
+                temp_student_id = f"NEW-{str(uuid.uuid4())[:8].upper()}"
+                new_student = Student(
+                    user_id=current_user.id,
+                    student_id=temp_student_id,
+                    **data
+                )
+                db.session.add(new_student)
+                db.session.commit()
+                flash('Profile created successfully. Please contact registrar for your Student ID.', 'success')
             else:
-                flash('Failed to update profile. Please try again.', 'error')
+                updated = student_service.update_student_profile(current_user.id, data)
+                if updated:
+                    flash('Profile updated successfully.', 'success')
+                else:
+                    flash('Failed to update profile. Please try again.', 'error')
 
             if _is_htmx():
                 resp = make_response('', 204)
