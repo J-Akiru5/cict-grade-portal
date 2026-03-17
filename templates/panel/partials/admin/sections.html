@@ -2,12 +2,38 @@
 <div class="space-y-6">
   <div class="flex items-center justify-between flex-wrap gap-3">
     <h2 class="text-lg font-bold text-slate-800">Section Management</h2>
-    <form method="GET" class="flex gap-2">
-      <input name="q" value="{{ search }}" placeholder="Search sections…"
-             class="text-sm rounded-lg border border-slate-200 px-3 py-1.5 w-48 focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
-      <button type="submit" class="px-4 py-1.5 bg-maroon text-white text-sm font-semibold rounded-lg hover:bg-maroon/90 transition">
-        Search
+    <form method="GET" class="flex flex-wrap gap-2 items-end">
+      <div>
+        <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1">Search</label>
+        <input name="q" value="{{ search or '' }}" placeholder="Search sections…"
+               class="text-sm rounded-lg border border-slate-200 px-3 py-1.5 w-48 focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+      </div>
+      <div>
+        <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1">Program</label>
+        <select name="program" class="text-sm rounded-lg border border-slate-200 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-maroon/40">
+          <option value="">All Programs</option>
+          {% for p in ['BSIT', 'BSIS'] %}
+            <option value="{{ p }}" {% if program_filter == p %}selected{% endif %}>{{ p }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1">Year Level</label>
+        <select name="year_level" class="text-sm rounded-lg border border-slate-200 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-maroon/40">
+          <option value="">All Years</option>
+          {% for y in [1, 2, 3, 4] %}
+            <option value="{{ y }}" {% if year_filter == y|string %}selected{% endif %}>Year {{ y }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="px-4 py-1.5 bg-maroon text-white text-sm font-semibold rounded-lg hover:bg-maroon/90 transition h-[38px]">
+        Apply
       </button>
+      {% if search or program_filter or year_filter %}
+        <a href="{{ url_for('panel.admin_sections') }}" class="px-3 py-1.5 text-sm font-medium text-slate-500 hover:text-maroon transition h-[38px] flex items-center">
+          Clear
+        </a>
+      {% endif %}
     </form>
   </div>
 
@@ -20,8 +46,11 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <div>
           <label class="block text-xs font-medium text-slate-600 mb-1">Program *</label>
-          <input name="program" value="BSIT" required
-                 class="rounded-lg border border-slate-200 px-3 py-1.5 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+          <select name="program" required class="rounded-lg border border-slate-200 px-3 py-1.5 text-sm w-32 focus:outline-none focus:ring-2 focus:ring-maroon/40">
+            {% for p in ['BSIT', 'BSIS'] %}
+              <option value="{{ p }}">{{ p }}</option>
+            {% endfor %}
+          </select>
         </div>
         <div>
           <label class="block text-xs font-medium text-slate-600 mb-1">Year Level *</label>
@@ -126,8 +155,11 @@
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
               <div>
                 <label class="block text-[10px] font-medium text-slate-500 mb-0.5">Program</label>
-                <input name="program" value="{{ sec.program }}"
-                       class="rounded-lg border border-slate-200 px-2 py-1 text-xs w-20 focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+                <select name="program" class="rounded-lg border border-slate-200 px-2 py-1 text-xs w-24 focus:outline-none focus:ring-2 focus:ring-maroon/40">
+                  {% for p in ['BSIT', 'BSIS'] %}
+                    <option value="{{ p }}" {{ 'selected' if sec.program == p else '' }}>{{ p }}</option>
+                  {% endfor %}
+                </select>
               </div>
               <div>
                 <label class="block text-[10px] font-medium text-slate-500 mb-0.5">Year Level</label>
@@ -154,7 +186,24 @@
       </tbody>
     </table>
   </div>
+
+  {# Pagination #}
+  {% if pagination.pages > 1 %}
+  <div class="flex justify-center gap-2">
+    {% if pagination.has_prev %}
+      <a href="{{ url_for('panel.admin_sections', page=pagination.prev_num, q=search, program=program_filter, year_level=year_filter) }}"
+         class="px-3 py-1.5 text-sm bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition">← Prev</a>
+    {% endif %}
+    <span class="px-3 py-1.5 text-sm text-slate-500">{{ pagination.page }} / {{ pagination.pages }}</span>
+    {% if pagination.has_next %}
+      <a href="{{ url_for('panel.admin_sections', page=pagination.next_num, q=search, program=program_filter, year_level=year_filter) }}"
+         class="px-3 py-1.5 text-sm bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition">Next →</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
   {% else %}
   <div class="paper-card p-10 text-center text-slate-400">No sections yet. Create one above.</div>
   {% endif %}
+</div>
 </div>

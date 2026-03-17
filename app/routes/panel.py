@@ -362,8 +362,22 @@ def audit_log():
 @role_required('admin')
 def admin_users():
     search = request.args.get('q', '').strip()
+    role = request.args.get('role', '').strip()
+    status = request.args.get('status', '').strip()
     page = request.args.get('page', 1, type=int)
-    pagination = admin_service.get_all_users(search=search or None, page=page)
+
+    is_active = None
+    if status == 'active':
+        is_active = True
+    elif status == 'inactive':
+        is_active = False
+
+    pagination = admin_service.get_all_users(
+        search=search or None,
+        role=role or None,
+        is_active=is_active,
+        page=page
+    )
     from app.models.subject import Subject
     from app.models.user import User
     subjects = Subject.query.order_by(Subject.subject_code).all()
@@ -378,6 +392,8 @@ def admin_users():
         'pagination': pagination,
         'users': pagination.items,
         'search': search,
+        'role': role,
+        'status': status,
         'subjects': subjects,
         'pending_users': pending_users,
         'active_page': 'admin_users',
@@ -504,14 +520,20 @@ def admin_edit_user(user_id):
 @role_required('admin')
 def admin_faculty():
     search = request.args.get('q', '').strip()
+    dept = request.args.get('dept', '').strip()
     page = request.args.get('page', 1, type=int)
-    pagination = admin_service.get_all_faculty(search=search or None, page=page)
+    pagination = admin_service.get_all_faculty(
+        search=search or None,
+        department=dept or None,
+        page=page
+    )
     from app.models.subject import Subject
     subjects = Subject.query.order_by(Subject.subject_code).all()
     context = {
         'pagination': pagination,
         'faculty_list': pagination.items,
         'search': search,
+        'dept': dept,
         'subjects': subjects,
         'active_page': 'admin_faculty',
     }
@@ -581,19 +603,33 @@ def admin_faculty_remove_subject(faculty_id, subject_id):
 @role_required('admin')
 def admin_students():
     search = request.args.get('q', '').strip()
+    section_id = request.args.get('section_id', type=int)
+    year_level = request.args.get('year_level', type=int)
     page = request.args.get('page', 1, type=int)
-    pagination = admin_service.get_all_students(search=search or None, page=page)
+
+    pagination = admin_service.get_all_students(
+        search=search or None,
+        section_id=section_id,
+        year_level=year_level,
+        page=page
+    )
     from app.models.user import User
+    from app.models.section import Section
     students_without_profile = (
         User.query.filter_by(role='student')
         .filter(~User.student_profile.has())
         .all()
     )
+    all_sections = Section.query.order_by(Section.program, Section.year_level, Section.section_letter).all()
+
     context = {
         'pagination': pagination,
         'students': pagination.items,
         'search': search,
+        'section_id': section_id,
+        'year_level': year_level,
         'orphan_users': students_without_profile,
+        'sections': all_sections,
         'active_page': 'admin_students',
     }
     if _is_htmx():
@@ -749,12 +785,18 @@ def admin_create_student_account(student_db_id):
 @role_required('admin')
 def admin_subjects():
     search = request.args.get('q', '').strip()
+    dept = request.args.get('dept', '').strip()
     page = request.args.get('page', 1, type=int)
-    pagination = admin_service.get_all_subjects(search=search or None, page=page)
+    pagination = admin_service.get_all_subjects(
+        search=search or None,
+        department=dept or None,
+        page=page
+    )
     context = {
         'pagination': pagination,
         'subjects': pagination.items,
         'search': search,
+        'dept': dept,
         'active_page': 'admin_subjects',
     }
     if _is_htmx():
@@ -918,12 +960,18 @@ def admin_grade_import():
 @role_required('admin')
 def admin_audit_log():
     search = request.args.get('q', '').strip()
+    role = request.args.get('role', '').strip()
     page = request.args.get('page', 1, type=int)
-    pagination = admin_service.get_full_audit_log(search=search or None, page=page)
+    pagination = admin_service.get_full_audit_log(
+        search=search or None,
+        actor_role=role or None,
+        page=page
+    )
     context = {
         'pagination': pagination,
         'entries': pagination.items,
         'search': search,
+        'role': role,
         'active_page': 'admin_audit_log',
     }
     if _is_htmx():
@@ -968,12 +1016,24 @@ def admin_settings():
 @role_required('admin')
 def admin_sections():
     search = request.args.get('q', '').strip()
-    sections = admin_service.get_all_sections(search=search or None)
+    program = request.args.get('program', '').strip()
+    year_level = request.args.get('year_level', type=int)
+    page = request.args.get('page', 1, type=int)
+
+    pagination = admin_service.get_all_sections(
+        search=search or None,
+        program=program or None,
+        year_level=year_level,
+        page=page
+    )
     from app.models.student import Student
     all_students = Student.query.order_by(Student.full_name).all()
     context = {
-        'sections': sections,
+        'pagination': pagination,
+        'sections': pagination.items,
         'search': search,
+        'program': program,
+        'year_level': year_level,
         'all_students': all_students,
         'active_page': 'admin_sections',
     }

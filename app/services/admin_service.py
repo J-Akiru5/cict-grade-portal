@@ -33,10 +33,14 @@ def _get_admin_supabase():
 
 # ─── User Management ──────────────────────────────────────────────────────────
 
-def get_all_users(search: str = None, page: int = 1, per_page: int = 25):
+def get_all_users(search: str = None, role: str = None, is_active: bool = None, page: int = 1, per_page: int = 25):
     q = User.query.order_by(User.created_at.desc())
     if search:
         q = q.filter(User.email.ilike(f'%{search}%'))
+    if role:
+        q = q.filter(User.role == role)
+    if is_active is not None:
+        q = q.filter(User.is_active == is_active)
     return q.paginate(page=page, per_page=per_page, error_out=False)
 
 
@@ -236,7 +240,7 @@ def create_account_for_student_profile(student_db_id: int) -> tuple[Student, Use
     return student, user, temp_password
 
 
-def get_all_faculty(search: str = None, page: int = 1, per_page: int = 25):
+def get_all_faculty(search: str = None, department: str = None, page: int = 1, per_page: int = 25):
     q = Faculty.query.join(User).order_by(Faculty.full_name)
     if search:
         q = q.filter(
@@ -245,6 +249,8 @@ def get_all_faculty(search: str = None, page: int = 1, per_page: int = 25):
                 Faculty.employee_id.ilike(f'%{search}%'),
             )
         )
+    if department:
+        q = q.filter(Faculty.department == department)
     return q.paginate(page=page, per_page=per_page, error_out=False)
 
 
@@ -305,7 +311,7 @@ def remove_subject_from_faculty(faculty_id: int, subject_id: int) -> None:
 
 # ─── Student Management ───────────────────────────────────────────────────────
 
-def get_all_students(search: str = None, page: int = 1, per_page: int = 25):
+def get_all_students(search: str = None, section_id: int = None, year_level: int = None, page: int = 1, per_page: int = 25):
     q = Student.query.order_by(Student.full_name)
     if search:
         q = q.filter(
@@ -315,6 +321,10 @@ def get_all_students(search: str = None, page: int = 1, per_page: int = 25):
                 Student.section.ilike(f'%{search}%'),
             )
         )
+    if section_id:
+        q = q.filter(Student.section_id == section_id)
+    if year_level:
+        q = q.filter(Student.year_level == year_level)
     return q.paginate(page=page, per_page=per_page, error_out=False)
 
 
@@ -417,7 +427,7 @@ def create_student_with_account(
 
 # ─── Subject Management ───────────────────────────────────────────────────────
 
-def get_all_subjects(search: str = None, page: int = 1, per_page: int = 25):
+def get_all_subjects(search: str = None, department: str = None, page: int = 1, per_page: int = 25):
     q = Subject.query.order_by(Subject.subject_code)
     if search:
         q = q.filter(
@@ -426,6 +436,8 @@ def get_all_subjects(search: str = None, page: int = 1, per_page: int = 25):
                 Subject.subject_title.ilike(f'%{search}%'),
             )
         )
+    if department:
+        q = q.filter(Subject.department == department)
     return q.paginate(page=page, per_page=per_page, error_out=False)
 
 
@@ -615,7 +627,7 @@ def import_grades_from_csv(
 
 # ─── Audit Log ────────────────────────────────────────────────────────────────
 
-def get_full_audit_log(search: str = None, page: int = 1, per_page: int = 50):
+def get_full_audit_log(search: str = None, actor_role: str = None, page: int = 1, per_page: int = 50):
     q = (
         GradeAudit.query
         .options(
@@ -627,18 +639,18 @@ def get_full_audit_log(search: str = None, page: int = 1, per_page: int = 50):
         )
         .order_by(GradeAudit.timestamp.desc())
     )
-    if search:
-        q = (
-            q.outerjoin(GradeAudit.actor)
-             .outerjoin(GradeAudit.target_student)
-             .filter(
-                 db.or_(
-                     User.email.ilike(f'%{search}%'),
-                     Student.full_name.ilike(f'%{search}%'),
-                     Student.student_id.ilike(f'%{search}%'),
-                 )
-             )
-        )
+    if search or actor_role:
+        q = q.outerjoin(GradeAudit.actor)
+        if search:
+            q = q.outerjoin(GradeAudit.target_student).filter(
+                db.or_(
+                    User.email.ilike(f'%{search}%'),
+                    Student.full_name.ilike(f'%{search}%'),
+                    Student.student_id.ilike(f'%{search}%'),
+                )
+            )
+        if actor_role:
+            q = q.filter(User.role == actor_role)
     return q.paginate(page=page, per_page=per_page, error_out=False)
 
 
@@ -659,7 +671,7 @@ def update_academic_settings(semester: str, year: str, actor_user) -> AcademicSe
 
 # ─── Section Management ───────────────────────────────────────────────────────
 
-def get_all_sections(search: str = None) -> list:
+def get_all_sections(search: str = None, program: str = None, year_level: int = None, page: int = 1, per_page: int = 25):
     q = Section.query.order_by(Section.program, Section.year_level, Section.section_letter)
     if search:
         q = q.filter(
@@ -668,7 +680,11 @@ def get_all_sections(search: str = None) -> list:
                 Section.section_letter.ilike(f'%{search}%'),
             )
         )
-    return q.all()
+    if program:
+        q = q.filter(Section.program == program)
+    if year_level:
+        q = q.filter(Section.year_level == year_level)
+    return q.paginate(page=page, per_page=per_page, error_out=False)
 
 
 def create_section(program: str, year_level: int, section_letter: str) -> Section:

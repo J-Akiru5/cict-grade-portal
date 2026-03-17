@@ -2,12 +2,37 @@
 <div class="space-y-6">
   <div class="flex items-center justify-between flex-wrap gap-3">
     <h2 class="text-lg font-bold text-slate-800">User Management</h2>
-    <form method="GET" class="flex gap-2">
-      <input name="q" value="{{ search }}" placeholder="Search email…"
-             class="text-sm rounded-lg border border-slate-200 px-3 py-1.5 w-56 focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
-      <button type="submit" class="px-4 py-1.5 bg-maroon text-white text-sm font-semibold rounded-lg hover:bg-maroon/90 transition">
-        Search
+    <form method="GET" class="flex flex-wrap gap-2 items-end">
+      <div>
+        <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1">Search</label>
+        <input name="q" value="{{ search or '' }}" placeholder="Search email…"
+               class="text-sm rounded-lg border border-slate-200 px-3 py-1.5 w-56 focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+      </div>
+      <div>
+        <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1">Role</label>
+        <select name="role" class="text-sm rounded-lg border border-slate-200 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-maroon/40">
+          <option value="">All Roles</option>
+          {% for r in ['student', 'faculty', 'admin'] %}
+            <option value="{{ r }}" {% if role_filter == r %}selected{% endif %}>{{ r | capitalize }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1">Status</label>
+        <select name="status" class="text-sm rounded-lg border border-slate-200 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-maroon/40">
+          <option value="">All Status</option>
+          <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+          <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+        </select>
+      </div>
+      <button type="submit" class="px-4 py-1.5 bg-maroon text-white text-sm font-semibold rounded-lg hover:bg-maroon/90 transition h-[38px]">
+        Apply
       </button>
+      {% if search or role_filter or status_filter %}
+        <a href="{{ url_for('panel.admin_users') }}" class="px-3 py-1.5 text-sm font-medium text-slate-500 hover:text-maroon transition h-[38px] flex items-center">
+          Clear
+        </a>
+      {% endif %}
     </form>
   </div>
 
@@ -212,12 +237,12 @@
   {% if pagination.pages > 1 %}
   <div class="flex justify-center gap-2">
     {% if pagination.has_prev %}
-      <a href="{{ url_for('panel.admin_users', page=pagination.prev_num, q=search) }}"
+      <a href="{{ url_for('panel.admin_users', page=pagination.prev_num, q=search, role=role_filter, status=status_filter) }}"
          class="px-3 py-1.5 text-sm bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition">← Prev</a>
     {% endif %}
     <span class="px-3 py-1.5 text-sm text-slate-500">{{ pagination.page }} / {{ pagination.pages }}</span>
     {% if pagination.has_next %}
-      <a href="{{ url_for('panel.admin_users', page=pagination.next_num, q=search) }}"
+      <a href="{{ url_for('panel.admin_users', page=pagination.next_num, q=search, role=role_filter, status=status_filter) }}"
          class="px-3 py-1.5 text-sm bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition">Next →</a>
     {% endif %}
   </div>
