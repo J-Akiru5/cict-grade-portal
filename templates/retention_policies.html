@@ -4,17 +4,17 @@
 {% block robots %}<meta name="robots" content="index, follow" />{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gray-900 font-sans text-white">
+<div class="min-h-screen bg-white font-sans text-gray-900">
 
   {# ── Header ── #}
   {% set active_page = 'retention' %}
   {% include 'partials/public_header.html' %}
 
-  {# ── Hero Section ── #}
+  {# ══════════════════════════════════════════════════════════
+     HERO — Maroon dark, circuit BG (matches home page)
+  ══════════════════════════════════════════════════════════ #}
   <section class="relative overflow-hidden bg-gradient-to-b from-gray-900 via-[#4a0000] to-gray-900 py-16 text-white sm:py-24">
-    {# Circuit animation background #}
     {% include 'partials/circuit_bg.html' %}
-    {# Grid overlay #}
     <div class="pointer-events-none absolute inset-0 opacity-[0.04] bg-[linear-gradient(rgba(255,255,255,0.1)_1px,_transparent_1px),linear-gradient(90deg,_rgba(255,255,255,0.1)_1px,_transparent_1px)] bg-[size:40px_40px]"></div>
     <div class="pointer-events-none absolute -right-20 -top-20 h-96 w-96 rounded-full bg-maroon/20 blur-3xl"></div>
     <div class="pointer-events-none absolute -left-20 -bottom-20 h-96 w-96 rounded-full bg-gold/5 blur-3xl"></div>
@@ -23,7 +23,7 @@
       <div class="flex flex-col items-start gap-6 md:flex-row md:items-center md:justify-between">
         <div class="max-w-3xl">
           <nav class="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-gold/90">
-            <span class="rounded bg-gold/10 px-2 py-0.5">Program</span>
+            <a href="{{ url_for('main.index') }}" class="rounded bg-gold/10 px-2 py-0.5 hover:bg-gold/20 transition">Home</a>
             <span class="text-white/40">/</span>
             <span>BSIT Retention</span>
           </nav>
@@ -50,54 +50,55 @@
     </div>
   </section>
 
-  {# ── Main Content ── #}
-  <main class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+  {# ══════════════════════════════════════════════════════════
+     MAIN CONTENT — White background, light cards
+  ══════════════════════════════════════════════════════════ #}
+  <main class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
     <div class="grid gap-12 lg:grid-cols-[1fr_340px]">
 
-      {# Left Column: Policies #}
+      {# ── Left Column: Policies ── #}
       <div class="space-y-16">
 
         {# Policy Header #}
         <div class="flex items-center gap-4">
-          <div class="h-10 w-1 bg-gold rounded-full"></div>
+          <div class="h-10 w-1 bg-maroon rounded-full"></div>
           <div>
-            <h2 class="text-xs font-black uppercase tracking-[0.3em] text-gold/60">Institutional Standards</h2>
-            <p class="text-xl font-bold text-white">Academic Integrity & Standards</p>
+            <h2 class="text-xs font-black uppercase tracking-[0.3em] text-maroon/60">Institutional Standards</h2>
+            <p class="text-xl font-bold text-gray-900">Academic Integrity &amp; Standards</p>
           </div>
         </div>
 
         {# Policy sections #}
         <div class="space-y-10">
 
-          {# Section 1 #}
+          {# ── Section 1: Academic Performance ── #}
           <div class="group relative">
-            <div class="absolute -left-4 top-0 h-full w-0.5 bg-white/10 transition-colors group-hover:bg-maroon/30"></div>
+            <div class="absolute -left-4 top-0 h-full w-0.5 bg-gray-200 transition-colors group-hover:bg-maroon/30 rounded-full"></div>
             <div class="flex flex-col gap-6 sm:flex-row">
               <div class="flex h-12 w-12 flex-none items-center justify-center rounded-2xl bg-maroon shadow-lg shadow-maroon/20 text-xl font-black text-white">1</div>
               <div class="flex-1">
-                <h3 class="text-2xl font-extrabold tracking-tight text-white">Academic Performance</h3>
-                <p class="mt-3 text-base leading-relaxed text-white/60">
+                <h3 class="text-2xl font-extrabold tracking-tight text-gray-900">Academic Performance</h3>
+                <p class="mt-3 text-base leading-relaxed text-gray-600">
                   BSIT students must demonstrate consistent academic improvement. Failure to satisfy these standards may result in academic probation or programmatic transfer.
                 </p>
 
-                {# Sub-items #}
                 <div class="mt-8 grid gap-4 sm:grid-cols-2">
-                  <div class="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm transition-all hover:border-maroon/30 hover:bg-white/10">
-                    <div class="flex items-center gap-3 text-maroon-light">
+                  <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:border-maroon/30 hover:shadow-md">
+                    <div class="flex items-center gap-3 text-maroon">
                       <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.876c1.27 0 2.09-1.383 1.45-2.435L11.45 4.45c-.64-1.05-2.16-1.05-2.8 0L2.55 14.565c-.64 1.05.18 2.435 1.45 2.435z"/></svg>
-                      <h4 class="font-bold text-white">Course Failures</h4>
+                      <h4 class="font-bold text-gray-900">Course Failures</h4>
                     </div>
-                    <p class="mt-3 text-sm leading-relaxed text-white/50">
+                    <p class="mt-3 text-sm leading-relaxed text-gray-500">
                       Failing three or more Major or General Education courses in one semester may lead to transfer advisement.
                     </p>
                   </div>
-                  <div class="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm transition-all hover:border-gold/30 hover:bg-white/10">
-                    <div class="flex items-center gap-3 text-gold">
-                      <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                      <h4 class="font-bold text-white">GWA Requirement</h4>
+                  <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:border-yellow-400/50 hover:shadow-md">
+                    <div class="flex items-center gap-3">
+                      <svg class="h-5 w-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                      <h4 class="font-bold text-gray-900">GWA Requirement</h4>
                     </div>
-                    <p class="mt-3 text-sm font-mono text-white/50">
-                      Standard: <span class="font-bold text-gold">3.00</span> or better per semester.
+                    <p class="mt-3 text-sm font-mono text-gray-500">
+                      Standard: <span class="font-bold text-yellow-700">3.00</span> or better per semester.
                     </p>
                   </div>
                 </div>
@@ -105,37 +106,37 @@
             </div>
           </div>
 
-          {# Section 2 #}
+          {# ── Section 2: Academic Probation ── #}
           <div class="group relative">
-            <div class="absolute -left-4 top-0 h-full w-0.5 bg-white/10 transition-colors group-hover:bg-maroon/30"></div>
+            <div class="absolute -left-4 top-0 h-full w-0.5 bg-gray-200 transition-colors group-hover:bg-maroon/30 rounded-full"></div>
             <div class="flex flex-col gap-6 sm:flex-row">
               <div class="flex h-12 w-12 flex-none items-center justify-center rounded-2xl bg-maroon shadow-lg shadow-maroon/20 text-xl font-black text-white">2</div>
               <div class="flex-1">
-                <h3 class="text-2xl font-extrabold tracking-tight text-white">Academic Probation</h3>
-                <p class="mt-3 text-base leading-relaxed text-white/60">
+                <h3 class="text-2xl font-extrabold tracking-tight text-gray-900">Academic Probation</h3>
+                <p class="mt-3 text-base leading-relaxed text-gray-600">
                   A warning period designed to provide students with the necessary support and guidance to improve their academic standing.
                 </p>
 
-                <div class="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm">
+                <div class="mt-6 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
                   <table class="w-full text-left text-sm">
-                    <thead class="border-b border-white/10 bg-white/5">
+                    <thead class="border-b border-gray-200 bg-gray-50">
                       <tr>
-                        <th class="px-6 py-4 font-bold uppercase tracking-wider text-white/50">Trigger</th>
-                        <th class="px-6 py-4 font-bold uppercase tracking-wider text-white/50">Action/Duration</th>
+                        <th class="px-6 py-4 font-bold uppercase tracking-wider text-gray-500">Trigger</th>
+                        <th class="px-6 py-4 font-bold uppercase tracking-wider text-gray-500">Action / Duration</th>
                       </tr>
                     </thead>
-                    <tbody class="divide-y divide-white/5">
-                      <tr>
-                        <td class="px-6 py-4 font-semibold text-white">GWA &lt; 3.0</td>
-                        <td class="px-6 py-4 text-white/60">Probation for the succeeding semester</td>
+                    <tbody class="divide-y divide-gray-100">
+                      <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 font-semibold text-gray-900">GWA &lt; 3.0</td>
+                        <td class="px-6 py-4 text-gray-600">Probation for the succeeding semester</td>
                       </tr>
-                      <tr>
-                        <td class="px-6 py-4 font-semibold text-white">First-time Freshmen Error</td>
-                        <td class="px-6 py-4 text-white/60">Probation instead of immediate transfer</td>
+                      <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 font-semibold text-gray-900">First-time Freshmen Error</td>
+                        <td class="px-6 py-4 text-gray-600">Probation instead of immediate transfer</td>
                       </tr>
-                      <tr>
-                        <td class="px-6 py-4 font-semibold text-white">On-Probation Violation</td>
-                        <td class="px-6 py-4 text-maroon-light font-bold">Recommended for Dismissal/Transfer</td>
+                      <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 font-semibold text-gray-900">On-Probation Violation</td>
+                        <td class="px-6 py-4 font-bold text-maroon">Recommended for Dismissal/Transfer</td>
                       </tr>
                     </tbody>
                   </table>
@@ -144,38 +145,38 @@
             </div>
           </div>
 
-          {# Section 3 & 4 #}
-          <div class="grid gap-8 sm:grid-cols-2">
-            <div class="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-sm transition-all hover:bg-white/10">
-               <div class="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-maroon/20 text-maroon-light">
-                 <span class="text-lg font-black">3</span>
-               </div>
-               <h3 class="text-xl font-bold text-white">Academic Dismissal</h3>
-               <p class="mt-4 text-sm leading-relaxed text-white/50 text-pretty">
-                 Violation of academic policies while on probation leads to a recommendation for dismissal or enrollment in other programs.
-               </p>
+          {# ── Sections 3 & 4 ── #}
+          <div class="grid gap-6 sm:grid-cols-2">
+            <div class="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm transition-all hover:border-maroon/30 hover:shadow-md">
+              <div class="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-maroon text-white shadow-md shadow-maroon/20">
+                <span class="text-lg font-black">3</span>
+              </div>
+              <h3 class="text-xl font-bold text-gray-900">Academic Dismissal</h3>
+              <p class="mt-4 text-sm leading-relaxed text-gray-500 text-pretty">
+                Violation of academic policies while on probation leads to a recommendation for dismissal or enrollment in other programs.
+              </p>
             </div>
-            <div class="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-sm transition-all hover:bg-white/10">
-               <div class="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gold/15 text-gold">
-                 <span class="text-lg font-black">4</span>
-               </div>
-               <h3 class="text-xl font-bold text-white">Re-enrollment (LOA)</h3>
-               <p class="mt-4 text-sm leading-relaxed text-white/50 text-pretty">
-                 Students returning from Leave of Absence must satisfy all return prerequisites as evaluated by the Program Chair.
-               </p>
+            <div class="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm transition-all hover:border-yellow-400/50 hover:shadow-md">
+              <div class="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gold/20 text-yellow-700 shadow-sm">
+                <span class="text-lg font-black">4</span>
+              </div>
+              <h3 class="text-xl font-bold text-gray-900">Re-enrollment (LOA)</h3>
+              <p class="mt-4 text-sm leading-relaxed text-gray-500 text-pretty">
+                Students returning from Leave of Absence must satisfy all return prerequisites as evaluated by the Program Chair.
+              </p>
             </div>
           </div>
 
-        </div>
+        </div>{# end policy sections #}
       </div>
 
-      {# Right Column: Sidebar #}
+      {# ── Right Column: Sidebar ── #}
       <aside class="space-y-6">
 
-        {# Quick Summary #}
+        {# At a Glance — solid maroon card (kept dark, high contrast) #}
         <div class="rounded-3xl bg-maroon p-8 text-white shadow-xl shadow-maroon/20">
           <h3 class="text-xs font-black uppercase tracking-[0.2em] text-white/50">At a Glance</h3>
-          <div class="mt-6 space-y-6">
+          <div class="mt-6 space-y-5">
             <div class="flex gap-4">
               <div class="flex h-6 w-6 flex-none items-center justify-center rounded-full bg-white/10 text-gold">
                 <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
@@ -197,16 +198,23 @@
           </div>
         </div>
 
-        {# Action Card #}
-        <div class="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-sm">
-          <h3 class="text-lg font-bold text-white">Need Guidance?</h3>
-          <p class="mt-2 text-sm text-white/50">
+        {# Need Guidance? — light card #}
+        <div class="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
+          <h3 class="text-lg font-bold text-gray-900">Need Guidance?</h3>
+          <p class="mt-2 text-sm text-gray-500">
             For specific cases and appeals, consult the Program Chair or the College Dean.
           </p>
           <div class="mt-6 flex flex-col gap-3">
-            <a href="{{ url_for('main.index') }}" class="inline-flex items-center justify-center rounded-xl border border-white/20 py-3 text-sm font-bold text-white transition hover:bg-white/10">Learn More</a>
+            <a href="{{ url_for('main.index') }}" class="inline-flex items-center justify-center rounded-xl border border-gray-300 py-3 text-sm font-bold text-gray-700 transition hover:bg-gray-50">Learn More</a>
             <a href="mailto:cict.dingle@isufst.edu.ph" class="inline-flex items-center justify-center rounded-xl bg-maroon py-3 text-sm font-bold text-white transition hover:bg-maroon-dark">Email Support</a>
           </div>
+        </div>
+
+        {# Info notice #}
+        <div class="rounded-2xl border border-maroon/20 bg-maroon/5 p-5">
+          <p class="text-xs leading-relaxed text-gray-600">
+            <span class="font-bold text-maroon">Note:</span> These policies are subject to the latest CHED memorandum orders and ISUFST institutional guidelines. Always verify with your academic adviser.
+          </p>
         </div>
 
       </aside>

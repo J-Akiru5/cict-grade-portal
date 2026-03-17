@@ -231,91 +231,39 @@
   <div class="flex-1 flex flex-col min-h-screen ml-0 md:ml-64">
 
     {# ── Mobile Header (< md) ── #}
-    <header class="mobile-header md:hidden">
+    <header class="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 md:hidden">
       <button id="hamburger-btn" aria-label="Open menu"
-              onclick="document.getElementById('app-shell').classList.add('drawer-open')">
-        <svg class="w-6 h-6 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              onclick="document.getElementById('app-shell').classList.add('drawer-open')"
+              class="text-slate-600 hover:text-maroon transition-colors">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
         </svg>
       </button>
 
-      <div class="flex items-center gap-2">
+      <a href="{{ url_for('main.index') }}" class="flex items-center gap-2">
         <img src="{{ url_for('static', filename='img/grade-portal-logo.png') }}"
              alt="Grade Portal" class="w-7 h-7 object-contain" />
-        <span class="text-slate-800 font-bold text-sm">
-          {% if current_user.role == 'admin' %}Admin{% else %}Faculty{% endif %}
-        </span>
-      </div>
+        <span class="text-slate-900 font-bold text-sm">CICT Portal</span>
+      </a>
 
-      <div class="flex items-center gap-2">
-        <button id="search-toggle" aria-label="Search"
-                onclick="document.getElementById('search-overlay').classList.add('open'); document.getElementById('search-input').focus();">
-          <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-          </svg>
-        </button>
-        {% if current_user.avatar_url %}
-          <img src="{{ current_user.avatar_url }}" alt="Avatar"
-               class="w-7 h-7 rounded-full object-cover border border-white/20">
-        {% else %}
-          <div class="w-7 h-7 rounded-full
-                      {% if current_user.role == 'admin' %}bg-gold{% else %}bg-blue-700{% endif %}
-                      border border-white/20
-                      flex items-center justify-center font-bold text-white text-xs font-mono">
-            {{ current_user.email[0].upper() if current_user.email else 'F' }}
-          </div>
-        {% endif %}
-      </div>
+      <div class="w-6"></div> {# Spacer to balance the hamburger #}
     </header>
 
     {# ── Desktop Top Bar (≥ md) ── #}
-    <header class="navbar-glass sticky top-0 z-20 hidden md:flex items-center justify-between
-                   h-16 px-6 shadow-sm">
+    <header class="sticky top-0 z-20 hidden h-16 items-center justify-between border-b border-slate-200 bg-white/95 px-6 shadow-sm backdrop-blur-md md:flex">
       <div class="flex items-center gap-3">
         <div id="page-spinner" class="htmx-indicator">
           <div class="cict-spinner"></div>
         </div>
-        <h2 class="text-slate-800 font-semibold text-base">
-          {% block page_title %}Welcome!{% endblock %}
-        </h2>
+        <a href="{{ url_for('main.index') }}" class="flex items-center gap-3">
+          <img src="{{ url_for('static', filename='img/grade-portal-logo.png') }}"
+               alt="Grade Portal" class="h-8 w-8 object-contain" />
+          <span class="border-l border-slate-200 pl-3 text-sm font-bold tracking-tight text-slate-900">CICT Grade Portal</span>
+        </a>
       </div>
 
       <div class="flex items-center gap-4">
-        {# Desktop search #}
-        <div class="relative">
-          <input type="text" id="desktop-search-input" placeholder="Search pages..."
-                 class="w-48 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200 text-sm
-                        text-slate-700 placeholder-slate-400
-                        focus:outline-none focus:ring-2 focus:ring-maroon/30 focus:border-maroon/30
-                        transition-all duration-200"
-                 oninput="handleSearch(this.value, 'desktop-search-results')" />
-          <div id="desktop-search-results"
-               class="absolute top-full mt-1 left-0 right-0 bg-white rounded-lg shadow-xl border border-slate-200
-                      overflow-hidden z-50 hidden">
-          </div>
-        </div>
-        <div class="text-right hidden sm:block">
-          <div class="text-xs text-slate-500">Academic Year</div>
-          <div class="text-xs font-semibold text-slate-700 font-mono">
-            {% if current_semester and current_year %}
-              {{ current_year }} • {{ current_semester }} Semester
-            {% else %}
-              CICT Dingle
-            {% endif %}
-          </div>
-        </div>
-        {% if current_user.avatar_url %}
-          <img src="{{ current_user.avatar_url }}" alt="Avatar"
-               class="w-8 h-8 rounded-full object-cover border-2 border-white/20">
-        {% else %}
-          <div class="w-8 h-8 rounded-full
-                      {% if current_user.role == 'admin' %}bg-gold{% else %}bg-blue-700{% endif %}
-                      border-2 border-white/20
-                      flex items-center justify-center font-bold text-white text-sm font-mono">
-            {{ current_user.email[0].upper() if current_user.email else 'F' }}
-          </div>
-        {% endif %}
+        {# Logo and title are already on the left. This space is intentionally empty. #}
       </div>
     </header>
 
