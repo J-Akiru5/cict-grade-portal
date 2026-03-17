@@ -19,83 +19,206 @@
 {% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gray-900 font-sans text-white">
+<div class="min-h-screen bg-white font-sans text-gray-900">
 
   {# ── Header ── #}
   {% set active_page = 'home' %}
   {% include 'partials/public_header.html' %}
 
-  {# ── Hero Section ── #}
+  {# ══════════════════════════════════════════════════════════
+     HERO — Maroon dark, circuit BG, 2-column on lg screens
+  ══════════════════════════════════════════════════════════ #}
   <section class="relative overflow-hidden bg-gradient-to-b from-gray-900 via-[#4a0000] to-gray-900 py-20 text-white md:py-28 lg:py-36">
     {# Circuit animation background #}
     {% include 'partials/circuit_bg.html' %}
     {# Grid overlay #}
     <div class="pointer-events-none absolute inset-0 opacity-[0.04] bg-[linear-gradient(rgba(255,255,255,0.1)_1px,_transparent_1px),linear-gradient(90deg,_rgba(255,255,255,0.1)_1px,_transparent_1px)] bg-[size:40px_40px]"></div>
-    {# Gold blur orb #}
+    {# Blur orbs #}
     <div class="pointer-events-none absolute -top-20 right-1/4 h-80 w-80 rounded-full bg-gold/15 blur-3xl"></div>
     <div class="pointer-events-none absolute bottom-0 left-1/4 h-64 w-64 rounded-full bg-maroon/30 blur-3xl"></div>
 
-    <div class="relative z-10 mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
-      {# Logos #}
-      <div class="mb-8 flex items-center justify-center gap-4">
-        <div class="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm shadow-lg md:h-24 md:w-24">
-          <img src="{{ url_for('static', filename='img/grade-portal-logo.png') }}" alt="Grade Portal" class="h-14 w-14 object-contain md:h-18 md:w-18"/>
-        </div>
-      </div>
+    <div class="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col-reverse items-center gap-12 lg:grid lg:grid-cols-2 lg:items-center lg:gap-16">
 
-      <div class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-gold backdrop-blur-sm">
-        Academic Grade Portal
-      </div>
-      <h1 class="mt-6 text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl">
-        <span class="text-gold">CICT</span> Grade Portal
-      </h1>
-      <p class="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-white/70 md:text-xl">
-        Your centralized platform for grades, schedules, records, and academic standing for the BSIT program at ISUFST Dingle Campus.
-      </p>
-      <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
-        {% if current_user.is_authenticated %}
-        <a href="{{ url_for('main.index') }}" class="inline-flex items-center gap-2 rounded-xl bg-gold px-6 py-3 font-bold text-black transition-all hover:scale-105 active:scale-95">
-          Open Portal
-          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-        </a>
-        {% else %}
-        <a href="{{ url_for('auth.login') }}" class="inline-flex items-center gap-2 rounded-xl bg-gold px-6 py-3 font-bold text-black transition-all hover:scale-105 active:scale-95">
-          Sign In
-          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-        </a>
-        <a href="{{ url_for('auth.register') }}" class="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 py-3 font-semibold text-white transition hover:bg-white/10">
-          Create Account
-        </a>
-        {% endif %}
-      </div>
-      <div class="mt-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm font-mono text-white/50 backdrop-blur-sm">
-        College of ICT &mdash; Dingle Campus
-      </div>
+        {# ── LEFT: Glassmorphic CICT Ecosystem Card ── #}
+        <div class="w-full max-w-md lg:max-w-none">
+          <div class="rounded-2xl border border-white/20 bg-white/10 p-6 shadow-2xl backdrop-blur-md">
+
+            {# Card header #}
+            <div class="mb-5 flex items-center justify-between">
+              <div>
+                <span class="inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-gold">
+                  CICT Digital Ecosystem
+                </span>
+                <p class="mt-2 text-sm font-semibold text-white">Explore CICT Platforms</p>
+              </div>
+              {# 3-dot decoration #}
+              <div class="flex items-center gap-1">
+                <span class="h-2 w-2 rounded-full bg-white/20"></span>
+                <span class="h-2 w-2 rounded-full bg-gold/40"></span>
+                <span class="h-2 w-2 rounded-full bg-maroon-light/60"></span>
+              </div>
+            </div>
+
+            {# Link items #}
+            <div class="space-y-1">
+
+              {# IRJICT #}
+              <a href="https://irjict.isufstcict.com/" target="_blank" rel="noopener"
+                 class="group flex items-center gap-4 rounded-xl p-3 transition-all hover:bg-white/10">
+                <div class="flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-white/15 text-white shadow-inner">
+                  <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                  </svg>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-1">
+                    <span class="text-sm font-semibold text-white">IRJICT</span>
+                    <svg class="h-3 w-3 text-white/40 opacity-0 transition-opacity group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                    </svg>
+                  </div>
+                  <p class="text-xs text-white/55 truncate">International Research Journal on ICT</p>
+                </div>
+                <svg class="h-4 w-4 flex-none text-white/30 transition-transform group-hover:translate-x-0.5 group-hover:text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+              </a>
+
+              <div class="mx-3 border-b border-white/10"></div>
+
+              {# CICT Tech Portal #}
+              <a href="https://portal.isufstcict.com/" target="_blank" rel="noopener"
+                 class="group flex items-center gap-4 rounded-xl p-3 transition-all hover:bg-white/10">
+                <div class="flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-gold/20 text-gold shadow-inner">
+                  <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/>
+                  </svg>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-1">
+                    <span class="text-sm font-semibold text-white">CICT Tech Portal</span>
+                    <svg class="h-3 w-3 text-white/40 opacity-0 transition-opacity group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                    </svg>
+                  </div>
+                  <p class="text-xs text-white/55 truncate">Faculty & Administrative Systems</p>
+                </div>
+                <svg class="h-4 w-4 flex-none text-white/30 transition-transform group-hover:translate-x-0.5 group-hover:text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+              </a>
+
+              <div class="mx-3 border-b border-white/10"></div>
+
+              {# CICT Store #}
+              <a href="https://cictstore.me/" target="_blank" rel="noopener"
+                 class="group flex items-center gap-4 rounded-xl p-3 transition-all hover:bg-white/10">
+                <div class="flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-white/15 text-white shadow-inner">
+                  <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                  </svg>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-1">
+                    <span class="text-sm font-semibold text-white">CICT Store</span>
+                    <svg class="h-3 w-3 text-white/40 opacity-0 transition-opacity group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                    </svg>
+                  </div>
+                  <p class="text-xs text-white/55 truncate">Official Merchandise &amp; Resources</p>
+                </div>
+                <svg class="h-4 w-4 flex-none text-white/30 transition-transform group-hover:translate-x-0.5 group-hover:text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+              </a>
+            </div>
+
+            {# Card footer #}
+            <div class="mt-5 flex items-center gap-2 border-t border-white/10 pt-4">
+              <div class="h-px flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+              <span class="text-[10px] font-medium uppercase tracking-widest text-white/35">Part of the CICT Ecosystem</span>
+              <div class="h-px flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+            </div>
+          </div>
+        </div>
+
+        {# ── RIGHT: Branding + CTA ── #}
+        <div class="text-center lg:text-left">
+          {# Logos row #}
+          <div class="mb-8 flex items-center justify-center gap-3 lg:justify-start">
+            <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm shadow-lg">
+              <img src="{{ url_for('static', filename='img/isufst-logo.png') }}" alt="ISUFST" class="h-11 w-11 object-contain"/>
+            </div>
+            <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm shadow-lg">
+              <img src="{{ url_for('static', filename='img/cict-logo.png') }}" alt="CICT" class="h-11 w-11 object-contain"/>
+            </div>
+            <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm shadow-lg">
+              <img src="{{ url_for('static', filename='img/grade-portal-logo.png') }}" alt="Grade Portal" class="h-11 w-11 object-contain"/>
+            </div>
+          </div>
+
+          <div class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-gold backdrop-blur-sm">
+            Academic Grade Portal
+          </div>
+          <h1 class="mt-5 text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl">
+            <span class="text-gold">CICT</span> Grade Portal
+          </h1>
+          <p class="mx-auto mt-4 max-w-xl text-base leading-relaxed text-white/70 lg:mx-0 md:text-lg">
+            Your centralized platform for grades, schedules, records, and academic standing for the BSIT program at ISUFST Dingle Campus.
+          </p>
+          <div class="mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('main.index') }}" class="inline-flex items-center gap-2 rounded-xl bg-gold px-6 py-3 font-bold text-black transition-all hover:scale-105 active:scale-95">
+              Open Portal
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            </a>
+            {% else %}
+            <a href="{{ url_for('auth.login') }}" class="inline-flex items-center gap-2 rounded-xl bg-gold px-6 py-3 font-bold text-black transition-all hover:scale-105 active:scale-95">
+              Sign In
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            </a>
+            <a href="{{ url_for('auth.register') }}" class="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 py-3 font-semibold text-white transition hover:bg-white/10">
+              Create Account
+            </a>
+            {% endif %}
+          </div>
+          <div class="mt-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm font-mono text-white/50 backdrop-blur-sm">
+            College of ICT &mdash; Dingle Campus
+          </div>
+        </div>
+
+      </div>{# end 2-col grid #}
     </div>
   </section>
 
-  {# ── Mission / Purpose Section ── #}
-  <section class="border-t border-white/5 py-16 md:py-20">
+  {# ══════════════════════════════════════════════════════════
+     MISSION / PURPOSE — White background
+  ══════════════════════════════════════════════════════════ #}
+  <section class="border-t border-gray-200 bg-white py-16 md:py-20">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div class="grid gap-12 lg:grid-cols-2 lg:items-start">
         <div>
           <div class="flex items-center gap-3 mb-6">
-            <div class="flex h-10 w-10 items-center justify-center rounded-full bg-maroon/20">
-              <svg class="h-5 w-5 text-maroon-light" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="flex h-10 w-10 items-center justify-center rounded-full bg-maroon/10">
+              <svg class="h-5 w-5 text-maroon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
               </svg>
             </div>
-            <h2 class="text-2xl font-bold tracking-tight text-white md:text-3xl">Empowering Academic Transparency</h2>
+            <h2 class="text-2xl font-bold tracking-tight text-gray-900 md:text-3xl">Empowering Academic Transparency</h2>
           </div>
-          <p class="text-base leading-relaxed text-white/70">
+          <p class="text-base leading-relaxed text-gray-600">
             The CICT Grade Portal is designed to give students, faculty, and administrators a single place to review academic records, monitor progress, and manage core academic workflows for the BSIT program.
           </p>
-          <p class="mt-4 text-base leading-relaxed text-white/70">
+          <p class="mt-4 text-base leading-relaxed text-gray-600">
             By centralizing grades, subject loads, schedules, and profile information, the portal aims to make key academic data easier to access so that students and faculty can respond early to grade or enrollment risks.
           </p>
-          <div class="mt-6 rounded-xl border-l-4 border-gold bg-gold/10 p-5">
-            <p class="text-sm font-medium text-white/80">
-              The portal serves the <strong class="text-white">College of Information and Communications Technology (CICT)</strong> at the Iloilo State University of Fisheries Science and Technology, Dingle Campus.
+          <div class="mt-6 rounded-xl border-l-4 border-maroon bg-maroon/5 p-5">
+            <p class="text-sm font-medium text-gray-700">
+              The portal serves the <strong class="text-gray-900">College of Information and Communications Technology (CICT)</strong> at the Iloilo State University of Fisheries Science and Technology, Dingle Campus.
             </p>
           </div>
         </div>
@@ -103,16 +226,16 @@
         <div>
           <div class="flex items-center gap-3 mb-6">
             <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gold/15">
-              <svg class="h-5 w-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="h-5 w-5 text-yellow-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
               </svg>
             </div>
-            <h2 class="text-2xl font-bold tracking-tight text-white md:text-3xl">Data Privacy & Security</h2>
+            <h2 class="text-2xl font-bold tracking-tight text-gray-900 md:text-3xl">Data Privacy &amp; Security</h2>
           </div>
-          <p class="text-base leading-relaxed text-white/70">
+          <p class="text-base leading-relaxed text-gray-600">
             All student and faculty data is handled with strict confidentiality. The portal uses Supabase-backed authentication with role-based access, ensuring that academic records are only visible to authorized users.
           </p>
-          <p class="mt-4 text-base leading-relaxed text-white/70">
+          <p class="mt-4 text-base leading-relaxed text-gray-600">
             New account registrations require admin approval before access is granted, and account activities are tracked via an audit trail for transparency and accountability.
           </p>
         </div>
@@ -120,87 +243,91 @@
     </div>
   </section>
 
-  {# ── Feature Cards Section ── #}
-  <section class="border-t border-white/5 bg-black/30 py-16 md:py-20">
+  {# ══════════════════════════════════════════════════════════
+     FEATURE CARDS — Light gray background
+  ══════════════════════════════════════════════════════════ #}
+  <section class="border-t border-gray-200 bg-gray-50 py-16 md:py-20">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-12">
-        <span class="text-xs font-bold uppercase tracking-[0.2em] text-gold/60">What the Portal Supports</span>
-        <h2 class="mt-3 text-2xl font-bold tracking-tight text-white md:text-3xl">Built for Everyone in CICT</h2>
+        <span class="text-xs font-bold uppercase tracking-[0.2em] text-maroon/60">What the Portal Supports</span>
+        <h2 class="mt-3 text-2xl font-bold tracking-tight text-gray-900 md:text-3xl">Built for Everyone in CICT</h2>
       </div>
 
       <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {# Card 1 #}
-        <article class="rounded-2xl border border-white/10 bg-white/5 p-6 text-center backdrop-blur-sm transition-all hover:border-maroon/30 hover:bg-white/10">
-          <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-maroon/20">
-            <svg class="h-6 w-6 text-maroon-light" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <article class="rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm transition-all hover:border-maroon/30 hover:shadow-md">
+          <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-maroon/10">
+            <svg class="h-6 w-6 text-maroon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
             </svg>
           </div>
-          <h3 class="font-semibold text-white">Grades & Records</h3>
-          <p class="mt-2 text-sm text-white/50">Real-time access to grades, GWA tracking, and full academic history.</p>
+          <h3 class="font-semibold text-gray-900">Grades &amp; Records</h3>
+          <p class="mt-2 text-sm text-gray-500">Real-time access to grades, GWA tracking, and full academic history.</p>
         </article>
 
         {# Card 2 #}
-        <article class="rounded-2xl border border-white/10 bg-white/5 p-6 text-center backdrop-blur-sm transition-all hover:border-gold/30 hover:bg-white/10">
+        <article class="rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm transition-all hover:border-yellow-400/50 hover:shadow-md">
           <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gold/15">
-            <svg class="h-6 w-6 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="h-6 w-6 text-yellow-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
             </svg>
           </div>
-          <h3 class="font-semibold text-white">Schedules</h3>
-          <p class="mt-2 text-sm text-white/50">Section-based class schedules viewable in a weekly matrix format.</p>
+          <h3 class="font-semibold text-gray-900">Schedules</h3>
+          <p class="mt-2 text-sm text-gray-500">Section-based class schedules viewable in a weekly matrix format.</p>
         </article>
 
         {# Card 3 #}
-        <article class="rounded-2xl border border-white/10 bg-white/5 p-6 text-center backdrop-blur-sm transition-all hover:border-maroon/30 hover:bg-white/10">
-          <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-maroon/20">
-            <svg class="h-6 w-6 text-maroon-light" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <article class="rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm transition-all hover:border-maroon/30 hover:shadow-md">
+          <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-maroon/10">
+            <svg class="h-6 w-6 text-maroon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
             </svg>
           </div>
-          <h3 class="font-semibold text-white">Faculty Workflows</h3>
-          <p class="mt-2 text-sm text-white/50">Grade encoding, class records, and student monitoring tools.</p>
+          <h3 class="font-semibold text-gray-900">Faculty Workflows</h3>
+          <p class="mt-2 text-sm text-gray-500">Grade encoding, class records, and student monitoring tools.</p>
         </article>
 
         {# Card 4 #}
-        <article class="rounded-2xl border border-white/10 bg-white/5 p-6 text-center backdrop-blur-sm transition-all hover:border-gold/30 hover:bg-white/10">
+        <article class="rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm transition-all hover:border-yellow-400/50 hover:shadow-md">
           <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gold/15">
-            <svg class="h-6 w-6 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="h-6 w-6 text-yellow-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
             </svg>
           </div>
-          <h3 class="font-semibold text-white">Admin Oversight</h3>
-          <p class="mt-2 text-sm text-white/50">User management, subject administration, and audit trails.</p>
+          <h3 class="font-semibold text-gray-900">Admin Oversight</h3>
+          <p class="mt-2 text-sm text-gray-500">User management, subject administration, and audit trails.</p>
         </article>
       </div>
     </div>
   </section>
 
-  {# ── Two-Column Info Cards ── #}
-  <section class="border-t border-white/5 py-16 md:py-20">
+  {# ══════════════════════════════════════════════════════════
+     TWO-COLUMN INFO CARDS — White background
+  ══════════════════════════════════════════════════════════ #}
+  <section class="border-t border-gray-200 bg-white py-16 md:py-20">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div class="grid gap-6 md:grid-cols-2">
-        <article class="rounded-2xl border border-white/10 border-l-4 border-l-maroon bg-white/5 p-8 backdrop-blur-sm transition-all hover:bg-white/10">
+        <article class="rounded-2xl border border-gray-200 border-l-4 border-l-maroon bg-white p-8 shadow-sm transition-all hover:shadow-md">
           <div class="mb-4 flex items-center gap-3">
-            <svg class="h-5 w-5 text-maroon-light" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="h-5 w-5 text-maroon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
-            <h3 class="text-lg font-bold text-white">Open Access for Students</h3>
+            <h3 class="text-lg font-bold text-gray-900">Open Access for Students</h3>
           </div>
-          <p class="text-sm leading-relaxed text-white/60">
+          <p class="text-sm leading-relaxed text-gray-600">
             Students can review their grades, subject loads, class schedules, and profile information at any time. The portal is accessible on mobile and desktop devices as a progressive web app.
           </p>
         </article>
 
-        <article class="rounded-2xl border border-white/10 border-l-4 border-l-gold bg-white/5 p-8 backdrop-blur-sm transition-all hover:bg-white/10">
+        <article class="rounded-2xl border border-gray-200 border-l-4 border-l-yellow-500 bg-white p-8 shadow-sm transition-all hover:shadow-md">
           <div class="mb-4 flex items-center gap-3">
-            <svg class="h-5 w-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="h-5 w-5 text-yellow-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
             </svg>
-            <h3 class="text-lg font-bold text-white">Retention Policy Awareness</h3>
+            <h3 class="text-lg font-bold text-gray-900">Retention Policy Awareness</h3>
           </div>
-          <p class="text-sm leading-relaxed text-white/60">
+          <p class="text-sm leading-relaxed text-gray-600">
             Public informational pages help applicants, current students, faculty, and parents understand BSIT program requirements, probation rules, and re-enrollment processes before signing in.
           </p>
         </article>
@@ -208,24 +335,24 @@
     </div>
   </section>
 
-  {# ── Contact & Location Section ── #}
-  <section class="border-t border-white/5">
-    {# Section Header #}
-    <div class="bg-gray-900 py-12 text-center">
-      <span class="text-xs font-bold uppercase tracking-[0.2em] text-gold/60">Get In Touch</span>
-      <h2 class="mt-3 text-3xl font-bold tracking-tight text-white md:text-4xl">Contact & Location</h2>
-      <p class="mx-auto mt-3 max-w-xl text-white/60">Reach out to the CICT Office for inquiries, support, or campus visits.</p>
+  {# ══════════════════════════════════════════════════════════
+     CONTACT & LOCATION
+  ══════════════════════════════════════════════════════════ #}
+  <section class="border-t border-gray-200">
+    {# Section Header — white #}
+    <div class="bg-white py-12 text-center">
+      <span class="text-xs font-bold uppercase tracking-[0.2em] text-maroon/60">Get In Touch</span>
+      <h2 class="mt-3 text-3xl font-bold tracking-tight text-gray-900 md:text-4xl">Contact &amp; Location</h2>
+      <p class="mx-auto mt-3 max-w-xl text-gray-500">Reach out to the CICT Office for inquiries, support, or campus visits.</p>
     </div>
 
     <div class="flex flex-col md:flex-row">
-      {# Left: Contact Info #}
+      {# Left: Contact Info — keep maroon+circuit #}
       <div class="relative overflow-hidden bg-gradient-to-br from-gray-900 via-[#4a0000] to-gray-900 px-8 py-16 text-white md:w-1/2 md:px-12 md:py-20">
-        {# Circuit background #}
         {% include 'partials/circuit_bg.html' %}
         <div class="pointer-events-none absolute inset-0 opacity-[0.04]" style="background:repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(255,255,255,0.05) 2px,rgba(255,255,255,0.05) 4px)"></div>
 
         <div class="relative z-10 space-y-8">
-          {# Address #}
           <div class="flex items-start gap-4">
             <div class="flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-gold/20">
               <svg class="h-5 w-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -239,8 +366,6 @@
               <p class="text-sm text-white/60">Iloilo 5035, Philippines</p>
             </div>
           </div>
-
-          {# Email #}
           <div class="flex items-start gap-4">
             <div class="flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-gold/20">
               <svg class="h-5 w-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -252,8 +377,6 @@
               <p class="mt-1 font-mono text-sm text-white/90">cict.dingle@isufst.edu.ph</p>
             </div>
           </div>
-
-          {# Phone #}
           <div class="flex items-start gap-4">
             <div class="flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-gold/20">
               <svg class="h-5 w-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -265,8 +388,6 @@
               <p class="mt-1 font-mono text-sm text-white/90">(033) 123 - 4567</p>
             </div>
           </div>
-
-          {# Website #}
           <div class="flex items-start gap-4">
             <div class="flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-gold/20">
               <svg class="h-5 w-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -295,25 +416,24 @@
     </div>
   </section>
 
-  {# ── CTA Banner ── #}
-  <section class="border-t border-white/5 bg-black/30 py-12 md:py-16">
-    <div class="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
+  {# ══════════════════════════════════════════════════════════
+     CTA BANNER — Keep dark maroon (matches hero)
+  ══════════════════════════════════════════════════════════ #}
+  <section class="relative overflow-hidden border-t border-white/5 bg-gradient-to-b from-gray-900 via-[#4a0000] to-gray-900 py-16 md:py-20">
+    {% include 'partials/circuit_bg.html' %}
+    <div class="relative z-10 mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
       <h2 class="text-2xl font-bold tracking-tight text-white md:text-3xl">Ready to check your academic records?</h2>
       <p class="mx-auto mt-3 max-w-xl text-white/60">Sign in to view your grades, schedule, and profile. New students can register for an account.</p>
       <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
         {% if current_user.is_authenticated %}
         <a href="{{ url_for('main.index') }}" class="inline-flex items-center gap-2 rounded-xl bg-gold px-6 py-3 font-bold text-black transition-all hover:scale-105 active:scale-95">
           Open Portal
-          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-          </svg>
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
         </a>
         {% else %}
         <a href="{{ url_for('auth.login') }}" class="inline-flex items-center gap-2 rounded-xl bg-gold px-6 py-3 font-bold text-black transition-all hover:scale-105 active:scale-95">
           Sign In
-          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-          </svg>
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
         </a>
         <a href="{{ url_for('auth.register') }}" class="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 py-3 font-semibold text-white transition hover:bg-white/10">
           Create Account
