@@ -104,6 +104,29 @@ def dashboard():
         'current_year': year,
         'active_page': 'dashboard',
     }
+
+    # Admin-specific dashboard stats
+    if current_user.role == 'admin':
+        from app.models.student import Student
+        from app.models.subject import Subject
+        from app.models.faculty import Faculty
+        from app.models.enrollment import Enrollment
+
+        # Count students enrolled in current academic year
+        enrolled_students = (
+            db.session.query(db.func.count(db.distinct(Enrollment.student_id)))
+            .filter(Enrollment.academic_year == year)
+            .scalar()
+        ) or 0
+        context['enrolled_students'] = enrolled_students
+        context['total_subjects'] = db.session.query(db.func.count(Subject.id)).scalar() or 0
+        context['total_faculty'] = db.session.query(db.func.count(Faculty.id)).scalar() or 0
+        context['total_sections'] = (
+            db.session.query(db.func.count(db.distinct(Enrollment.student_id)))
+            .filter(Enrollment.academic_year == year, Enrollment.semester == semester)
+            .scalar()
+        ) or 0
+
     if _is_htmx():
         return render_template('panel/partials/dashboard.html', **context)
     return render_template('panel/pages/dashboard.html', **context)
@@ -951,6 +974,135 @@ def admin_grade_import():
     if _is_htmx():
         return render_template('panel/partials/admin/grade_import.html', **context)
     return render_template('panel/pages/admin/grade_import.html', **context)
+
+
+# ── Admin Grades View ────────────────────────────────────────────────
+
+@panel_bp.route('/admin/grades')
+@login_required
+@role_required('admin')
+def admin_grades():
+    """Admin view of all student grades with filters."""
+    from app.models.section import Section
+    from app.models.subject import Subject
+    from app.models.student import Student
+    from app.models.enrollment import Enrollment
+    from app.models.grade import Grade
+
+    # Get filter parameters
+    search = request.args.get('q', '').strip()
+    section_id = request.args.get('section_id', type=int)
+    subject_id = request.args.get('subject_id', type=int)
+    semester = request.args.get('semester')
+    year = request.args.get('year')
+    page = request.args.get('page', 1, type=int)
+
+    if not semester or not year:
+        semester, year = _current_period()
+
+    # Build query for enrollments with grades
+    q = (
+        Enrollment.query
+        .join(Student)
+        .join(Subject)
+        .outerjoin(Grade)
+        .options(
+            db.contains_eager(Enrollment.student),
+            db.contains_eager(Enrollment.subject),
+            db.joinedload(Enrollment.grade),
+        )
+        .filter(Enrollment.semester == semester)
+        .filter(Enrollment.academic_year == year)
+    )
+
+    # Apply filters
+    if search:
+        q = q.filter(
+            db.or_(
+                Student.full_name.ilike(f'%{search}%'),
+                Student.student_id.ilike(f'%{search}%'),
+                Subject.subject_code.ilike(f'%{search}%'),
+            )
+        )
+    if section_id:
+        q = q.filter(Student.section_id == section_id)
+    if subject_id:
+        q = q.filter(Enrollment.subject_id == subject_id)
+
+    q = q.order_by(Student.full_name, Subject.subject_code)
+    pagination = q.paginate(page=page, per_page=30, error_out=False)
+
+    # Get filter options
+    sections = Section.query.order_by(Section.program, Section.year_level, Section.section_letter).all()
+    subjects = Subject.query.order_by(Subject.subject_code).all()
+
+    context = {
+        'pagination': pagination,
+        'enrollments': pagination.items,
+        'search': search,
+        'section_id': section_id,
+        'subject_id': subject_id,
+        'sections': sections,
+        'subjects': subjects,
+        'current_semester': semester,
+        'current_year': year,
+        'active_page': 'admin_grades',
+    }
+    if _is_htmx():
+        return render_template('panel/partials/admin/grades.html', **context)
+    return render_template('panel/pages/admin/grades.html', **context)
+
+
+@panel_bp.route('/admin/grades/<int:enrollment_id>/encode', methods=['POST'])
+@login_required
+@role_required('admin')
+def admin_encode_grade(enrollment_id):
+    """Admin can encode grades for any enrollment (no faculty ownership check)."""
+    from app.models.enrollment import Enrollment
+    from app.models.grade import Grade
+    from datetime import datetime, timezone
+
+    enrollment = db.session.get(Enrollment, enrollment_id)
+    if not enrollment:
+        flash('Enrollment not found.', 'error')
+        return redirect(url_for('panel.admin_grades'))
+
+    raw = request.form.get('grade_value', '').strip().upper()
+    remarks = None
+    grade_value = None
+
+    if raw in ('INC', 'DRP'):
+        remarks = raw
+    elif raw:
+        try:
+            grade_value = round(float(raw), 2)
+            if grade_value not in admin_service.VALID_GRADES:
+                flash(f'Invalid grade: {raw}. Must be one of {sorted(admin_service.VALID_GRADES)}.', 'error')
+                return redirect(request.referrer or url_for('panel.admin_grades'))
+        except ValueError:
+            flash(f'Invalid grade: "{raw}".', 'error')
+            return redirect(request.referrer or url_for('panel.admin_grades'))
+
+    # Create or update grade
+    grade = enrollment.grade
+    if not grade:
+        grade = Grade(enrollment_id=enrollment.id)
+        db.session.add(grade)
+
+    grade.grade_value = grade_value
+    grade.remarks = remarks
+    grade.date_encoded = datetime.now(timezone.utc)
+    grade.encoded_by_id = current_user.id
+
+    try:
+        db.session.commit()
+        flash('Grade saved successfully.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        logging.error(f'Admin grade encode error: {e}')
+        flash('Error saving grade.', 'error')
+
+    return redirect(request.referrer or url_for('panel.admin_grades'))
 
 
 # ── Admin Audit Log ─────────────────────────────────────────────────

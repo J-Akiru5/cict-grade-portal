@@ -8,7 +8,7 @@
       <svg class="w-full h-full" viewBox="0 0 600 200" fill="none">
         <line x1="80" y1="30" x2="250" y2="100" stroke="#D4AF37" stroke-width="0.5" opacity="0.3"/>
         <line x1="250" y1="100" x2="450" y2="60" stroke="#D4AF37" stroke-width="0.5" opacity="0.2"/>
-        <line x1="450" y1="60" x2="550" y2="150" stroke="#D4AF37" stroke-width="0.5" opacity="0.25"/>
+        <line x1="450" cy="60" x2="550" y2="150" stroke="#D4AF37" stroke-width="0.5" opacity="0.25"/>
         <circle cx="80" cy="30" r="2" fill="#D4AF37" opacity="0.4"/>
         <circle cx="250" cy="100" r="3" fill="#D4AF37" opacity="0.4"/>
         <circle cx="450" cy="60" r="2" fill="#D4AF37" opacity="0.3"/>
@@ -28,7 +28,7 @@
               {{ faculty.employee_id }}
             </span>
           {% endif %}
-          <span class="bg-white/10 text-white/80 text-xs px-2 py-1 rounded capitalize">
+          <span class="bg-gold/80 text-white text-xs px-2 py-1 rounded capitalize font-semibold">
             {{ current_user.role }}
           </span>
           {% if faculty and faculty.department %}
@@ -39,11 +39,19 @@
         </div>
       </div>
       <div class="text-center flex-shrink-0">
+        {% if current_user.role == 'admin' %}
+        <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-gold/50 flex flex-col
+                    items-center justify-center bg-black/20">
+          <span class="font-mono font-bold text-lg sm:text-xl text-white">{{ enrolled_students }}</span>
+          <span class="text-white/50 text-[9px] uppercase tracking-widest">Enrolled</span>
+        </div>
+        {% else %}
         <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-gold/50 flex flex-col
                     items-center justify-center bg-black/20">
           <span class="font-mono font-bold text-lg sm:text-xl text-white">{{ subjects|length }}</span>
           <span class="text-white/50 text-[9px] uppercase tracking-widest">Subjects</span>
         </div>
+        {% endif %}
       </div>
     </div>
     <div class="bg-black/20 px-6 py-2 flex items-center gap-2 text-white/60 text-xs relative z-10">
@@ -56,6 +64,116 @@
   </div>
 
   {# ── Quick Stats ── #}
+  {% if current_user.role == 'admin' %}
+  {# Admin-specific stats #}
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+    <div class="paper-card px-4 py-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-maroon/10 flex items-center justify-center">
+          <svg class="w-5 h-5 text-maroon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="text-2xl font-bold font-mono text-maroon">{{ enrolled_students }}</div>
+          <div class="text-xs text-slate-500">Enrolled Students</div>
+        </div>
+      </div>
+    </div>
+    <div class="paper-card px-4 py-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+          <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13"/>
+          </svg>
+        </div>
+        <div>
+          <div class="text-2xl font-bold font-mono text-blue-600">{{ total_subjects }}</div>
+          <div class="text-xs text-slate-500">Total Subjects</div>
+        </div>
+      </div>
+    </div>
+    <div class="paper-card px-4 py-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
+          <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="text-2xl font-bold font-mono text-green-600">{{ total_faculty }}</div>
+          <div class="text-xs text-slate-500">Total Faculty</div>
+        </div>
+      </div>
+    </div>
+    <div class="paper-card px-4 py-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
+          <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="text-lg font-bold font-mono text-purple-600">{{ current_semester }}</div>
+          <div class="text-xs text-slate-500">{{ current_year }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# Admin Quick Actions #}
+  <div class="paper-card p-5">
+    <h3 class="font-semibold text-slate-800 mb-4">Quick Actions</h3>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <a href="{{ url_for('panel.admin_grades') }}"
+         hx-get="{{ url_for('panel.admin_grades') }}"
+         hx-target="#main-content" hx-push-url="true"
+         class="flex items-center gap-3 p-3 rounded-lg bg-maroon/5 border border-maroon/10 hover:bg-maroon/10 transition">
+        <svg class="w-5 h-5 text-maroon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+        </svg>
+        <span class="text-sm font-medium text-slate-700">View Grades</span>
+      </a>
+      <a href="{{ url_for('panel.admin_students') }}"
+         hx-get="{{ url_for('panel.admin_students') }}"
+         hx-target="#main-content" hx-push-url="true"
+         class="flex items-center gap-3 p-3 rounded-lg bg-blue-50 border border-blue-100 hover:bg-blue-100 transition">
+        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+        <span class="text-sm font-medium text-slate-700">Manage Students</span>
+      </a>
+      <a href="{{ url_for('panel.admin_enrollments') }}"
+         hx-get="{{ url_for('panel.admin_enrollments') }}"
+         hx-target="#main-content" hx-push-url="true"
+         class="flex items-center gap-3 p-3 rounded-lg bg-green-50 border border-green-100 hover:bg-green-100 transition">
+        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+        </svg>
+        <span class="text-sm font-medium text-slate-700">Enrollments</span>
+      </a>
+      <a href="{{ url_for('panel.admin_faculty') }}"
+         hx-get="{{ url_for('panel.admin_faculty') }}"
+         hx-target="#main-content" hx-push-url="true"
+         class="flex items-center gap-3 p-3 rounded-lg bg-purple-50 border border-purple-100 hover:bg-purple-100 transition">
+        <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+        </svg>
+        <span class="text-sm font-medium text-slate-700">Manage Faculty</span>
+      </a>
+    </div>
+  </div>
+
+  {% else %}
+  {# Faculty-specific stats #}
   <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
     {% for label, value, color in [
       ('Assigned Subjects', subjects|length, 'text-maroon'),
@@ -69,7 +187,7 @@
     {% endfor %}
   </div>
 
-  {# ── Assigned Subjects ── #}
+  {# ── Assigned Subjects (Faculty view) ── #}
   {% if subjects %}
   <div class="paper-card p-5">
     <h3 class="font-semibold text-slate-800 mb-3">Assigned Subjects</h3>
@@ -99,6 +217,7 @@
     </svg>
     No subjects assigned yet. Contact the administrator.
   </div>
+  {% endif %}
   {% endif %}
 
 </div>

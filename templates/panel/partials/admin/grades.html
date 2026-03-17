@@ -1,0 +1,204 @@
+{# HTMX partial: Admin Grades View #}
+<div class="space-y-4">
+
+  {# ── Header ── #}
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div>
+      <h1 class="text-xl font-bold text-slate-900">Student Grades</h1>
+      <p class="text-sm text-slate-500">View and manage all student grades</p>
+    </div>
+    <div class="text-sm text-slate-500 font-mono">
+      {{ current_semester }} Semester | {{ current_year }}
+    </div>
+  </div>
+
+  {# ── Filters ── #}
+  <form method="GET" class="paper-card p-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+      {# Search #}
+      <div class="lg:col-span-2">
+        <input type="text" name="q" value="{{ search }}"
+               placeholder="Search student name, ID, or subject..."
+               class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm
+                      focus:outline-none focus:ring-2 focus:ring-maroon/40">
+      </div>
+
+      {# Section filter #}
+      <select name="section_id"
+              class="rounded-lg border border-slate-200 px-3 py-2 text-sm bg-white
+                     focus:outline-none focus:ring-2 focus:ring-maroon/40">
+        <option value="">All Sections</option>
+        {% for section in sections %}
+          <option value="{{ section.id }}" {{ 'selected' if section_id == section.id }}>
+            {{ section.display_name }}
+          </option>
+        {% endfor %}
+      </select>
+
+      {# Subject filter #}
+      <select name="subject_id"
+              class="rounded-lg border border-slate-200 px-3 py-2 text-sm bg-white
+                     focus:outline-none focus:ring-2 focus:ring-maroon/40">
+        <option value="">All Subjects</option>
+        {% for subject in subjects %}
+          <option value="{{ subject.id }}" {{ 'selected' if subject_id == subject.id }}>
+            {{ subject.subject_code }}
+          </option>
+        {% endfor %}
+      </select>
+
+      {# Semester/Year #}
+      <div class="flex gap-2">
+        <select name="semester"
+                class="flex-1 rounded-lg border border-slate-200 px-2 py-2 text-sm bg-white
+                       focus:outline-none focus:ring-2 focus:ring-maroon/40">
+          {% for s in ['1st', '2nd', 'Summer'] %}
+            <option value="{{ s }}" {{ 'selected' if current_semester == s }}>{{ s }}</option>
+          {% endfor %}
+        </select>
+        <input type="text" name="year" value="{{ current_year }}"
+               placeholder="Year"
+               class="w-24 rounded-lg border border-slate-200 px-2 py-2 text-sm font-mono
+                      focus:outline-none focus:ring-2 focus:ring-maroon/40">
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2 mt-3">
+      <button type="submit"
+              class="px-4 py-2 bg-maroon text-white text-sm font-medium rounded-lg hover:bg-maroon/90 transition">
+        Apply Filters
+      </button>
+      <a href="{{ url_for('panel.admin_grades') }}"
+         class="px-4 py-2 bg-slate-100 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-200 transition">
+        Reset
+      </a>
+    </div>
+  </form>
+
+  {# ── Grades Table ── #}
+  {% if enrollments %}
+  <div class="paper-card overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="bg-slate-50 border-b border-slate-200">
+            <th class="px-4 py-3 text-left font-semibold text-slate-600 text-xs uppercase tracking-wide">Student</th>
+            <th class="px-4 py-3 text-left font-semibold text-slate-600 text-xs uppercase tracking-wide">Student ID</th>
+            <th class="px-4 py-3 text-left font-semibold text-slate-600 text-xs uppercase tracking-wide">Section</th>
+            <th class="px-4 py-3 text-left font-semibold text-slate-600 text-xs uppercase tracking-wide">Subject</th>
+            <th class="px-4 py-3 text-center font-semibold text-slate-600 text-xs uppercase tracking-wide">Grade</th>
+            <th class="px-4 py-3 text-center font-semibold text-slate-600 text-xs uppercase tracking-wide">Remarks</th>
+            <th class="px-4 py-3 text-center font-semibold text-slate-600 text-xs uppercase tracking-wide">Encode</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          {% for enrollment in enrollments %}
+          {% set grade = enrollment.grade %}
+          <tr class="hover:bg-slate-50 transition-colors">
+            <td class="px-4 py-3 font-medium text-slate-800">{{ enrollment.student.full_name }}</td>
+            <td class="px-4 py-3 font-mono text-xs text-slate-500">{{ enrollment.student.student_id }}</td>
+            <td class="px-4 py-3 text-xs">
+              {% if enrollment.student.section_obj %}
+                <span class="inline-flex items-center px-2 py-0.5 bg-maroon/10 text-maroon rounded font-mono font-medium">
+                  {{ enrollment.student.section_obj.display_name }}
+                </span>
+              {% else %}
+                <span class="text-slate-400">{{ enrollment.student.section or '---' }}</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-3">
+              <div class="font-mono text-sm font-semibold text-slate-800">{{ enrollment.subject.subject_code }}</div>
+              <div class="text-xs text-slate-400 truncate max-w-[200px]">{{ enrollment.subject.subject_title }}</div>
+            </td>
+            <td class="px-4 py-3 text-center font-mono font-bold
+                       {% if grade and grade.grade_value %}
+                         {% if grade.grade_value <= 1.75 %}text-green-600
+                         {% elif grade.grade_value <= 2.50 %}text-blue-600
+                         {% elif grade.grade_value <= 3.0 %}text-yellow-600
+                         {% else %}text-red-600{% endif %}
+                       {% else %}text-slate-400{% endif %}">
+              {{ grade.grade_display if grade else '---' }}
+            </td>
+            <td class="px-4 py-3 text-center">
+              {% if grade %}
+                {% set r = grade.computed_remarks %}
+                <span class="text-xs font-semibold px-2 py-0.5 rounded-full
+                             {% if r == 'PASSED' %}bg-green-100 text-green-700
+                             {% elif r == 'FAILED' %}bg-red-100 text-red-700
+                             {% elif r in ('INC','DRP') %}bg-yellow-100 text-yellow-700
+                             {% else %}bg-slate-100 text-slate-500{% endif %}">
+                  {{ r }}
+                </span>
+              {% else %}
+                <span class="text-xs text-slate-400">---</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-3">
+              <form method="POST"
+                    action="{{ url_for('panel.admin_encode_grade', enrollment_id=enrollment.id) }}"
+                    class="flex items-center gap-2 justify-center">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <input name="grade_value"
+                       value="{{ grade.grade_value if grade and grade.grade_value else (grade.remarks if grade and grade.remarks else '') }}"
+                       placeholder="1.75 / INC"
+                       class="w-24 rounded-lg border border-slate-200 px-2 py-1 text-sm text-center font-mono
+                              focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+                <button type="submit"
+                        class="px-3 py-1 bg-maroon text-white text-xs font-semibold rounded-lg hover:bg-maroon/90 transition">
+                  Save
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {# ── Pagination ── #}
+  {% if pagination.pages > 1 %}
+  <div class="flex items-center justify-between">
+    <div class="text-sm text-slate-500">
+      Showing {{ ((pagination.page - 1) * pagination.per_page) + 1 }} -
+      {{ min(pagination.page * pagination.per_page, pagination.total) }}
+      of {{ pagination.total }} entries
+    </div>
+    <div class="flex items-center gap-1">
+      {% if pagination.has_prev %}
+        <a href="{{ url_for('panel.admin_grades', page=pagination.prev_num, q=search, section_id=section_id, subject_id=subject_id, semester=current_semester, year=current_year) }}"
+           class="px-3 py-1 text-sm rounded-lg border border-slate-200 hover:bg-slate-50">&larr;</a>
+      {% endif %}
+      {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+        {% if page_num %}
+          <a href="{{ url_for('panel.admin_grades', page=page_num, q=search, section_id=section_id, subject_id=subject_id, semester=current_semester, year=current_year) }}"
+             class="px-3 py-1 text-sm rounded-lg border {{ 'bg-maroon text-white border-maroon' if page_num == pagination.page else 'border-slate-200 hover:bg-slate-50' }}">
+            {{ page_num }}
+          </a>
+        {% else %}
+          <span class="px-2 text-slate-400">...</span>
+        {% endif %}
+      {% endfor %}
+      {% if pagination.has_next %}
+        <a href="{{ url_for('panel.admin_grades', page=pagination.next_num, q=search, section_id=section_id, subject_id=subject_id, semester=current_semester, year=current_year) }}"
+           class="px-3 py-1 text-sm rounded-lg border border-slate-200 hover:bg-slate-50">&rarr;</a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <p class="text-xs text-slate-400 text-center">
+    Valid grades: 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 2.75, 3.0, 5.0 &nbsp;|&nbsp; Special: INC, DRP
+  </p>
+
+  {% else %}
+  <div class="paper-card p-10 text-center text-slate-400">
+    <svg class="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+    </svg>
+    No grades found for the selected filters.
+  </div>
+  {% endif %}
+
+</div>

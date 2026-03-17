@@ -65,6 +65,11 @@ def profile():
 def edit_profile():
     student = student_service.get_student_profile(current_user.id)
 
+    # If no student profile exists, show error and redirect
+    if not student:
+        flash('No student profile found. Please contact the registrar.', 'error')
+        return redirect(url_for('student.profile'))
+
     if request.method == 'POST':
         # Handle avatar upload
         avatar_file = request.files.get('avatar')
@@ -89,8 +94,12 @@ def edit_profile():
                 'year_level': request.form.get('year_level', type=int) or None,
                 'gender': request.form.get('gender', '').strip() or None,
             }
-            student_service.update_student_profile(current_user.id, data)
-            flash('Profile updated successfully.', 'success')
+            updated = student_service.update_student_profile(current_user.id, data)
+            if updated:
+                flash('Profile updated successfully.', 'success')
+            else:
+                flash('Failed to update profile. Please try again.', 'error')
+
             if _is_htmx():
                 resp = make_response('', 204)
                 resp.headers['HX-Redirect'] = url_for('student.profile')
