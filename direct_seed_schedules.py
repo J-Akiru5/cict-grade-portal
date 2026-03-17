@@ -28,8 +28,8 @@ def get_db_connection():
                 password=os.getenv('DB_PASSWORD', '')
             )
     except Exception as e:
-        print(f"❌ Database connection failed: {e}")
-        print("🔧 Please check your database credentials in .env file")
+        print(f"[!] Database connection failed: {e}")
+        print("[!] Please check your database credentials in .env file")
         return None
 
 def create_time_obj(time_str):
@@ -47,7 +47,7 @@ def clear_existing_schedules(cursor):
         WHERE academic_year = '2025-2026' AND semester = '2nd'
     """)
     deleted_count = cursor.rowcount
-    print(f"🗑 Cleared {deleted_count} existing schedule entries")
+    print(f"[-] Cleared {deleted_count} existing schedule entries")
     return deleted_count
 
 def get_or_create_subject(cursor, subject_code, subject_title, units=3):
@@ -67,7 +67,7 @@ def get_or_create_subject(cursor, subject_code, subject_title, units=3):
         """, (subject_code, subject_title, units, 'CICT', datetime.utcnow()))
 
         subject_id = cursor.fetchone()[0]
-        print(f"✓ Created subject: {subject_code} - {subject_title}")
+        print(f"[+] Created subject: {subject_code} - {subject_title}")
         return subject_id
 
 def get_or_create_faculty(cursor, faculty_name):
@@ -84,7 +84,7 @@ def get_or_create_faculty(cursor, faculty_name):
     else:
         # For now, just return None if faculty doesn't exist
         # In a full implementation, you'd create the user and faculty records
-        print(f"⚠ Faculty not found: {faculty_name} (will be NULL)")
+        print(f"[!] Faculty not found: {faculty_name} (will be NULL)")
         return None
 
 def get_section_id(cursor, section_name):
@@ -146,7 +146,7 @@ def create_missing_sections(cursor):
                 VALUES (%s, %s, %s, %s)
             """, (program, year_level, section_letter, datetime.utcnow()))
             created_count += 1
-            print(f"✓ Created section: BSIT-{year_level}{section_letter}")
+            print(f"[+] Created section: BSIT-{year_level}{section_letter}")
 
     return created_count
 
@@ -204,8 +204,8 @@ def get_official_schedule_data():
 
 def main():
     """Main seeding function"""
-    print("🚀 ISUFST CICT - Direct Database Schedule Seeder")
-    print("📅 Academic Year: 2025-2026, 2nd Semester")
+    print(">>> ISUFST CICT - Direct Database Schedule Seeder")
+    print(">>> Academic Year: 2025-2026, 2nd Semester")
     print("=" * 60)
 
     # Get database connection
@@ -241,7 +241,7 @@ def main():
                 section_id = get_section_id(cursor, section_name)
 
                 if not section_id:
-                    print(f"⚠ Section not found: {section_name}")
+                    print(f"[!] Section not found: {section_name}")
                     continue
 
                 # Convert times
@@ -260,7 +260,7 @@ def main():
                 ))
 
                 created_count += 1
-                print(f"✓ {section_name} | {subject_code} | {day} {time_start}-{time_end}")
+                print(f"[+] {section_name} | {subject_code} | {day} {time_start}-{time_end}")
 
             except Exception as e:
                 print(f"✗ Error creating entry for {section_name} {subject_code}: {e}")
@@ -268,16 +268,16 @@ def main():
         # Commit all changes
         conn.commit()
 
-        print(f"\n✅ Successfully created {created_count} schedule entries")
+        print(f"\n[+] Successfully created {created_count} schedule entries")
         if section_count > 0:
-            print(f"✅ Created {section_count} new sections")
+            print(f"[+] Created {section_count} new sections")
         if cleared_count > 0:
-            print(f"🗑 Cleared {cleared_count} old entries")
-        print("🎓 Official schedule seeding completed!")
+            print(f"[-] Cleared {cleared_count} old entries")
+        print(">>> Official schedule seeding completed!")
 
     except Exception as e:
         conn.rollback()
-        print(f"\n❌ Error during seeding: {e}")
+        print(f"\n[!] Error during seeding: {e}")
 
     finally:
         cursor.close()

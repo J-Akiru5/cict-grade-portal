@@ -61,7 +61,7 @@ def create_admin(email: str, password: str) -> None:
     )
     db.session.add(user)
     db.session.commit()
-    click.echo(f'✅  Admin user {email} created successfully (id={sb_user.id}).')
+    click.echo(f'[+] Admin user {email} created successfully (id={sb_user.id}).')
 
 
 def register_cli(app):
@@ -98,8 +98,8 @@ def register_cli(app):
         from seed_official_schedules_2025_2026 import seed_official_schedules, create_schedule_entry
         from app.extensions import db
 
-        click.echo(f"🚀 Seeding OFFICIAL schedules for {semester} Semester, A.Y. {academic_year}")
-        click.echo("📋 Source: Official ISUFST CICT Schedule Documents")
+        click.echo(f">>> Seeding OFFICIAL schedules for {semester} Semester, A.Y. {academic_year}")
+        click.echo(">>> Source: Official ISUFST CICT Schedule Documents")
 
         try:
             # First ensure all sections exist
@@ -119,13 +119,13 @@ def register_cli(app):
             # Commit all changes
             db.session.commit()
 
-            click.echo(f"✅ Successfully created {created_count} OFFICIAL schedule entries")
+            click.echo(f"[+] Successfully created {created_count} OFFICIAL schedule entries")
             if section_count > 0:
-                click.echo(f"✅ Created {section_count} missing sections")
-            click.echo("🎓 OFFICIAL schedule seeding completed!")
+                click.echo(f"[+] Created {section_count} missing sections")
+            click.echo(">>> OFFICIAL schedule seeding completed!")
 
         except Exception as e:
             db.session.rollback()
-            click.echo(f"❌ Error during seeding: {e}")
+            click.echo(f"[!] Error during seeding: {e}")
             raise
 

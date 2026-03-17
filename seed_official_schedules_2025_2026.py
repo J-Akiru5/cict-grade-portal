@@ -35,7 +35,7 @@ def get_or_create_subject(subject_code, subject_title, units=3):
             department="CICT"
         )
         db.session.add(subject)
-        print(f"✓ Created subject: {subject_code} - {subject_title}")
+        print(f"[+] Created subject: {subject_code} - {subject_title}")
     return subject
 
 def get_or_create_faculty(faculty_name):
@@ -63,7 +63,7 @@ def get_or_create_faculty(faculty_name):
             department="CICT"
         )
         db.session.add(faculty)
-        print(f"✓ Created faculty: {faculty_name}")
+        print(f"[+] Created faculty: {faculty_name}")
     return faculty
 
 def get_section(section_name):
@@ -100,7 +100,7 @@ def create_schedule_entry(section_name, subject_code, subject_title, faculty_nam
         section = get_section(section_name)
 
         if not section:
-            print(f"⚠ Section not found: {section_name}")
+            print(f"[!] Section not found: {section_name}")
             return None
 
         # Convert time strings to time objects
@@ -108,7 +108,7 @@ def create_schedule_entry(section_name, subject_code, subject_title, faculty_nam
         end_time = create_time(time_end)
 
         if not start_time or not end_time:
-            print(f"⚠ Invalid time format: {time_start}-{time_end}")
+            print(f"[!] Invalid time format: {time_start}-{time_end}")
             return None
 
         # Create schedule entry
@@ -125,7 +125,7 @@ def create_schedule_entry(section_name, subject_code, subject_title, faculty_nam
         )
 
         db.session.add(schedule)
-        print(f"✓ {section_name} | {subject_code} | {faculty_name} | {day} {time_start}-{time_end}")
+        print(f"[+] {section_name} | {subject_code} | {faculty_name} | {day} {time_start}-{time_end}")
 
         return schedule
 
@@ -136,8 +136,8 @@ def create_schedule_entry(section_name, subject_code, subject_title, faculty_nam
 def seed_official_schedules():
     """Seed all OFFICIAL schedules from ISUFST CICT images"""
 
-    print("🚀 Starting OFFICIAL schedule seeding for 2nd Semester A.Y. 2025-2026")
-    print("📋 Based on actual ISUFST CICT schedule documents")
+    print(">>> Starting OFFICIAL schedule seeding for 2nd Semester A.Y. 2025-2026")
+    print(">>> Based on actual ISUFST CICT schedule documents")
     print("=" * 60)
 
     # Clear existing schedules for 2025-2026, 2nd semester first
@@ -147,7 +147,7 @@ def seed_official_schedules():
     ).count()
 
     if existing_count > 0:
-        print(f"🗑 Clearing {existing_count} existing schedule entries...")
+        print(f"[-] Clearing {existing_count} existing schedule entries...")
         Schedule.query.filter_by(
             academic_year="2025-2026",
             semester="2nd"
@@ -410,10 +410,10 @@ def main():
     app = create_app()
 
     with app.app_context():
-        print("🏫 ISUFST CICT Grade Portal - OFFICIAL Schedule Seeder")
-        print("📅 Academic Year: 2025-2026")
-        print("📖 Semester: 2nd Semester")
-        print("🎯 Source: Official ISUFST CICT Schedule Documents")
+        print(">>> ISUFST CICT Grade Portal - OFFICIAL Schedule Seeder")
+        print(">>> Academic Year: 2025-2026")
+        print(">>> Semester: 2nd Semester")
+        print(">>> Source: Official ISUFST CICT Schedule Documents")
         print("=" * 60)
 
         try:
@@ -434,12 +434,12 @@ def main():
             # Commit all changes
             db.session.commit()
 
-            print(f"\n✅ Successfully created {created_count} OFFICIAL schedule entries")
-            print("🎓 OFFICIAL schedule seeding completed!")
+            print(f"\n[+] Successfully created {created_count} OFFICIAL schedule entries")
+            print(">>> OFFICIAL schedule seeding completed!")
 
         except Exception as e:
             db.session.rollback()
-            print(f"\n❌ Error during seeding: {e}")
+            print(f"\n[!] Error during seeding: {e}")
             raise
 
 if __name__ == "__main__":
