@@ -1,0 +1,48 @@
+{# ── Circuit Board SVG Background ──
+   Include inside a position:relative container with overflow:hidden.
+   The SVG fills the parent absolutely. #}
+<div class="absolute inset-0 pointer-events-none overflow-hidden">
+  <svg class="w-full h-full" viewBox="0 0 800 600" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+    <defs>
+      <linearGradient id="circuit-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#800000" stop-opacity="0.6"/>
+        <stop offset="100%" stop-color="#800000" stop-opacity="0.2"/>
+      </linearGradient>
+    </defs>
+
+    {# ── Vertical circuit paths with 90° bends ── #}
+    <path class="circuit-path" d="M100,0 L100,150 L200,150 L200,300" stroke="url(#circuit-grad)" stroke-width="1.5" fill="none" opacity="0.3"/>
+    <path class="circuit-path" d="M200,0 L200,100 L350,100 L350,250 L350,400" stroke="url(#circuit-grad)" stroke-width="1.5" fill="none" opacity="0.25"/>
+    <path class="circuit-path" d="M350,0 L350,80 L500,80 L500,200" stroke="url(#circuit-grad)" stroke-width="1.5" fill="none" opacity="0.3"/>
+    <path class="circuit-path" d="M500,0 L500,120 L600,120 L600,350" stroke="url(#circuit-grad)" stroke-width="1.5" fill="none" opacity="0.2"/>
+    <path class="circuit-path" d="M650,0 L650,180 L550,180 L550,400 L550,600" stroke="url(#circuit-grad)" stroke-width="1.5" fill="none" opacity="0.25"/>
+    <path class="circuit-path" d="M150,600 L150,450 L300,450 L300,300" stroke="url(#circuit-grad)" stroke-width="1.5" fill="none" opacity="0.2"/>
+    <path class="circuit-path" d="M450,600 L450,500 L600,500 L600,350" stroke="url(#circuit-grad)" stroke-width="1.5" fill="none" opacity="0.25"/>
+    <path class="circuit-path" d="M700,600 L700,400 L750,400 L750,200 L700,200 L700,0" stroke="url(#circuit-grad)" stroke-width="1.5" fill="none" opacity="0.2"/>
+
+    {# ── Horizontal gold connector paths ── #}
+    <path class="circuit-path" d="M100,150 L350,150" stroke="#D4AF37" stroke-width="0.8" fill="none" opacity="0.15"/>
+    <path class="circuit-path" d="M200,300 L500,300" stroke="#D4AF37" stroke-width="0.8" fill="none" opacity="0.12"/>
+    <path class="circuit-path" d="M350,250 L600,250" stroke="#D4AF37" stroke-width="0.8" fill="none" opacity="0.15"/>
+    <path class="circuit-path" d="M150,450 L450,450" stroke="#D4AF37" stroke-width="0.8" fill="none" opacity="0.1"/>
+    <path class="circuit-path" d="M500,200 L700,200" stroke="#D4AF37" stroke-width="0.8" fill="none" opacity="0.12"/>
+    <path class="circuit-path" d="M300,400 L550,400" stroke="#D4AF37" stroke-width="0.8" fill="none" opacity="0.15"/>
+    <path class="circuit-path" d="M600,500 L750,500" stroke="#D4AF37" stroke-width="0.8" fill="none" opacity="0.1"/>
+
+    {# ── Gold particle nodes at circuit junctions ── #}
+    <circle class="circuit-node" cx="100" cy="150" r="3" fill="#D4AF37" opacity="0.4"/>
+    <circle class="circuit-node" cx="200" cy="150" r="4" fill="#D4AF37" opacity="0.5"/>
+    <circle class="circuit-node" cx="200" cy="300" r="3" fill="#D4AF37" opacity="0.35"/>
+    <circle class="circuit-node" cx="350" cy="100" r="3" fill="#D4AF37" opacity="0.4"/>
+    <circle class="circuit-node" cx="350" cy="250" r="4" fill="#D4AF37" opacity="0.5"/>
+    <circle class="circuit-node" cx="500" cy="80" r="3" fill="#D4AF37" opacity="0.3"/>
+    <circle class="circuit-node" cx="500" cy="200" r="4" fill="#D4AF37" opacity="0.45"/>
+    <circle class="circuit-node" cx="500" cy="300" r="3" fill="#D4AF37" opacity="0.35"/>
+    <circle class="circuit-node" cx="600" cy="120" r="3" fill="#D4AF37" opacity="0.3"/>
+    <circle class="circuit-node" cx="600" cy="350" r="4" fill="#D4AF37" opacity="0.5"/>
+    <circle class="circuit-node" cx="550" cy="400" r="3" fill="#D4AF37" opacity="0.35"/>
+    <circle class="circuit-node" cx="650" cy="180" r="3" fill="#D4AF37" opacity="0.3"/>
+    <circle class="circuit-node" cx="700" cy="400" r="4" fill="#D4AF37" opacity="0.4"/>
+    <circle class="circuit-node" cx="750" cy="200" r="3" fill="#D4AF37" opacity="0.35"/>
+  </svg>
+</div>

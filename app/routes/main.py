@@ -10,7 +10,7 @@ def index():
     if current_user.is_authenticated:
         from app.routes.auth import _redirect_by_role
         return _redirect_by_role(current_user.role)
-    return redirect(url_for('auth.login'))
+    return render_template('about.html')
 
 
 @main_bp.route('/about')

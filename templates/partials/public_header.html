@@ -1,0 +1,32 @@
+{# ── Shared Public Header / Navbar ──
+   Set {% set active_page = 'home' %} or 'retention' before including. #}
+<header class="sticky top-0 z-30 border-b border-white/10 bg-gray-900/95 backdrop-blur-md">
+  <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+    <a href="{{ url_for('main.index') }}" class="flex items-center gap-3">
+      <div class="flex items-center gap-2">
+        <img src="{{ url_for('static', filename='img/isufst-logo.png') }}" alt="ISUFST" class="h-9 w-9 object-contain"/>
+        <img src="{{ url_for('static', filename='img/cict-logo.png') }}" alt="CICT" class="h-9 w-9 object-contain"/>
+      </div>
+      <div>
+        <span class="block text-sm font-bold tracking-tight text-white">CICT Grade Portal</span>
+        <span class="block text-xs text-white/60">ISUFST Dingle Campus</span>
+      </div>
+    </a>
+    <nav class="flex flex-wrap items-center gap-2 text-sm font-medium">
+      <a href="{{ url_for('main.index') }}"
+         class="rounded-full px-4 py-1.5 transition {% if active_page == 'home' %}bg-white/10 text-white{% else %}text-white/70 hover:bg-white/10 hover:text-white{% endif %}">
+        Home
+      </a>
+      <a href="{{ url_for('main.retention_policies') }}"
+         class="rounded-full px-4 py-1.5 transition {% if active_page == 'retention' %}bg-white/10 text-white{% else %}text-white/70 hover:bg-white/10 hover:text-white{% endif %}">
+        Retention Policies
+      </a>
+      {% if current_user.is_authenticated %}
+      <a href="{{ url_for('main.index') }}" class="rounded-full border border-gold bg-gold px-4 py-1.5 text-sm font-bold text-black transition hover:bg-gold-dark">Open Portal</a>
+      {% else %}
+      <a href="{{ url_for('auth.login') }}" class="rounded-full border border-maroon bg-maroon px-4 py-1.5 text-white transition hover:bg-maroon-dark">Sign In</a>
+      <a href="{{ url_for('auth.register') }}" class="hidden rounded-full border border-white/20 px-4 py-1.5 text-white/70 transition hover:bg-white/10 hover:text-white sm:inline-flex">Register</a>
+      {% endif %}
+    </nav>
+  </div>
+</header>
