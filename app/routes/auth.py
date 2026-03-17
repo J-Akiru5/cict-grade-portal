@@ -157,10 +157,8 @@ def reset_password():
             flash('Reset link is invalid or expired. Please request a new one.', 'error')
             return redirect(url_for('auth.forgot_password'))
 
-    if not access_token:
-        flash('Invalid or expired reset link.', 'error')
-        return redirect(url_for('auth.forgot_password'))
-
+    # We allow GET requests to render even without a token because the 
+    # access_token might be in the URL fragment (#), which only JS can read.
     return render_template('auth/reset_password.html', access_token=access_token)
 
 
