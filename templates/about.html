@@ -28,7 +28,7 @@
   {# ══════════════════════════════════════════════════════════
      HERO — Maroon dark, circuit BG, 2-column on lg screens
   ══════════════════════════════════════════════════════════ #}
-  <section class="relative overflow-hidden bg-gradient-to-b from-gray-900 via-[#4a0000] to-gray-900 py-20 text-white md:py-28 lg:py-36">
+  <section class="relative overflow-hidden bg-gradient-to-b from-gray-900 via-[#4a0000] to-gray-900 py-10 text-white sm:py-16 md:py-28 lg:py-36">
     {# Circuit animation background #}
     {% include 'partials/circuit_bg.html' %}
     {# Grid overlay #}
@@ -38,14 +38,59 @@
     <div class="pointer-events-none absolute bottom-0 left-1/4 h-64 w-64 rounded-full bg-maroon/30 blur-3xl"></div>
 
     <div class="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div class="flex flex-col-reverse items-center gap-12 lg:grid lg:grid-cols-2 lg:items-center lg:gap-16">
+        <div class="flex flex-col items-center gap-8 sm:gap-12 lg:grid lg:grid-cols-2 lg:flex-none lg:items-center lg:gap-16">
 
-        {# ── LEFT: Glassmorphic CICT Ecosystem Card ── #}
-        <div class="w-full max-w-md lg:max-w-none">
-          <div class="rounded-2xl border border-white/20 bg-white/10 p-6 shadow-2xl backdrop-blur-md">
+        {# ── RIGHT: Branding + CTA (shown first on mobile via DOM order) ── #}
+        <div class="text-center lg:text-left order-first lg:order-last">
+          {# Logos row #}
+          <div class="mb-6 flex items-center justify-center gap-3 sm:mb-8 lg:justify-start">
+            <div class="flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm shadow-lg">
+              <img src="{{ url_for('static', filename='img/isufst-logo.png') }}" alt="ISUFST" class="h-8 w-8 sm:h-11 sm:w-11 object-contain"/>
+            </div>
+            <div class="flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm shadow-lg">
+              <img src="{{ url_for('static', filename='img/cict-logo.png') }}" alt="CICT" class="h-8 w-8 sm:h-11 sm:w-11 object-contain"/>
+            </div>
+            <div class="flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm shadow-lg">
+              <img src="{{ url_for('static', filename='img/grade-portal-logo.png') }}" alt="Grade Portal" class="h-8 w-8 sm:h-11 sm:w-11 object-contain"/>
+            </div>
+          </div>
+
+          <div class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-gold backdrop-blur-sm">
+            Academic Grade Portal
+          </div>
+          <h1 class="mt-4 text-3xl font-bold tracking-tight sm:text-4xl sm:mt-5 md:text-5xl lg:text-6xl">
+            <span class="text-gold">CICT</span> Grade Portal
+          </h1>
+          <p class="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-white/70 sm:text-base sm:mt-4 lg:mx-0 md:text-lg">
+            Your centralized platform for grades, schedules, records, and academic standing for the BSIT program at ISUFST Dingle Campus.
+          </p>
+          <div class="mt-6 sm:mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('main.index') }}" class="inline-flex items-center gap-2 rounded-xl bg-gold px-6 py-3 font-bold text-black transition-all hover:scale-105 active:scale-95">
+              Open Portal
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            </a>
+            {% else %}
+            <a href="{{ url_for('auth.login') }}" class="inline-flex items-center gap-2 rounded-xl bg-gold px-6 py-3 font-bold text-black transition-all hover:scale-105 active:scale-95">
+              Sign In
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            </a>
+            <a href="{{ url_for('auth.register') }}" class="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 py-3 font-semibold text-white transition hover:bg-white/10">
+              Create Account
+            </a>
+            {% endif %}
+          </div>
+          <div class="mt-4 sm:mt-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm font-mono text-white/50 backdrop-blur-sm">
+            College of ICT &mdash; Dingle Campus
+          </div>
+        </div>
+
+        {# ── LEFT: Glassmorphic CICT Ecosystem Card (shown below branding on mobile) ── #}
+        <div class="w-full max-w-md lg:max-w-none order-last lg:order-first">
+          <div class="rounded-2xl border border-white/20 bg-white/10 p-4 sm:p-6 shadow-2xl backdrop-blur-md">
 
             {# Card header #}
-            <div class="mb-5 flex items-center justify-between">
+            <div class="mb-3 sm:mb-5 flex items-center justify-between">
               <div>
                 <span class="inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-gold">
                   CICT Digital Ecosystem
@@ -61,12 +106,12 @@
             </div>
 
             {# Link items #}
-            <div class="space-y-1">
+            <div class="space-y-0.5 sm:space-y-1">
 
               {# IRJICT #}
               <a href="https://irjict.isufstcict.com/" target="_blank" rel="noopener"
-                 class="group flex items-center gap-4 rounded-xl p-3 transition-all hover:bg-white/10">
-                <div class="flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-white/15 text-white shadow-inner">
+                 class="group flex items-center gap-3 rounded-xl p-2.5 sm:p-3 transition-all hover:bg-white/10">
+                <div class="flex h-9 w-9 sm:h-11 sm:w-11 flex-none items-center justify-center rounded-xl bg-white/15 text-white shadow-inner">
                   <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
@@ -90,8 +135,8 @@
 
               {# CICT Tech Portal #}
               <a href="https://portal.isufstcict.com/" target="_blank" rel="noopener"
-                 class="group flex items-center gap-4 rounded-xl p-3 transition-all hover:bg-white/10">
-                <div class="flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-gold/20 text-gold shadow-inner">
+                 class="group flex items-center gap-3 rounded-xl p-2.5 sm:p-3 transition-all hover:bg-white/10">
+                <div class="flex h-9 w-9 sm:h-11 sm:w-11 flex-none items-center justify-center rounded-xl bg-gold/20 text-gold shadow-inner">
                   <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/>
@@ -115,8 +160,8 @@
 
               {# CICT Store #}
               <a href="https://cictstore.me/" target="_blank" rel="noopener"
-                 class="group flex items-center gap-4 rounded-xl p-3 transition-all hover:bg-white/10">
-                <div class="flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-white/15 text-white shadow-inner">
+                 class="group flex items-center gap-3 rounded-xl p-2.5 sm:p-3 transition-all hover:bg-white/10">
+                <div class="flex h-9 w-9 sm:h-11 sm:w-11 flex-none items-center justify-center rounded-xl bg-white/15 text-white shadow-inner">
                   <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
@@ -138,7 +183,7 @@
             </div>
 
             {# Card footer #}
-            <div class="mt-5 flex items-center gap-2 border-t border-white/10 pt-4">
+            <div class="mt-3 sm:mt-5 flex items-center gap-2 border-t border-white/10 pt-3 sm:pt-4">
               <div class="h-px flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
               <span class="text-[10px] font-medium uppercase tracking-widest text-white/35">Part of the CICT Ecosystem</span>
               <div class="h-px flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
@@ -146,50 +191,6 @@
           </div>
         </div>
 
-        {# ── RIGHT: Branding + CTA ── #}
-        <div class="text-center lg:text-left">
-          {# Logos row #}
-          <div class="mb-8 flex items-center justify-center gap-3 lg:justify-start">
-            <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm shadow-lg">
-              <img src="{{ url_for('static', filename='img/isufst-logo.png') }}" alt="ISUFST" class="h-11 w-11 object-contain"/>
-            </div>
-            <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm shadow-lg">
-              <img src="{{ url_for('static', filename='img/cict-logo.png') }}" alt="CICT" class="h-11 w-11 object-contain"/>
-            </div>
-            <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm shadow-lg">
-              <img src="{{ url_for('static', filename='img/grade-portal-logo.png') }}" alt="Grade Portal" class="h-11 w-11 object-contain"/>
-            </div>
-          </div>
-
-          <div class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-gold backdrop-blur-sm">
-            Academic Grade Portal
-          </div>
-          <h1 class="mt-5 text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl">
-            <span class="text-gold">CICT</span> Grade Portal
-          </h1>
-          <p class="mx-auto mt-4 max-w-xl text-base leading-relaxed text-white/70 lg:mx-0 md:text-lg">
-            Your centralized platform for grades, schedules, records, and academic standing for the BSIT program at ISUFST Dingle Campus.
-          </p>
-          <div class="mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
-            {% if current_user.is_authenticated %}
-            <a href="{{ url_for('main.index') }}" class="inline-flex items-center gap-2 rounded-xl bg-gold px-6 py-3 font-bold text-black transition-all hover:scale-105 active:scale-95">
-              Open Portal
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-            </a>
-            {% else %}
-            <a href="{{ url_for('auth.login') }}" class="inline-flex items-center gap-2 rounded-xl bg-gold px-6 py-3 font-bold text-black transition-all hover:scale-105 active:scale-95">
-              Sign In
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-            </a>
-            <a href="{{ url_for('auth.register') }}" class="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 py-3 font-semibold text-white transition hover:bg-white/10">
-              Create Account
-            </a>
-            {% endif %}
-          </div>
-          <div class="mt-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm font-mono text-white/50 backdrop-blur-sm">
-            College of ICT &mdash; Dingle Campus
-          </div>
-        </div>
 
       </div>{# end 2-col grid #}
     </div>

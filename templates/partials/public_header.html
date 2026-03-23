@@ -2,12 +2,15 @@
    Set {% set active_page = 'home' %} or 'retention' before including. #}
 <header class="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur-md">
   <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-    <a href="{{ url_for('main.index') }}" class="flex items-center gap-3">
-      <img src="{{ url_for('static', filename='img/grade-portal-logo.png') }}" alt="CICT Grade Portal" class="h-8 w-8 object-contain"/>
-      <span class="text-sm font-bold tracking-tight text-slate-900 border-l border-slate-200 pl-3">CICT Grade Portal</span>
+
+    {# ── Logo / Brand ── #}
+    <a href="{{ url_for('main.index') }}" class="flex items-center gap-2.5 flex-shrink-0">
+      <img src="{{ url_for('static', filename='img/grade-portal-logo.png') }}" alt="CICT Grade Portal" class="h-7 w-7 object-contain"/>
+      <span class="text-sm font-bold tracking-tight text-slate-900 border-l border-slate-200 pl-2.5">CICT Grade Portal</span>
     </a>
 
-    <nav class="flex flex-wrap items-center gap-2 text-sm font-medium">
+    {# ── Desktop Nav (md+) ── #}
+    <nav class="hidden md:flex items-center gap-2 text-sm font-medium">
       <a href="{{ url_for('main.index') }}"
          class="rounded-full px-4 py-1.5 transition {% if active_page == 'home' %}bg-slate-100 text-slate-900{% else %}text-slate-600 hover:bg-slate-50 hover:text-slate-900{% endif %}">
         Home
@@ -20,8 +23,88 @@
       <a href="{{ url_for('main.index') }}" class="rounded-full border border-gold bg-gold px-4 py-1.5 text-sm font-bold text-black transition hover:bg-gold-dark">Open Portal</a>
       {% else %}
       <a href="{{ url_for('auth.login') }}" class="rounded-full border border-maroon bg-maroon px-4 py-1.5 text-white transition hover:bg-maroon-dark">Sign In</a>
-      <a href="{{ url_for('auth.register') }}" class="hidden rounded-full border border-slate-200 px-4 py-1.5 text-slate-600 transition hover:bg-slate-50 hover:text-slate-900 sm:inline-flex">Register</a>
+      <a href="{{ url_for('auth.register') }}" class="hidden rounded-full border border-slate-200 px-4 py-1.5 text-slate-600 transition hover:bg-slate-50 hover:text-slate-900 lg:inline-flex">Register</a>
+      {% endif %}
+    </nav>
+
+    {# ── Mobile Right Side: CTA + Hamburger (mobile only) ── #}
+    <div class="flex items-center gap-2 md:hidden">
+      {% if current_user.is_authenticated %}
+      <a href="{{ url_for('main.index') }}" class="rounded-full bg-gold px-3 py-1.5 text-xs font-bold text-black transition hover:bg-gold-dark">Open Portal</a>
+      {% else %}
+      <a href="{{ url_for('auth.login') }}" class="rounded-full bg-maroon px-3 py-1.5 text-xs font-bold text-white transition hover:bg-maroon-dark">Sign In</a>
+      {% endif %}
+
+      {# Hamburger Button #}
+      <button id="mobile-menu-btn" aria-label="Toggle menu" aria-expanded="false"
+              class="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition hover:bg-slate-50 hover:text-slate-900">
+        {# Hamburger icon #}
+        <svg id="menu-icon-open" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+        {# Close icon (hidden by default) #}
+        <svg id="menu-icon-close" class="hidden h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  {# ── Mobile Dropdown Menu ── #}
+  <div id="mobile-menu" class="hidden border-t border-slate-100 bg-white md:hidden">
+    <nav class="flex flex-col px-4 py-3 gap-1">
+      <a href="{{ url_for('main.index') }}"
+         class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition {% if active_page == 'home' %}bg-slate-100 text-slate-900{% else %}text-slate-600 hover:bg-slate-50 hover:text-slate-900{% endif %}">
+        <svg class="h-4 w-4 flex-none text-maroon/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+        </svg>
+        Home
+      </a>
+      <a href="{{ url_for('main.retention_policies') }}"
+         class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition {% if active_page == 'retention' %}bg-slate-100 text-slate-900{% else %}text-slate-600 hover:bg-slate-50 hover:text-slate-900{% endif %}">
+        <svg class="h-4 w-4 flex-none text-maroon/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+        </svg>
+        Retention Policies
+      </a>
+      {% if not current_user.is_authenticated %}
+      <div class="mt-2 border-t border-slate-100 pt-2">
+        <a href="{{ url_for('auth.register') }}"
+           class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-900">
+          <svg class="h-4 w-4 flex-none text-maroon/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+          </svg>
+          Create Account
+        </a>
+      </div>
       {% endif %}
     </nav>
   </div>
 </header>
+
+<script>
+(function () {
+  const btn       = document.getElementById('mobile-menu-btn');
+  const menu      = document.getElementById('mobile-menu');
+  const iconOpen  = document.getElementById('menu-icon-open');
+  const iconClose = document.getElementById('menu-icon-close');
+
+  btn.addEventListener('click', function () {
+    const isOpen = !menu.classList.contains('hidden');
+    menu.classList.toggle('hidden', isOpen);
+    iconOpen.classList.toggle('hidden', !isOpen);
+    iconClose.classList.toggle('hidden', isOpen);
+    btn.setAttribute('aria-expanded', String(!isOpen));
+  });
+
+  // Close menu on resize to desktop
+  window.addEventListener('resize', function () {
+    if (window.innerWidth >= 768) {
+      menu.classList.add('hidden');
+      iconOpen.classList.remove('hidden');
+      iconClose.classList.add('hidden');
+      btn.setAttribute('aria-expanded', 'false');
+    }
+  });
+})();
+</script>

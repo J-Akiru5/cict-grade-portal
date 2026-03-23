@@ -13,7 +13,7 @@
         <select name="program" class="text-sm rounded-lg border border-slate-200 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-maroon/40">
           <option value="">All Programs</option>
           {% for p in ['BSIT', 'BSIS'] %}
-            <option value="{{ p }}" {% if program_filter == p %}selected{% endif %}>{{ p }}</option>
+            <option value="{{ p }}" {% if program == p %}selected{% endif %}>{{ p }}</option>
           {% endfor %}
         </select>
       </div>
@@ -22,14 +22,14 @@
         <select name="year_level" class="text-sm rounded-lg border border-slate-200 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-maroon/40">
           <option value="">All Years</option>
           {% for y in [1, 2, 3, 4] %}
-            <option value="{{ y }}" {% if year_filter == y|string %}selected{% endif %}>Year {{ y }}</option>
+            <option value="{{ y }}" {% if year_level == y %}selected{% endif %}>Year {{ y }}</option>
           {% endfor %}
         </select>
       </div>
       <button type="submit" class="px-4 py-1.5 bg-maroon text-white text-sm font-semibold rounded-lg hover:bg-maroon/90 transition h-[38px]">
         Apply
       </button>
-      {% if search or program_filter or year_filter %}
+      {% if search or program or year_level %}
         <a href="{{ url_for('panel.admin_sections') }}" class="px-3 py-1.5 text-sm font-medium text-slate-500 hover:text-maroon transition h-[38px] flex items-center">
           Clear
         </a>
@@ -191,12 +191,12 @@
   {% if pagination.pages > 1 %}
   <div class="flex justify-center gap-2">
     {% if pagination.has_prev %}
-      <a href="{{ url_for('panel.admin_sections', page=pagination.prev_num, q=search, program=program_filter, year_level=year_filter) }}"
+      <a href="{{ url_for('panel.admin_sections', page=pagination.prev_num, q=search, program=program, year_level=year_level) }}"
          class="px-3 py-1.5 text-sm bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition">← Prev</a>
     {% endif %}
     <span class="px-3 py-1.5 text-sm text-slate-500">{{ pagination.page }} / {{ pagination.pages }}</span>
     {% if pagination.has_next %}
-      <a href="{{ url_for('panel.admin_sections', page=pagination.next_num, q=search, program=program_filter, year_level=year_filter) }}"
+      <a href="{{ url_for('panel.admin_sections', page=pagination.next_num, q=search, program=program, year_level=year_level) }}"
          class="px-3 py-1.5 text-sm bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition">Next →</a>
     {% endif %}
   </div>
@@ -205,5 +205,4 @@
   {% else %}
   <div class="paper-card p-10 text-center text-slate-400">No sections yet. Create one above.</div>
   {% endif %}
-</div>
 </div>
