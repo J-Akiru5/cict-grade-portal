@@ -85,4 +85,14 @@ def create_app(config_name: str | None = None) -> Flask:
             return {'pending_approval_count': pending}
         return {'pending_approval_count': 0}
 
+    @app.context_processor
+    def inject_academic_settings():
+        """Inject current academic settings into all templates."""
+        from .models.academic_settings import AcademicSettings
+        settings = AcademicSettings.get_current()
+        return {
+            'current_semester': settings.current_semester,
+            'current_academic_year': settings.current_year,
+        }
+
     return app

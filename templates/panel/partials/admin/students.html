@@ -189,6 +189,46 @@
         </form>
       </div>
     </details>
+
+    {# ── Merge Duplicate Profiles ── #}
+    <details class="paper-card h-fit col-span-full">
+      <summary class="p-4 cursor-pointer font-semibold text-red-700 select-none">
+        Merge Duplicate Profiles
+      </summary>
+      <div class="px-5 pb-5 border-t border-red-100 pt-4">
+        <form method="POST" action="{{ url_for('panel.admin_merge_students') }}"
+              onsubmit="return confirm('This will permanently merge these profiles. Enrollments and schedules will be transferred. This cannot be undone.');"
+              class="space-y-3">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs text-yellow-800">
+            <strong>Warning:</strong> The secondary profile will be deleted. All enrollments and schedules will be moved to the primary profile.
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Primary (Keep This)</label>
+              <select name="primary_id" required class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40">
+                <option value="">— Select —</option>
+                {% for s in all_students %}
+                  <option value="{{ s.id }}">{{ s.full_name }} ({{ s.student_id }})</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Secondary (Delete This)</label>
+              <select name="secondary_id" required class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40">
+                <option value="">— Select —</option>
+                {% for s in all_students %}
+                  <option value="{{ s.id }}">{{ s.full_name }} ({{ s.student_id }})</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <button type="submit" class="w-full px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition">
+            Merge Profiles
+          </button>
+        </form>
+      </div>
+    </details>
   </div>
 
   {# ── Student Table ── #}

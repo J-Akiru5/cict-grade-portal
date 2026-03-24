@@ -122,22 +122,31 @@ def toggle_user_active(user_id: str) -> User:
 def update_user(
     user_id: str,
     email: str = None,
+    password: str = None,
     full_name: str = None,
     employee_id: str = None,
     department: str = None,
 ) -> User:
-    """Update a user's email (via Supabase) and their faculty profile fields."""
+    """Update a user's email/password (via Supabase) and their faculty profile fields."""
     user = db.session.get(User, user_id)
     if not user:
         raise ValueError(f'User {user_id} not found.')
 
+    updates = {}
     if email and email != user.email:
+        updates['email'] = email
+    if password:
+        updates['password'] = password
+
+    if updates:
         try:
             client = _get_admin_supabase()
-            client.auth.admin.update_user_by_id(user_id, {'email': email})
+            client.auth.admin.update_user_by_id(user_id, updates)
         except Exception as e:
-            raise ValueError(f'Failed to update email in Supabase: {e}')
-        user.email = email
+            raise ValueError(f'Failed to update credentials in Supabase: {e}')
+        
+        if email and email != user.email:
+            user.email = email
 
     if user.faculty_profile:
         if full_name:
@@ -216,12 +225,28 @@ def create_account_for_student_profile(student_db_id: int) -> tuple[Student, Use
         if existing_user.role != 'student':
             raise ValueError('This email is already used by a non-student account.')
         if existing_user.student_profile and existing_user.student_profile.id != student.id:
-            raise ValueError('This email is already linked to another student profile.')
+            other = existing_user.student_profile
+            raise ValueError(
+                f'This email is already linked to another student: {other.full_name} '
+                f'({other.student_id}). Use the merge function to combine these records.'
+            )
         existing_user.role = 'student'
         existing_user.is_active = True
         student.user_id = existing_user.id
         user = existing_user
     else:
+        # Check if another student profile has this gmail (without linked account)
+        duplicate_profile = Student.query.filter(
+            Student.id != student_db_id,
+            db.func.lower(Student.gmail) == email
+        ).first()
+        if duplicate_profile:
+            raise ValueError(
+                f'Gmail "{email}" is also used by another student profile: '
+                f'{duplicate_profile.full_name} ({duplicate_profile.student_id}). '
+                f'Please merge profiles first using the merge function below.'
+            )
+
         temp_password = _generate_temporary_password()
         client = _get_admin_supabase()
         response = client.auth.admin.create_user({
@@ -341,6 +366,23 @@ def create_student(
     gmail: str = None,
     gender: str = None,
 ) -> Student:
+    # Pre-check: student_id must be unique
+    existing_by_id = Student.query.filter_by(student_id=student_id).first()
+    if existing_by_id:
+        raise ValueError(f'Student ID "{student_id}" already exists (belongs to {existing_by_id.full_name}).')
+
+    # Pre-check: gmail must be unique (if provided)
+    if gmail:
+        gmail_clean = gmail.strip().lower()
+        existing_by_email = Student.query.filter(
+            db.func.lower(Student.gmail) == gmail_clean
+        ).first()
+        if existing_by_email:
+            raise ValueError(
+                f'Gmail "{gmail}" is already used by student {existing_by_email.full_name} '
+                f'({existing_by_email.student_id}). Consider merging records.'
+            )
+
     student = Student(
         user_id=user_id,
         student_id=student_id,
@@ -380,6 +422,55 @@ def delete_student(student_db_id: int) -> None:
         raise ValueError(f'Student {student_db_id} not found.')
     db.session.delete(student)
     db.session.commit()
+
+
+def merge_student_profiles(primary_id: int, secondary_id: int) -> Student:
+    """
+    Merge two student profiles into one.
+    The primary profile is kept; data from secondary fills in blanks.
+    Enrollments, grades, and schedules are transferred to primary.
+    Secondary profile is then deleted.
+    """
+    from app.models.enrollment import Enrollment
+    from app.models.schedule import Schedule
+
+    primary = db.session.get(Student, primary_id)
+    secondary = db.session.get(Student, secondary_id)
+
+    if not primary or not secondary:
+        raise ValueError('One or both student profiles not found.')
+    if primary_id == secondary_id:
+        raise ValueError('Cannot merge a profile with itself.')
+
+    # Transfer user account if secondary has one and primary doesn't
+    if secondary.user_id and not primary.user_id:
+        primary.user_id = secondary.user_id
+        secondary.user_id = None
+
+    # Fill in blank fields from secondary
+    fields_to_merge = [
+        'full_name', 'age', 'address', 'contact_number', 'gmail',
+        'gender', 'section', 'section_id', 'year_level', 'curriculum_year'
+    ]
+    for field in fields_to_merge:
+        if not getattr(primary, field) and getattr(secondary, field):
+            setattr(primary, field, getattr(secondary, field))
+
+    # Transfer enrollments
+    Enrollment.query.filter_by(student_id=secondary_id).update(
+        {'student_id': primary_id}, synchronize_session=False
+    )
+
+    # Transfer schedules
+    Schedule.query.filter_by(student_id=secondary_id).update(
+        {'student_id': primary_id}, synchronize_session=False
+    )
+
+    # Delete secondary profile
+    db.session.delete(secondary)
+    db.session.commit()
+
+    return primary
 
 
 def create_student_with_account(

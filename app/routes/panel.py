@@ -520,9 +520,11 @@ def admin_edit_user(user_id):
     if request.method == 'POST':
         try:
             new_email = request.form.get('email', '').strip().lower() or None
+            new_password = request.form.get('new_password', '').strip() or None
             admin_service.update_user(
                 user_id,
                 email=new_email if new_email != user.email else None,
+                password=new_password,
                 full_name=request.form.get('full_name', '').strip() or None,
                 employee_id=request.form.get('employee_id', '').strip(),
                 department=request.form.get('department', '').strip() or None,
@@ -638,12 +640,14 @@ def admin_students():
     )
     from app.models.user import User
     from app.models.section import Section
+    from app.models.student import Student
     students_without_profile = (
         User.query.filter_by(role='student')
         .filter(~User.student_profile.has())
         .all()
     )
     all_sections = Section.query.order_by(Section.program, Section.year_level, Section.section_letter).all()
+    all_students = Student.query.order_by(Student.full_name).all()
 
     context = {
         'pagination': pagination,
@@ -653,6 +657,7 @@ def admin_students():
         'year_level': year_level,
         'orphan_users': students_without_profile,
         'sections': all_sections,
+        'all_students': all_students,
         'active_page': 'admin_students',
     }
     if _is_htmx():
@@ -769,6 +774,22 @@ def admin_delete_student(student_db_id):
         flash('Student deleted.', 'success')
     except Exception as e:
         flash(f'Error: {e}', 'error')
+    return redirect(url_for('panel.admin_students'))
+
+
+@panel_bp.route('/admin/students/merge', methods=['POST'])
+@login_required
+@role_required('admin')
+def admin_merge_students():
+    try:
+        primary_id = int(request.form['primary_id'])
+        secondary_id = int(request.form['secondary_id'])
+        merged = admin_service.merge_student_profiles(primary_id, secondary_id)
+        flash(f'Successfully merged into {merged.full_name} ({merged.student_id}).', 'success')
+    except ValueError as e:
+        flash(str(e), 'error')
+    except Exception as e:
+        flash(f'Merge failed: {e}', 'error')
     return redirect(url_for('panel.admin_students'))
 
 

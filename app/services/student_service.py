@@ -54,7 +54,7 @@ def get_grades(student_id: int, semester: str | None = None, academic_year: str 
 def get_schedule_matrix(student_id: int, semester: str | None = None, academic_year: str | None = None) -> dict:
     """
     Build a dict mapping day → list of schedule entries for the weekly matrix view.
-    Includes both student-individual and section-level schedules.
+    ONLY includes schedules for subjects the student is enrolled in.
     Returns: {'Mon': [...], 'Tue': [...], ..., 'Sun': [...]}
     """
     DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
@@ -64,7 +64,22 @@ def get_schedule_matrix(student_id: int, semester: str | None = None, academic_y
     if not student:
         return matrix
 
-    # Query student-individual schedules + section-level schedules
+    # Get subject IDs the student is enrolled in for this semester/year
+    enrollment_query = db.session.query(Enrollment.subject_id).filter(
+        Enrollment.student_id == student_id
+    )
+    if semester:
+        enrollment_query = enrollment_query.filter(Enrollment.semester == semester)
+    if academic_year:
+        enrollment_query = enrollment_query.filter(Enrollment.academic_year == academic_year)
+
+    enrolled_subject_ids = [e.subject_id for e in enrollment_query.all()]
+
+    if not enrolled_subject_ids:
+        return matrix
+
+    # Query student-individual schedules + section-level schedules,
+    # filtered by enrolled subjects only
     conditions = [Schedule.student_id == student_id]
     if student.section_id:
         conditions.append(Schedule.section_id == student.section_id)
@@ -72,6 +87,7 @@ def get_schedule_matrix(student_id: int, semester: str | None = None, academic_y
     query = (
         Schedule.query
         .filter(db.or_(*conditions))
+        .filter(Schedule.subject_id.in_(enrolled_subject_ids))
         .join(Subject, Schedule.subject_id == Subject.id)
     )
     if semester:

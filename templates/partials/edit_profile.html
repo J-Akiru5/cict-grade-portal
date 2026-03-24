@@ -26,40 +26,44 @@
         enctype="multipart/form-data" class="space-y-6">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
-    {# ── Avatar Upload ── #}
+    {# ── Avatar Upload with Drag & Drop ── #}
     <div class="paper-card overflow-hidden">
       <div class="px-5 py-4 border-b border-slate-100 bg-slate-50">
         <h2 class="font-semibold text-slate-700 text-sm uppercase tracking-widest">Profile Photo</h2>
       </div>
       <div class="px-6 py-5">
         <div class="flex items-center gap-5">
-          {% if current_user.avatar_url %}
-            <img src="{{ current_user.avatar_url }}" alt="Current photo"
-                 class="w-16 h-16 rounded-full object-cover border-2 border-slate-200 shadow-sm bg-surface-dark"
-                 id="avatar-preview">
-          {% else %}
-            <div class="w-16 h-16 rounded-full bg-surface-dark border-2 border-slate-200 shadow-sm
-                        flex items-center justify-center font-bold text-white text-xl font-mono"
-                 id="avatar-preview-placeholder">
-              {{ student.full_name[0].upper() if student and student.full_name else 'S' }}
-            </div>
-          {% endif %}
-          <div class="flex-1">
-            <label for="avatar"
-                   class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
-                          text-slate-700 bg-white border border-slate-300 hover:bg-slate-50
-                          cursor-pointer transition shadow-sm">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
-              </svg>
-              Choose Photo
-            </label>
+          {# Avatar Preview #}
+          <div id="avatar-container">
+            {% if current_user.avatar_url %}
+              <img src="{{ current_user.avatar_url }}" alt="Current photo"
+                   class="w-20 h-20 rounded-full object-cover border-2 border-slate-200 shadow-sm bg-surface-dark"
+                   id="avatar-preview">
+            {% else %}
+              <div class="w-20 h-20 rounded-full bg-surface-dark border-2 border-slate-200 shadow-sm
+                          flex items-center justify-center font-bold text-white text-2xl font-mono"
+                   id="avatar-preview-placeholder">
+                {{ student.full_name[0].upper() if student and student.full_name else 'S' }}
+              </div>
+            {% endif %}
+          </div>
+
+          {# Drag-and-Drop Zone #}
+          <div id="avatar-dropzone"
+               class="flex-1 border-2 border-dashed border-slate-300 rounded-xl p-4 text-center
+                      hover:border-maroon hover:bg-maroon/5 transition-colors cursor-pointer relative"
+               ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
             <input type="file" id="avatar" name="avatar" accept="image/jpeg,image/png"
-                   class="hidden" onchange="previewAvatar(this)">
-            <p class="text-xs text-slate-400 mt-1.5">JPG or PNG, max 2 MB</p>
+                   class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                   onchange="previewAvatar(this)">
+            <div class="pointer-events-none">
+              <svg class="w-8 h-8 mx-auto text-slate-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+              </svg>
+              <p class="text-sm text-slate-600 font-medium">Drag & drop your photo here</p>
+              <p class="text-xs text-slate-400 mt-1">or click to browse (JPG/PNG, max 2MB)</p>
+            </div>
           </div>
         </div>
       </div>
@@ -214,23 +218,65 @@
 
 <script>
 function previewAvatar(input) {
-  if (input.files && input.files[0]) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const placeholder = document.getElementById('avatar-preview-placeholder');
-      const existing = document.getElementById('avatar-preview');
-      if (placeholder) {
-        const img = document.createElement('img');
-        img.src = e.target.result;
-        img.alt = 'Preview';
-        img.id = 'avatar-preview';
-        img.className = 'w-16 h-16 rounded-full object-cover border-2 border-slate-200 shadow-sm';
-        placeholder.replaceWith(img);
-      } else if (existing) {
-        existing.src = e.target.result;
-      }
-    };
-    reader.readAsDataURL(input.files[0]);
+  const file = input.files && input.files[0];
+  if (!file) return;
+
+  // Validate file size (2MB max)
+  if (file.size > 2 * 1024 * 1024) {
+    alert('File size must be less than 2MB');
+    input.value = '';
+    return;
+  }
+
+  // Validate file type
+  if (!['image/jpeg', 'image/png'].includes(file.type)) {
+    alert('Only JPG and PNG files are allowed');
+    input.value = '';
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const container = document.getElementById('avatar-container');
+    const placeholder = document.getElementById('avatar-preview-placeholder');
+    const existing = document.getElementById('avatar-preview');
+
+    if (placeholder) {
+      const img = document.createElement('img');
+      img.src = e.target.result;
+      img.alt = 'Preview';
+      img.id = 'avatar-preview';
+      img.className = 'w-20 h-20 rounded-full object-cover border-2 border-slate-200 shadow-sm';
+      placeholder.replaceWith(img);
+    } else if (existing) {
+      existing.src = e.target.result;
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleDragOver(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  e.currentTarget.classList.add('border-maroon', 'bg-maroon/10');
+}
+
+function handleDragLeave(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  e.currentTarget.classList.remove('border-maroon', 'bg-maroon/10');
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  e.currentTarget.classList.remove('border-maroon', 'bg-maroon/10');
+
+  const files = e.dataTransfer.files;
+  if (files.length > 0) {
+    const input = document.getElementById('avatar');
+    input.files = files;
+    previewAvatar(input);
   }
 }
 </script>

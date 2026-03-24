@@ -19,11 +19,19 @@
       {# Account section #}
       <div>
         <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Account</p>
-        <div>
-          <label class="block text-xs font-medium text-slate-600 mb-1">Email Address</label>
-          <input name="email" type="email" value="{{ user.email }}" required
-                 class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
-          <p class="text-xs text-amber-600 mt-1">Changing email updates both the portal database and Supabase Auth. The user must use the new email to log in.</p>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">Email Address</label>
+            <input name="email" type="email" value="{{ user.email }}" required
+                   class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+            <p class="text-xs text-amber-600 mt-1">Changing email updates both the portal database and Supabase Auth. The user must use the new email to log in.</p>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">New Password (Optional)</label>
+            <input name="new_password" type="password" minlength="8" placeholder="Leave blank to keep current password"
+                   class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+            <p class="text-xs text-slate-500 mt-1">Provide a new password to change the user's login access.</p>
+          </div>
         </div>
       </div>
 
