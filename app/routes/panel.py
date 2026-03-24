@@ -107,27 +107,19 @@ def dashboard():
         'active_page': 'dashboard',
     }
 
-    # Admin-specific dashboard stats
+    # Admin-specific dashboard stats and analytics
     if current_user.role == 'admin':
-        from app.models.student import Student
-        from app.models.subject import Subject
-        from app.models.faculty import Faculty
-        from app.models.enrollment import Enrollment
+        from app.services import analytics_service
 
-        # Count students enrolled in current academic year
-        enrolled_students = (
-            db.session.query(db.func.count(db.distinct(Enrollment.student_id)))
-            .filter(Enrollment.academic_year == year)
-            .scalar()
-        ) or 0
-        context['enrolled_students'] = enrolled_students
-        context['total_subjects'] = db.session.query(db.func.count(Subject.id)).scalar() or 0
-        context['total_faculty'] = db.session.query(db.func.count(Faculty.id)).scalar() or 0
-        context['total_sections'] = (
-            db.session.query(db.func.count(db.distinct(Enrollment.student_id)))
-            .filter(Enrollment.academic_year == year, Enrollment.semester == semester)
-            .scalar()
-        ) or 0
+        # Get comprehensive dashboard summary
+        summary = analytics_service.get_dashboard_summary(semester, year)
+        context.update(summary)
+
+        # Get chart data
+        context['grade_distribution'] = analytics_service.get_grade_distribution(semester, year)
+        context['grade_remarks'] = analytics_service.get_grade_remarks_distribution(semester, year)
+        context['enrollment_by_year'] = analytics_service.get_enrollment_by_year_level(semester, year)
+        context['top_subjects'] = analytics_service.get_subject_enrollment_counts(semester, year, limit=5)
 
     if _is_htmx():
         return render_template('panel/partials/dashboard.html', **context)
@@ -171,6 +163,9 @@ def subject_grades(subject_id):
         enrollments = faculty_service.get_grades_for_subject(
             faculty.id, subject_id, semester, year
         )
+        release_status = faculty_service.get_release_status_for_subject(
+            faculty.id, subject_id, semester, year
+        )
     except PermissionError:
         flash('You do not have access to this subject.', 'error')
         return redirect(url_for('panel.my_subjects'))
@@ -181,6 +176,7 @@ def subject_grades(subject_id):
         'faculty': faculty,
         'subject': subject,
         'enrollments': enrollments,
+        'release_status': release_status,
         'current_semester': semester,
         'current_year': year,
         'active_page': 'subjects',
@@ -226,6 +222,39 @@ def encode_grade(subject_id, enrollment_id):
 
     semester = request.form.get('semester')
     year = request.form.get('year')
+    return redirect(url_for('panel.subject_grades', subject_id=subject_id,
+                            semester=semester, year=year))
+
+
+@panel_bp.route('/subjects/<int:subject_id>/release-grades', methods=['POST'])
+@login_required
+@role_required('faculty', 'admin')
+def release_grades(subject_id):
+    """Release all encoded grades for a subject, making them visible to students."""
+    faculty = faculty_service.get_faculty_profile(current_user.id)
+    if not faculty:
+        flash('Faculty profile not found.', 'error')
+        return redirect(url_for('panel.my_subjects'))
+
+    semester = request.form.get('semester')
+    year = request.form.get('year')
+    if not semester or not year:
+        semester, year = _current_period()
+
+    try:
+        count = faculty_service.release_grades_for_subject(
+            faculty.id, subject_id, semester, year, current_user
+        )
+        if count > 0:
+            flash(f'Successfully released {count} grade(s). Students can now view their grades.', 'success')
+        else:
+            flash('No grades to release. Encode grades first before releasing.', 'info')
+    except PermissionError as e:
+        flash(str(e), 'error')
+    except Exception as e:
+        logging.error(f'Grade release error: {e}')
+        flash('An error occurred while releasing grades.', 'error')
+
     return redirect(url_for('panel.subject_grades', subject_id=subject_id,
                             semester=semester, year=year))
 
@@ -747,18 +776,31 @@ def admin_students():
         .filter(~User.student_profile.has())
         .all()
     )
+    orphan_users_data = [
+        {
+            'id': str(u.id), 
+            'email': u.email, 
+            'name': getattr(u, 'full_name', '') or getattr(u, 'name', '') or u.email
+        } 
+        for u in students_without_profile
+    ]
     all_sections = Section.query.order_by(Section.program, Section.year_level, Section.section_letter).all()
     all_students = Student.query.order_by(Student.full_name).all()
+    all_subjects = Subject.query.order_by(Subject.subject_code).all()
 
+    semester, year = _current_period()
     context = {
         'pagination': pagination,
         'students': pagination.items,
         'search': search,
         'section_id': section_id,
         'year_level': year_level,
-        'orphan_users': students_without_profile,
+        'orphan_users': orphan_users_data,
         'sections': all_sections,
         'all_students': all_students,
+        'all_subjects': all_subjects,
+        'current_semester': semester,
+        'current_year': year,
         'active_page': 'admin_students',
     }
     if _is_htmx():
@@ -958,6 +1000,78 @@ def admin_delete_student(student_db_id):
         flash('Student deleted.', 'success')
     except Exception as e:
         flash(f'Error: {e}', 'error')
+    return redirect(url_for('panel.admin_students'))
+
+
+@panel_bp.route('/admin/students/bulk-delete', methods=['POST'])
+@login_required
+@role_required('admin')
+def admin_bulk_delete_students():
+    """Bulk delete multiple students at once."""
+    student_ids = request.form.getlist('student_ids', type=int)
+    if not student_ids:
+        flash('No students selected.', 'warning')
+        return redirect(url_for('panel.admin_students'))
+
+    deleted = 0
+    errors = []
+    for sid in student_ids:
+        try:
+            admin_service.delete_student(sid)
+            deleted += 1
+        except Exception as e:
+            errors.append(str(e))
+
+    if deleted > 0:
+        flash(f'Successfully deleted {deleted} student(s).', 'success')
+    if errors:
+        flash(f'{len(errors)} student(s) could not be deleted.', 'error')
+
+    return redirect(url_for('panel.admin_students'))
+
+
+@panel_bp.route('/admin/enrollments/bulk', methods=['POST'])
+@login_required
+@role_required('admin')
+def admin_bulk_enroll():
+    """Bulk enroll multiple students in a subject."""
+    student_ids = request.form.getlist('student_ids', type=int)
+    subject_id = request.form.get('subject_id', type=int)
+    semester = request.form.get('semester', '1st')
+    academic_year = request.form.get('academic_year', '')
+
+    if not student_ids:
+        flash('No students selected.', 'warning')
+        return redirect(url_for('panel.admin_students'))
+
+    if not subject_id:
+        flash('Please select a subject.', 'warning')
+        return redirect(url_for('panel.admin_students'))
+
+    if not academic_year:
+        settings = AcademicSettings.get_current()
+        academic_year = settings.current_year
+
+    enrolled = 0
+    skipped = 0
+    for sid in student_ids:
+        try:
+            admin_service.create_enrollment(
+                student_id=sid,
+                subject_id=subject_id,
+                semester=semester,
+                academic_year=academic_year
+            )
+            enrolled += 1
+        except Exception:
+            # Likely already enrolled
+            skipped += 1
+
+    if enrolled > 0:
+        flash(f'Successfully enrolled {enrolled} student(s).', 'success')
+    if skipped > 0:
+        flash(f'{skipped} student(s) were already enrolled or could not be enrolled.', 'info')
+
     return redirect(url_for('panel.admin_students'))
 
 
@@ -1285,7 +1399,7 @@ def admin_grades():
         db.session.query(
             Enrollment.student_id,
             func.round(
-                func.sum(Grade.grade_value * Subject.units) / func.sum(Subject.units),
+                db.cast(func.sum(Grade.grade_value * Subject.units) / func.sum(Subject.units), db.Numeric),
                 4
             ).label('avg_gpa')
         )

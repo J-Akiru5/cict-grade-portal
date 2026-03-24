@@ -368,61 +368,220 @@
   {# ── Student Table ── #}
   {% if students %}
   <div class="paper-card overflow-hidden">
-    <table class="w-full text-sm">
-      <thead>
-        <tr class="bg-slate-50 border-b border-slate-200">
-          <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Name</th>
-          <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Student ID</th>
-          <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Section</th>
-          <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Year</th>
-          <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Account</th>
-          <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Actions</th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-slate-100">
-        {% for student in students %}
-        <tr class="hover:bg-slate-50 transition-colors">
-          <td class="px-4 py-3 font-medium text-slate-800">{{ student.full_name }}</td>
-          <td class="px-4 py-3 font-mono text-xs text-slate-500">{{ student.student_id }}</td>
-          <td class="px-4 py-3 text-center text-slate-600">{{ student.section or '—' }}</td>
-          <td class="px-4 py-3 text-center text-slate-600">{{ student.year_level or '—' }}</td>
-          <td class="px-4 py-3 text-center">
-            {% if student.user_id %}
-              <span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-semibold">Linked</span>
-            {% else %}
-              <span class="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-semibold">Profile Only</span>
-            {% endif %}
-          </td>
-          <td class="px-4 py-3 text-center">
-            <div class="flex items-center justify-center gap-2">
-              {% if not student.user_id %}
-              <form method="POST" action="{{ url_for('panel.admin_create_student_account', student_db_id=student.id) }}"
-                    data-confirm-message="Create login account for {{ student.full_name }} using Gmail {{ student.gmail|default('(missing)', true) }}?"
-                    onsubmit="return confirm(this.dataset.confirmMessage);">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                <button type="submit"
-                        class="text-xs px-3 py-1 bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-100 transition {{ 'opacity-50 cursor-not-allowed hover:bg-amber-50' if not student.gmail else '' }}"
-                        {% if not student.gmail %}disabled title="Set student Gmail first to create account."{% endif %}>
-                  Create Account
-                </button>
-              </form>
+    {# ── Bulk Actions Bar ── #}
+    <div id="bulk-actions-bar" class="hidden px-4 py-3 bg-maroon/5 border-b border-maroon/20 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <input type="checkbox" id="select-all-students" class="w-4 h-4 rounded border-slate-300 text-maroon focus:ring-maroon/50" />
+        <span class="text-sm text-slate-700">
+          <span id="selected-count" class="font-bold text-maroon">0</span> students selected
+        </span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button type="button" id="bulk-enroll-btn"
+                class="text-xs px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium"
+                onclick="document.getElementById('bulk-enroll-modal').classList.remove('hidden')">
+          Bulk Enroll
+        </button>
+        <button type="button" id="bulk-delete-btn"
+                class="text-xs px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium"
+                onclick="confirmBulkDelete()">
+          Delete Selected
+        </button>
+        <button type="button" id="clear-selection-btn"
+                class="text-xs px-3 py-1.5 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition font-medium"
+                onclick="clearAllSelections()">
+          Clear
+        </button>
+      </div>
+    </div>
+
+    <form id="bulk-delete-form" method="POST" action="{{ url_for('panel.admin_bulk_delete_students') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="bg-slate-50 border-b border-slate-200">
+            <th class="px-4 py-3 text-center w-12">
+              <input type="checkbox" id="header-checkbox" class="w-4 h-4 rounded border-slate-300 text-maroon focus:ring-maroon/50"
+                     onchange="toggleAllCheckboxes(this.checked)" />
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Name</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Student ID</th>
+            <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Section</th>
+            <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Year</th>
+            <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Account</th>
+            <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          {% for student in students %}
+          <tr class="hover:bg-slate-50 transition-colors" data-student-id="{{ student.id }}">
+            <td class="px-4 py-3 text-center">
+              <input type="checkbox" name="student_ids" value="{{ student.id }}"
+                     class="student-checkbox w-4 h-4 rounded border-slate-300 text-maroon focus:ring-maroon/50"
+                     onchange="updateBulkSelection()" />
+            </td>
+            <td class="px-4 py-3 font-medium text-slate-800">{{ student.full_name }}</td>
+            <td class="px-4 py-3 font-mono text-xs text-slate-500">{{ student.student_id }}</td>
+            <td class="px-4 py-3 text-center text-slate-600">{{ student.section or '—' }}</td>
+            <td class="px-4 py-3 text-center text-slate-600">{{ student.year_level or '—' }}</td>
+            <td class="px-4 py-3 text-center">
+              {% if student.user_id %}
+                <span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-semibold">Linked</span>
+              {% else %}
+                <span class="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-semibold">Profile Only</span>
               {% endif %}
-              <a href="{{ url_for('panel.admin_edit_student', student_db_id=student.id) }}"
-                 class="text-xs px-3 py-1 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition">Edit</a>
-              <form method="POST" action="{{ url_for('panel.admin_delete_student', student_db_id=student.id) }}"
-                    onsubmit="return confirm('Delete {{ student.full_name }}? This cannot be undone.');">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                <button type="submit" class="text-xs px-3 py-1 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition">
-                  Delete
-                </button>
-              </form>
-            </div>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+            </td>
+            <td class="px-4 py-3 text-center">
+              <div class="flex items-center justify-center gap-2">
+                {% if not student.user_id %}
+                <form method="POST" action="{{ url_for('panel.admin_create_student_account', student_db_id=student.id) }}"
+                      data-confirm-message="Create login account for {{ student.full_name }} using Gmail {{ student.gmail|default('(missing)', true) }}?"
+                      onsubmit="return confirm(this.dataset.confirmMessage);">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                  <button type="submit"
+                          class="text-xs px-3 py-1 bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-100 transition {{ 'opacity-50 cursor-not-allowed hover:bg-amber-50' if not student.gmail else '' }}"
+                          {% if not student.gmail %}disabled title="Set student Gmail first to create account."{% endif %}>
+                    Create Account
+                  </button>
+                </form>
+                {% endif %}
+                <a href="{{ url_for('panel.admin_edit_student', student_db_id=student.id) }}"
+                   class="text-xs px-3 py-1 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition">Edit</a>
+                <form method="POST" action="{{ url_for('panel.admin_delete_student', student_db_id=student.id) }}"
+                      onsubmit="return confirm('Delete {{ student.full_name }}? This cannot be undone.');">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                  <button type="submit" class="text-xs px-3 py-1 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition">
+                    Delete
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </form>
   </div>
+
+  {# ── Bulk Enroll Modal ── #}
+  <div id="bulk-enroll-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+      <div class="px-6 py-4 bg-maroon text-white">
+        <h3 class="font-bold text-lg">Bulk Enroll Students</h3>
+        <p class="text-white/70 text-sm mt-1">Enroll <span id="modal-selected-count" class="font-semibold">0</span> selected students</p>
+      </div>
+      <form method="POST" action="{{ url_for('panel.admin_bulk_enroll') }}" class="p-6 space-y-4">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <div id="bulk-enroll-student-ids"></div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Subject *</label>
+          <select name="subject_id" required class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40">
+            <option value="">Select a subject...</option>
+            {% for subj in all_subjects %}
+              <option value="{{ subj.id }}">{{ subj.subject_code }} - {{ subj.subject_title }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Semester</label>
+            <select name="semester" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40">
+              <option value="1st" {% if current_semester == '1st' %}selected{% endif %}>1st Semester</option>
+              <option value="2nd" {% if current_semester == '2nd' %}selected{% endif %}>2nd Semester</option>
+              <option value="Summer" {% if current_semester == 'Summer' %}selected{% endif %}>Summer</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Academic Year</label>
+            <input name="academic_year" value="{{ current_year }}" required
+                   class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40" />
+          </div>
+        </div>
+        <div class="flex gap-3 pt-2">
+          <button type="button" onclick="document.getElementById('bulk-enroll-modal').classList.add('hidden')"
+                  class="flex-1 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition font-medium">
+            Cancel
+          </button>
+          <button type="submit" class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium">
+            Enroll Students
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {# ── Bulk Selection JavaScript ── #}
+  <script>
+    function updateBulkSelection() {
+      const checkboxes = document.querySelectorAll('.student-checkbox');
+      const checked = document.querySelectorAll('.student-checkbox:checked');
+      const bulkBar = document.getElementById('bulk-actions-bar');
+      const countSpan = document.getElementById('selected-count');
+      const modalCount = document.getElementById('modal-selected-count');
+      const headerCheckbox = document.getElementById('header-checkbox');
+      const selectAll = document.getElementById('select-all-students');
+
+      countSpan.textContent = checked.length;
+      modalCount.textContent = checked.length;
+
+      if (checked.length > 0) {
+        bulkBar.classList.remove('hidden');
+      } else {
+        bulkBar.classList.add('hidden');
+      }
+
+      // Update header checkbox state
+      if (checked.length === 0) {
+        headerCheckbox.checked = false;
+        headerCheckbox.indeterminate = false;
+        if (selectAll) selectAll.checked = false;
+      } else if (checked.length === checkboxes.length) {
+        headerCheckbox.checked = true;
+        headerCheckbox.indeterminate = false;
+        if (selectAll) selectAll.checked = true;
+      } else {
+        headerCheckbox.checked = false;
+        headerCheckbox.indeterminate = true;
+        if (selectAll) selectAll.indeterminate = true;
+      }
+
+      // Update hidden inputs for bulk enroll
+      const container = document.getElementById('bulk-enroll-student-ids');
+      container.innerHTML = '';
+      checked.forEach(cb => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'student_ids';
+        input.value = cb.value;
+        container.appendChild(input);
+      });
+    }
+
+    function toggleAllCheckboxes(checked) {
+      document.querySelectorAll('.student-checkbox').forEach(cb => {
+        cb.checked = checked;
+      });
+      updateBulkSelection();
+    }
+
+    function clearAllSelections() {
+      toggleAllCheckboxes(false);
+    }
+
+    function confirmBulkDelete() {
+      const count = document.querySelectorAll('.student-checkbox:checked').length;
+      if (count === 0) return;
+
+      if (confirm(`Delete ${count} selected student(s)? This cannot be undone.`)) {
+        document.getElementById('bulk-delete-form').submit();
+      }
+    }
+
+    // Connect select-all checkbox in bulk bar
+    document.getElementById('select-all-students')?.addEventListener('change', function() {
+      toggleAllCheckboxes(this.checked);
+    });
+  </script>
 
   {% if pagination.pages > 1 %}
   <div class="flex justify-center gap-2">

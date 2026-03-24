@@ -93,6 +93,70 @@
     {% endif %}
   {% endwith %}
 
+  {# ── Global Loading Overlay (HTMX) ─────────────────────────── #}
+  <div id="global-loader" class="fixed inset-0 bg-black/30 z-[200] flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-200">
+    <div class="bg-white rounded-2xl p-6 shadow-2xl flex flex-col items-center gap-3 transform scale-95 transition-transform duration-200" id="loader-content">
+      <div class="relative">
+        <div class="w-12 h-12 border-4 border-maroon/20 rounded-full"></div>
+        <div class="w-12 h-12 border-4 border-maroon border-t-transparent rounded-full animate-spin absolute inset-0"></div>
+      </div>
+      <span class="text-slate-700 font-medium text-sm">Loading...</span>
+    </div>
+  </div>
+
+  <script>
+    // Global HTMX loading state management
+    (function() {
+      const loader = document.getElementById('global-loader');
+      const content = document.getElementById('loader-content');
+      let requestCount = 0;
+      let showTimeout = null;
+
+      function showLoader() {
+        if (showTimeout) clearTimeout(showTimeout);
+        // Small delay to avoid flashing for fast requests
+        showTimeout = setTimeout(() => {
+          if (requestCount > 0) {
+            loader.classList.remove('opacity-0', 'pointer-events-none');
+            loader.classList.add('opacity-100', 'pointer-events-auto');
+            content.classList.remove('scale-95');
+            content.classList.add('scale-100');
+          }
+        }, 150);
+      }
+
+      function hideLoader() {
+        if (showTimeout) clearTimeout(showTimeout);
+        loader.classList.add('opacity-0', 'pointer-events-none');
+        loader.classList.remove('opacity-100', 'pointer-events-auto');
+        content.classList.add('scale-95');
+        content.classList.remove('scale-100');
+      }
+
+      document.body.addEventListener('htmx:beforeRequest', function(evt) {
+        // Only show for navigation/page loads, not small API calls
+        const target = evt.detail.target;
+        if (target && (target.id === 'main-content' || target.closest('#main-content'))) {
+          requestCount++;
+          showLoader();
+        }
+      });
+
+      document.body.addEventListener('htmx:afterRequest', function(evt) {
+        const target = evt.detail.target;
+        if (target && (target.id === 'main-content' || target.closest('#main-content'))) {
+          requestCount = Math.max(0, requestCount - 1);
+          if (requestCount === 0) hideLoader();
+        }
+      });
+
+      document.body.addEventListener('htmx:requestError', function(evt) {
+        requestCount = Math.max(0, requestCount - 1);
+        if (requestCount === 0) hideLoader();
+      });
+    })();
+  </script>
+
   {# ── Page Content ────────────────────────────────────────── #}
   {% block content %}{% endblock %}
 

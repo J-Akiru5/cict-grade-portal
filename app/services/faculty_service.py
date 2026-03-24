@@ -269,3 +269,103 @@ def update_faculty_schedule(
         entry.academic_year = academic_year
     db.session.commit()
     return entry
+
+
+# ─── Grade Release Control ─────────────────────────────────────────────
+
+def release_grades_for_subject(
+    faculty_id: int,
+    subject_id: int,
+    semester: str,
+    academic_year: str,
+    actor_user,
+) -> int:
+    """
+    Mark all encoded grades for a subject as released (visible to students).
+    Returns the count of grades released.
+    Raises PermissionError if subject is not owned by faculty.
+    """
+    if not is_subject_owned_by_faculty(faculty_id, subject_id):
+        raise PermissionError('Subject not assigned to this faculty member.')
+
+    now = datetime.now(timezone.utc)
+
+    # Find all grades for this subject that have a value and are not yet released
+    grades_to_release = (
+        Grade.query
+        .join(Enrollment)
+        .filter(
+            Enrollment.subject_id == subject_id,
+            Enrollment.semester == semester,
+            Enrollment.academic_year == academic_year,
+            Grade.grade_value.isnot(None),
+            Grade.is_released == False
+        )
+        .all()
+    )
+
+    count = 0
+    for grade in grades_to_release:
+        grade.is_released = True
+        grade.released_at = now
+        grade.released_by_id = actor_user.id
+        count += 1
+
+    if count > 0:
+        db.session.commit()
+        logging.info(f'Released {count} grades for subject {subject_id} by user {actor_user.id}')
+
+    return count
+
+
+def get_release_status_for_subject(
+    faculty_id: int,
+    subject_id: int,
+    semester: str,
+    academic_year: str,
+) -> dict:
+    """
+    Get release status summary for a subject.
+    Returns dict with counts of encoded, released, and pending grades.
+    """
+    if not is_subject_owned_by_faculty(faculty_id, subject_id):
+        raise PermissionError('Subject not assigned to this faculty member.')
+
+    total_enrollments = (
+        Enrollment.query
+        .filter_by(subject_id=subject_id, semester=semester, academic_year=academic_year)
+        .count()
+    )
+
+    grades_with_value = (
+        Grade.query
+        .join(Enrollment)
+        .filter(
+            Enrollment.subject_id == subject_id,
+            Enrollment.semester == semester,
+            Enrollment.academic_year == academic_year,
+            Grade.grade_value.isnot(None)
+        )
+        .count()
+    )
+
+    grades_released = (
+        Grade.query
+        .join(Enrollment)
+        .filter(
+            Enrollment.subject_id == subject_id,
+            Enrollment.semester == semester,
+            Enrollment.academic_year == academic_year,
+            Grade.is_released == True
+        )
+        .count()
+    )
+
+    return {
+        'total_enrollments': total_enrollments,
+        'grades_encoded': grades_with_value,
+        'grades_released': grades_released,
+        'grades_pending_release': grades_with_value - grades_released,
+        'not_encoded': total_enrollments - grades_with_value,
+    }
+

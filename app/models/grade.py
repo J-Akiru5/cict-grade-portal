@@ -25,9 +25,15 @@ class Grade(db.Model):
         onupdate=lambda: datetime.now(timezone.utc)
     )
 
+    # Grade Release Control
+    is_released = db.Column(db.Boolean, default=False, nullable=False)
+    released_at = db.Column(db.DateTime, nullable=True)
+    released_by_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=True)
+
     # Relationships
     enrollment = db.relationship('Enrollment', back_populates='grade')
     encoded_by = db.relationship('User', foreign_keys=[encoded_by_id])
+    released_by = db.relationship('User', foreign_keys=[released_by_id])
 
     @property
     def computed_remarks(self) -> str:

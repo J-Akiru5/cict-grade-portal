@@ -24,6 +24,58 @@
     </form>
   </div>
 
+  {# ── Grade Release Status Card ── #}
+  {% if release_status %}
+  <div class="paper-card p-4">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-6">
+        <div>
+          <div class="text-xs text-slate-500 uppercase font-semibold">Total Enrolled</div>
+          <div class="text-xl font-bold text-slate-800 font-mono">{{ release_status.total_enrollments }}</div>
+        </div>
+        <div>
+          <div class="text-xs text-slate-500 uppercase font-semibold">Grades Encoded</div>
+          <div class="text-xl font-bold text-blue-600 font-mono">{{ release_status.grades_encoded }}</div>
+        </div>
+        <div>
+          <div class="text-xs text-slate-500 uppercase font-semibold">Released</div>
+          <div class="text-xl font-bold text-green-600 font-mono">{{ release_status.grades_released }}</div>
+        </div>
+        <div>
+          <div class="text-xs text-slate-500 uppercase font-semibold">Pending Release</div>
+          <div class="text-xl font-bold text-amber-600 font-mono">{{ release_status.grades_pending_release }}</div>
+        </div>
+      </div>
+      <form method="POST" action="{{ url_for('panel.release_grades', subject_id=subject.id) }}"
+            onsubmit="return confirm('Release {{ release_status.grades_pending_release }} grade(s) to students? They will be able to see their grades immediately.');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <input type="hidden" name="semester" value="{{ current_semester }}" />
+        <input type="hidden" name="year" value="{{ current_year }}" />
+        <button type="submit"
+                {% if release_status.grades_pending_release == 0 %}disabled{% endif %}
+                class="px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition
+                       disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M5 13l4 4L19 7"/>
+          </svg>
+          Release Grades to Students
+        </button>
+      </form>
+    </div>
+    {% if release_status.grades_pending_release > 0 %}
+    <p class="text-xs text-amber-600 mt-3">
+      <strong>Note:</strong> {{ release_status.grades_pending_release }} grade(s) are encoded but not yet visible to students.
+      Click "Release Grades" to make them visible.
+    </p>
+    {% elif release_status.grades_released > 0 %}
+    <p class="text-xs text-green-600 mt-3">
+      All encoded grades have been released. Students can view their grades.
+    </p>
+    {% endif %}
+  </div>
+  {% endif %}
+
   {# ── Grade Table ── #}
   {% if enrollments %}
   <div class="paper-card overflow-hidden">
@@ -34,6 +86,7 @@
           <th class="px-4 py-3 text-left font-semibold text-slate-600 text-xs uppercase tracking-wide">Student ID</th>
           <th class="px-4 py-3 text-center font-semibold text-slate-600 text-xs uppercase tracking-wide">Current Grade</th>
           <th class="px-4 py-3 text-center font-semibold text-slate-600 text-xs uppercase tracking-wide">Remarks</th>
+          <th class="px-4 py-3 text-center font-semibold text-slate-600 text-xs uppercase tracking-wide">Status</th>
           <th class="px-4 py-3 text-center font-semibold text-slate-600 text-xs uppercase tracking-wide">Encode</th>
         </tr>
       </thead>
@@ -62,6 +115,21 @@
                            {% else %}bg-slate-100 text-slate-500{% endif %}">
                 {{ r }}
               </span>
+            {% else %}
+              <span class="text-xs text-slate-400">—</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3 text-center">
+            {% if grade and grade.grade_value %}
+              {% if grade.is_released %}
+                <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-700">
+                  Released
+                </span>
+              {% else %}
+                <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                  Pending
+                </span>
+              {% endif %}
             {% else %}
               <span class="text-xs text-slate-400">—</span>
             {% endif %}

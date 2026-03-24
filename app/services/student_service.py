@@ -33,9 +33,11 @@ def get_all_enrollments(student_id: int):
     )
 
 
-def get_grades(student_id: int, semester: str | None = None, academic_year: str | None = None):
+def get_grades(student_id: int, semester: str | None = None, academic_year: str | None = None, include_unreleased: bool = False):
     """
     Return grades for a student, optionally filtered by semester/year.
+    By default, only returns released grades (visible to students).
+    Set include_unreleased=True for admin/faculty views.
     Each item is a Grade with eager-loaded enrollment and subject.
     """
     query = (
@@ -44,11 +46,71 @@ def get_grades(student_id: int, semester: str | None = None, academic_year: str 
         .join(Subject, Enrollment.subject_id == Subject.id)
         .filter(Enrollment.student_id == student_id)
     )
+
+    # Only show released grades to students
+    if not include_unreleased:
+        query = query.filter(Grade.is_released == True)
+
     if semester:
         query = query.filter(Enrollment.semester == semester)
     if academic_year:
         query = query.filter(Enrollment.academic_year == academic_year)
     return query.all()
+
+
+def get_grade_history(student_id: int, include_unreleased: bool = False) -> dict:
+    """
+    Get all grades for a student grouped by academic year and semester.
+    Returns a dict with keys like '2024-2025 - 1st' containing grade details and GWA.
+    """
+    from app.services.gwa_service import compute_gwa
+
+    query = (
+        db.session.query(Grade, Enrollment, Subject)
+        .join(Enrollment, Grade.enrollment_id == Enrollment.id)
+        .join(Subject, Enrollment.subject_id == Subject.id)
+        .filter(Enrollment.student_id == student_id)
+        .filter(Grade.grade_value.isnot(None))
+    )
+
+    if not include_unreleased:
+        query = query.filter(Grade.is_released == True)
+
+    results = query.order_by(
+        Enrollment.academic_year.desc(),
+        Enrollment.semester
+    ).all()
+
+    history = {}
+    for grade, enrollment, subject in results:
+        key = f"{enrollment.academic_year} - {enrollment.semester}"
+        if key not in history:
+            history[key] = {
+                'academic_year': enrollment.academic_year,
+                'semester': enrollment.semester,
+                'grades': [],
+                'gwa': None,
+                'total_units': 0,
+            }
+        history[key]['grades'].append({
+            'subject_code': subject.subject_code,
+            'subject_title': subject.subject_title,
+            'units': subject.units,
+            'grade_value': grade.grade_value,
+            'remarks': grade.computed_remarks,
+            'released_at': grade.released_at,
+        })
+        history[key]['total_units'] += subject.units or 0
+
+    # Calculate GWA per semester
+    for key, data in history.items():
+        grades_for_gwa = [g for g in data['grades'] if g['grade_value'] is not None]
+        if grades_for_gwa:
+            total_weighted = sum(g['grade_value'] * (g['units'] or 3) for g in grades_for_gwa)
+            total_units = sum(g['units'] or 3 for g in grades_for_gwa)
+            data['gwa'] = round(total_weighted / total_units, 4) if total_units > 0 else None
+
+    return history
 
 
 def get_schedule_matrix(student_id: int, semester: str | None = None, academic_year: str | None = None) -> dict:

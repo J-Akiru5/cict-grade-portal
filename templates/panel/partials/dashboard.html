@@ -111,19 +111,76 @@
     </div>
     <div class="paper-card px-4 py-4">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
-          <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
+          <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
           </svg>
         </div>
         <div>
-          <div class="text-lg font-bold font-mono text-purple-600">{{ current_semester }}</div>
-          <div class="text-xs text-slate-500">{{ current_year }}</div>
+          <div class="text-2xl font-bold font-mono text-amber-600">{{ encoding_progress|default(0) }}%</div>
+          <div class="text-xs text-slate-500">Grades Encoded</div>
         </div>
       </div>
     </div>
   </div>
+
+  {# ── Grade Encoding Progress ── #}
+  <div class="paper-card p-5">
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="font-semibold text-slate-800">Grade Encoding Progress</h3>
+      <span class="text-sm text-slate-500">{{ grades_encoded|default(0) }} / {{ total_enrollments|default(0) }} grades</span>
+    </div>
+    <div class="h-3 bg-slate-100 rounded-full overflow-hidden">
+      <div class="h-full bg-gradient-to-r from-maroon to-gold rounded-full transition-all duration-500"
+           style="width: {{ encoding_progress|default(0) }}%"></div>
+    </div>
+    <div class="flex justify-between mt-2 text-xs text-slate-500">
+      <span>{{ grades_pending|default(0) }} pending</span>
+      <span>{{ grades_encoded|default(0) }} completed</span>
+    </div>
+  </div>
+
+  {# ── Analytics Charts Row ── #}
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    {# Grade Remarks Distribution (Pie Chart) #}
+    <div class="paper-card p-5">
+      <h3 class="font-semibold text-slate-800 mb-4">Grade Status Distribution</h3>
+      <div class="relative h-64">
+        <canvas id="gradeRemarksChart"></canvas>
+      </div>
+    </div>
+
+    {# Enrollment by Year Level (Bar Chart) #}
+    <div class="paper-card p-5">
+      <h3 class="font-semibold text-slate-800 mb-4">Students by Year Level</h3>
+      <div class="relative h-64">
+        <canvas id="enrollmentByYearChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  {# ── Top Subjects by Enrollment ── #}
+  {% if top_subjects %}
+  <div class="paper-card p-5">
+    <h3 class="font-semibold text-slate-800 mb-4">Top Subjects by Enrollment</h3>
+    <div class="space-y-3">
+      {% for code, count in top_subjects.items() %}
+      <div class="flex items-center gap-3">
+        <span class="font-mono text-sm font-semibold text-slate-700 w-24 truncate">{{ code }}</span>
+        <div class="flex-1 h-6 bg-slate-100 rounded-full overflow-hidden">
+          {% set max_count = top_subjects.values()|list|max if top_subjects else 1 %}
+          {% set width = (count / max_count * 100)|round|int %}
+          <div class="h-full bg-gradient-to-r from-maroon/80 to-maroon rounded-full flex items-center justify-end px-2 transition-all duration-500"
+               style="width: {{ width }}%">
+            <span class="text-xs font-bold text-white">{{ count }}</span>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
 
   {# Admin Quick Actions #}
   <div class="paper-card p-5">
@@ -171,6 +228,100 @@
       </a>
     </div>
   </div>
+
+  {# Chart.js Scripts for Admin Dashboard #}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // Grade Remarks Distribution (Doughnut Chart)
+    (function() {
+      const ctx = document.getElementById('gradeRemarksChart');
+      if (!ctx) return;
+
+      const data = {{ grade_remarks|default({})|tojson }};
+      const labels = Object.keys(data);
+      const values = Object.values(data);
+
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: values,
+            backgroundColor: [
+              '#22c55e', // Passed - green
+              '#ef4444', // Failed - red
+              '#f59e0b', // Incomplete - amber
+              '#6b7280', // Dropped - gray
+              '#e2e8f0', // Not Encoded - light gray
+            ],
+            borderWidth: 0,
+            hoverOffset: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '60%',
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: {
+                usePointStyle: true,
+                padding: 15,
+                font: { size: 12 }
+              }
+            }
+          }
+        }
+      });
+    })();
+
+    // Enrollment by Year Level (Bar Chart)
+    (function() {
+      const ctx = document.getElementById('enrollmentByYearChart');
+      if (!ctx) return;
+
+      const data = {{ enrollment_by_year|default({})|tojson }};
+      const labels = Object.keys(data);
+      const values = Object.values(data);
+
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Students',
+            data: values,
+            backgroundColor: [
+              'rgba(128, 0, 0, 0.8)',
+              'rgba(128, 0, 0, 0.65)',
+              'rgba(128, 0, 0, 0.5)',
+              'rgba(128, 0, 0, 0.35)',
+            ],
+            borderRadius: 8,
+            borderSkipped: false,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { precision: 0 },
+              grid: { color: 'rgba(0,0,0,0.05)' }
+            },
+            x: {
+              grid: { display: false }
+            }
+          }
+        }
+      });
+    })();
+  </script>
 
   {% else %}
   {# Faculty-specific stats #}
