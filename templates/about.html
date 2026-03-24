@@ -41,7 +41,7 @@
         <div class="flex flex-col items-center gap-8 sm:gap-12 lg:grid lg:grid-cols-2 lg:flex-none lg:items-center lg:gap-16">
 
         {# ── RIGHT: Branding + CTA (shown first on mobile via DOM order) ── #}
-        <div class="text-center lg:text-left order-first lg:order-last">
+        <div class="text-center lg:text-left order-first lg:order-last" data-aos="fade-left">
           {# Logos row #}
           <div class="mb-6 flex items-center justify-center gap-3 sm:mb-8 lg:justify-start">
             <div class="flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm shadow-lg">
@@ -86,7 +86,7 @@
         </div>
 
         {# ── LEFT: Glassmorphic CICT Ecosystem Card (shown below branding on mobile) ── #}
-        <div class="w-full max-w-md lg:max-w-none order-last lg:order-first">
+        <div class="w-full max-w-md lg:max-w-none order-last lg:order-first" data-aos="fade-right">
           <div class="rounded-2xl border border-white/20 bg-white/10 p-4 sm:p-6 shadow-2xl backdrop-blur-md">
 
             {# Card header #}
@@ -202,7 +202,7 @@
   <section class="border-t border-gray-200 bg-white py-16 md:py-20">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div class="grid gap-12 lg:grid-cols-2 lg:items-start">
-        <div>
+        <div data-aos="fade-right">
           <div class="flex items-center gap-3 mb-6">
             <div class="flex h-10 w-10 items-center justify-center rounded-full bg-maroon/10">
               <svg class="h-5 w-5 text-maroon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -224,7 +224,7 @@
           </div>
         </div>
 
-        <div>
+        <div data-aos="fade-left" data-aos-delay="100">
           <div class="flex items-center gap-3 mb-6">
             <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gold/15">
               <svg class="h-5 w-5 text-yellow-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -249,14 +249,14 @@
   ══════════════════════════════════════════════════════════ #}
   <section class="border-t border-gray-200 bg-gray-50 py-16 md:py-20">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div class="text-center mb-12">
+      <div class="text-center mb-12" data-aos="fade-up">
         <span class="text-xs font-bold uppercase tracking-[0.2em] text-maroon/60">What the Portal Supports</span>
         <h2 class="mt-3 text-2xl font-bold tracking-tight text-gray-900 md:text-3xl">Built for Everyone in CICT</h2>
       </div>
 
       <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {# Card 1 #}
-        <article class="rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm transition-all hover:border-maroon/30 hover:shadow-md">
+        <article class="rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm transition-all hover:border-maroon/30 hover:shadow-md" data-aos="fade-up" data-aos-delay="0">
           <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-maroon/10">
             <svg class="h-6 w-6 text-maroon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
@@ -267,7 +267,7 @@
         </article>
 
         {# Card 2 #}
-        <article class="rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm transition-all hover:border-yellow-400/50 hover:shadow-md">
+        <article class="rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm transition-all hover:border-yellow-400/50 hover:shadow-md" data-aos="fade-up" data-aos-delay="100">
           <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gold/15">
             <svg class="h-6 w-6 text-yellow-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -278,7 +278,7 @@
         </article>
 
         {# Card 3 #}
-        <article class="rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm transition-all hover:border-maroon/30 hover:shadow-md">
+        <article class="rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm transition-all hover:border-maroon/30 hover:shadow-md" data-aos="fade-up" data-aos-delay="200">
           <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-maroon/10">
             <svg class="h-6 w-6 text-maroon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -289,7 +289,7 @@
         </article>
 
         {# Card 4 #}
-        <article class="rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm transition-all hover:border-yellow-400/50 hover:shadow-md">
+        <article class="rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm transition-all hover:border-yellow-400/50 hover:shadow-md" data-aos="fade-up" data-aos-delay="300">
           <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gold/15">
             <svg class="h-6 w-6 text-yellow-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
@@ -309,7 +309,7 @@
   <section class="border-t border-gray-200 bg-white py-16 md:py-20">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div class="grid gap-6 md:grid-cols-2">
-        <article class="rounded-2xl border border-gray-200 border-l-4 border-l-maroon bg-white p-8 shadow-sm transition-all hover:shadow-md">
+        <article class="rounded-2xl border border-gray-200 border-l-4 border-l-maroon bg-white p-8 shadow-sm transition-all hover:shadow-md" data-aos="fade-right">
           <div class="mb-4 flex items-center gap-3">
             <svg class="h-5 w-5 text-maroon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -321,7 +321,7 @@
           </p>
         </article>
 
-        <article class="rounded-2xl border border-gray-200 border-l-4 border-l-yellow-500 bg-white p-8 shadow-sm transition-all hover:shadow-md">
+        <article class="rounded-2xl border border-gray-200 border-l-4 border-l-yellow-500 bg-white p-8 shadow-sm transition-all hover:shadow-md" data-aos="fade-left" data-aos-delay="100">
           <div class="mb-4 flex items-center gap-3">
             <svg class="h-5 w-5 text-yellow-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
@@ -341,7 +341,7 @@
   ══════════════════════════════════════════════════════════ #}
   <section class="border-t border-gray-200">
     {# Section Header — white #}
-    <div class="bg-white py-12 text-center">
+    <div class="bg-white py-12 text-center" data-aos="fade-up">
       <span class="text-xs font-bold uppercase tracking-[0.2em] text-maroon/60">Get In Touch</span>
       <h2 class="mt-3 text-3xl font-bold tracking-tight text-gray-900 md:text-4xl">Contact &amp; Location</h2>
       <p class="mx-auto mt-3 max-w-xl text-gray-500">Reach out to the CICT Office for inquiries, support, or campus visits.</p>
@@ -349,7 +349,7 @@
 
     <div class="flex flex-col md:flex-row">
       {# Left: Contact Info — keep maroon+circuit #}
-      <div class="relative overflow-hidden bg-gradient-to-br from-gray-900 via-[#4a0000] to-gray-900 px-8 py-16 text-white md:w-1/2 md:px-12 md:py-20">
+      <div class="relative overflow-hidden bg-gradient-to-br from-gray-900 via-[#4a0000] to-gray-900 px-8 py-16 text-white md:w-1/2 md:px-12 md:py-20" data-aos="fade-right">
         {% include 'partials/circuit_bg.html' %}
         <div class="pointer-events-none absolute inset-0 opacity-[0.04]" style="background:repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(255,255,255,0.05) 2px,rgba(255,255,255,0.05) 4px)"></div>
 
@@ -404,7 +404,7 @@
       </div>
 
       {# Right: Map #}
-      <div class="min-h-[350px] md:w-1/2 md:min-h-0">
+      <div class="min-h-[350px] md:w-1/2 md:min-h-0" data-aos="fade-left" data-aos-delay="100">
         <iframe
           title="ISUFST Dingle Campus Location"
           src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1142.3101206086283!2d122.6621262161048!3d11.001688730609768!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x33af1776ffd9b7f1%3A0x2c4663ccaaf49fa8!2sIloilo%20State%20University%20of%20Fisheries%20Science%20and%20Technology%E2%80%93%20Dingle%20Campus!5e1!3m2!1sen!2sph!4v1773719665867!5m2!1sen!2sph"
@@ -422,7 +422,7 @@
   ══════════════════════════════════════════════════════════ #}
   <section class="relative overflow-hidden border-t border-white/5 bg-gradient-to-b from-gray-900 via-[#4a0000] to-gray-900 py-16 md:py-20">
     {% include 'partials/circuit_bg.html' %}
-    <div class="relative z-10 mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
+    <div class="relative z-10 mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8" data-aos="fade-up">
       <h2 class="text-2xl font-bold tracking-tight text-white md:text-3xl">Ready to check your academic records?</h2>
       <p class="mx-auto mt-3 max-w-xl text-white/60">Sign in to view your grades, schedule, and profile. New students can register for an account.</p>
       <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
