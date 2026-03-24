@@ -836,8 +836,10 @@ def get_all_admin_schedules(
     section_id: int = None,
     semester: str = None,
     academic_year: str = None,
-) -> list:
-    """Return section-level schedules (section_id is set), filterable."""
+    page: int = 1,
+    per_page: int = 20,
+):
+    """Return paginated section-level schedules, filterable."""
     q = (
         Schedule.query
         .filter(Schedule.section_id.isnot(None))
@@ -854,7 +856,7 @@ def get_all_admin_schedules(
         q = q.filter(Schedule.semester == semester)
     if academic_year:
         q = q.filter(Schedule.academic_year == academic_year)
-    return q.all()
+    return q.paginate(page=page, per_page=per_page, error_out=False)
 
 
 def create_admin_schedule(
@@ -898,3 +900,43 @@ def delete_admin_schedule(schedule_id: int) -> None:
         raise ValueError('This is not an admin-managed schedule.')
     db.session.delete(schedule)
     db.session.commit()
+
+
+def update_admin_schedule(
+    schedule_id: int,
+    section_id: int = None,
+    subject_id: int = None,
+    faculty_id: int = None,
+    day_of_week: str = None,
+    time_start=None,
+    time_end=None,
+    room: str = None,
+    semester: str = None,
+    academic_year: str = None,
+) -> Schedule:
+    """Edit an admin-managed schedule entry."""
+    schedule = db.session.get(Schedule, schedule_id)
+    if not schedule:
+        raise ValueError(f'Schedule {schedule_id} not found.')
+    if schedule.section_id is None:
+        raise ValueError('This is not an admin-managed schedule.')
+    if section_id is not None:
+        schedule.section_id = section_id
+    if subject_id is not None:
+        schedule.subject_id = subject_id
+    if faculty_id is not None:
+        schedule.faculty_id = faculty_id
+    if day_of_week is not None:
+        schedule.day_of_week = day_of_week
+    if time_start is not None:
+        schedule.time_start = time_start
+    if time_end is not None:
+        schedule.time_end = time_end
+    if room is not None:
+        schedule.room = room or None
+    if semester is not None:
+        schedule.semester = semester
+    if academic_year is not None:
+        schedule.academic_year = academic_year
+    db.session.commit()
+    return schedule

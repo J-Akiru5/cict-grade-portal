@@ -96,15 +96,19 @@ def get_faculty_audit_log(faculty_user_id: str, limit: int = 200) -> list:
     )
 
 
-def get_faculty_schedule(faculty_id: int, semester: str, academic_year: str) -> list:
-    """Return schedule entries owned by this faculty member."""
-    return (
+def get_faculty_schedule(faculty_id: int, semester: str = None, academic_year: str = None, page: int = 1, per_page: int = 20):
+    """Return paginated schedule entries owned by this faculty member."""
+    q = (
         Schedule.query
-        .filter_by(faculty_id=faculty_id, semester=semester, academic_year=academic_year)
+        .filter_by(faculty_id=faculty_id)
         .options(db.joinedload(Schedule.subject))
         .order_by(Schedule.day_of_week, Schedule.time_start)
-        .all()
     )
+    if semester:
+        q = q.filter(Schedule.semester == semester)
+    if academic_year:
+        q = q.filter(Schedule.academic_year == academic_year)
+    return q.paginate(page=page, per_page=per_page, error_out=False)
 
 
 def add_faculty_schedule(
@@ -143,3 +147,38 @@ def delete_faculty_schedule(faculty_id: int, schedule_id: int) -> None:
         raise PermissionError('Schedule entry not found or not owned by you.')
     db.session.delete(entry)
     db.session.commit()
+
+
+def update_faculty_schedule(
+    faculty_id: int,
+    schedule_id: int,
+    subject_id: int = None,
+    day_of_week: str = None,
+    time_start=None,
+    time_end=None,
+    room: str = None,
+    semester: str = None,
+    academic_year: str = None,
+) -> Schedule:
+    """Edit a faculty schedule entry, verifying ownership."""
+    entry = db.session.get(Schedule, schedule_id)
+    if not entry or entry.faculty_id != faculty_id:
+        raise PermissionError('Schedule entry not found or not owned by you.')
+    if subject_id is not None:
+        if not is_subject_owned_by_faculty(faculty_id, subject_id):
+            raise PermissionError('Subject not assigned to this faculty member.')
+        entry.subject_id = subject_id
+    if day_of_week is not None:
+        entry.day_of_week = day_of_week
+    if time_start is not None:
+        entry.time_start = time_start
+    if time_end is not None:
+        entry.time_end = time_end
+    if room is not None:
+        entry.room = room or None
+    if semester is not None:
+        entry.semester = semester
+    if academic_year is not None:
+        entry.academic_year = academic_year
+    db.session.commit()
+    return entry

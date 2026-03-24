@@ -282,13 +282,14 @@ def student_detail(student_db_id):
 @login_required
 @role_required('faculty', 'admin')
 def faculty_schedule():
-    semester = request.args.get('semester')
-    year = request.args.get('year')
-    if not semester or not year:
-        semester, year = _current_period()
+    semester = request.args.get('semester') or None
+    year = request.args.get('year') or None
+    page = request.args.get('page', 1, type=int)
 
     faculty = faculty_service.get_faculty_profile(current_user.id)
-    schedules = faculty_service.get_faculty_schedule(faculty.id, semester, year) if faculty else []
+    schedules = faculty_service.get_faculty_schedule(
+        faculty.id, semester=semester, academic_year=year, page=page
+    ) if faculty else None
     subjects = faculty_service.get_faculty_subjects(faculty.id) if faculty else []
 
     context = {
@@ -296,8 +297,8 @@ def faculty_schedule():
         'schedules': schedules,
         'subjects': subjects,
         'days': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-        'current_semester': semester,
-        'current_year': year,
+        'current_semester': semester or '',
+        'current_year': year or '',
         'active_page': 'schedule',
     }
     if _is_htmx():
@@ -339,6 +340,47 @@ def add_schedule():
         logging.error(f'Add schedule error: {e}')
         flash('Could not add schedule entry.', 'error')
 
+    return redirect(url_for('panel.faculty_schedule',
+                            semester=request.form.get('semester'),
+                            year=request.form.get('year')))
+
+
+@panel_bp.route('/schedule/<int:schedule_id>/edit', methods=['POST'])
+@login_required
+@role_required('faculty', 'admin')
+def edit_schedule(schedule_id):
+    from datetime import time as dt_time
+    faculty = faculty_service.get_faculty_profile(current_user.id)
+    if not faculty:
+        flash('Faculty profile not found.', 'error')
+        return redirect(url_for('panel.faculty_schedule'))
+    try:
+        subject_id = request.form.get('subject_id', type=int)
+        day = request.form.get('day_of_week') or None
+        room = request.form.get('room', '').strip() or ''
+        semester = request.form.get('semester') or None
+        year = request.form.get('year') or None
+        ts = request.form.get('time_start', '')
+        te = request.form.get('time_end', '')
+        time_start = dt_time(*map(int, ts.split(':'))) if ts else None
+        time_end = dt_time(*map(int, te.split(':'))) if te else None
+
+        faculty_service.update_faculty_schedule(
+            faculty.id, schedule_id,
+            subject_id=subject_id,
+            day_of_week=day,
+            time_start=time_start,
+            time_end=time_end,
+            room=room,
+            semester=semester,
+            academic_year=year,
+        )
+        flash('Schedule entry updated.', 'success')
+    except PermissionError as e:
+        flash(str(e), 'error')
+    except Exception as e:
+        logging.error(f'Edit schedule error: {e}')
+        flash('Could not update schedule entry.', 'error')
     return redirect(url_for('panel.faculty_schedule',
                             semester=request.form.get('semester'),
                             year=request.form.get('year')))
@@ -1524,14 +1566,15 @@ def admin_schedules():
     from app.models.faculty import Faculty
 
     section_filter = request.args.get('section_id', type=int)
-    semester, year = _current_period()
-    semester = request.args.get('semester', semester)
-    year = request.args.get('year', year)
+    semester = request.args.get('semester') or None
+    year = request.args.get('year') or None
+    page = request.args.get('page', 1, type=int)
 
     schedules = admin_service.get_all_admin_schedules(
         section_id=section_filter,
         semester=semester,
         academic_year=year,
+        page=page,
     )
     sections = admin_service.get_all_sections()
     subjects = Subject.query.order_by(Subject.subject_code).all()
@@ -1543,8 +1586,8 @@ def admin_schedules():
         'subjects': subjects,
         'all_faculty': all_faculty,
         'section_filter': section_filter,
-        'current_semester': semester,
-        'current_year': year,
+        'current_semester': semester or '',
+        'current_year': year or '',
         'active_page': 'admin_schedules',
     }
     if _is_htmx():
@@ -1579,6 +1622,45 @@ def admin_create_schedule():
         flash('Schedule entry created.', 'success')
     except Exception as e:
         logging.error(f'Admin schedule create error: {e}')
+        flash(f'Error: {e}', 'error')
+    return redirect(url_for('panel.admin_schedules',
+                            semester=request.form.get('semester'),
+                            year=request.form.get('year')))
+
+
+@panel_bp.route('/admin/schedules/<int:schedule_id>/edit', methods=['POST'])
+@login_required
+@role_required('admin')
+def admin_edit_schedule(schedule_id):
+    from datetime import time as dt_time
+    try:
+        section_id = request.form.get('section_id', type=int)
+        subject_id = request.form.get('subject_id', type=int)
+        faculty_id = request.form.get('faculty_id', type=int)
+        day = request.form.get('day_of_week') or None
+        room = request.form.get('room', '').strip()
+        semester = request.form.get('semester') or None
+        year = request.form.get('year') or None
+        ts = request.form.get('time_start', '')
+        te = request.form.get('time_end', '')
+        time_start = dt_time(*map(int, ts.split(':'))) if ts else None
+        time_end = dt_time(*map(int, te.split(':'))) if te else None
+
+        admin_service.update_admin_schedule(
+            schedule_id,
+            section_id=section_id,
+            subject_id=subject_id,
+            faculty_id=faculty_id,
+            day_of_week=day,
+            time_start=time_start,
+            time_end=time_end,
+            room=room,
+            semester=semester,
+            academic_year=year,
+        )
+        flash('Schedule entry updated.', 'success')
+    except Exception as e:
+        logging.error(f'Admin schedule edit error: {e}')
         flash(f'Error: {e}', 'error')
     return redirect(url_for('panel.admin_schedules',
                             semester=request.form.get('semester'),

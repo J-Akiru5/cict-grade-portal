@@ -12,18 +12,23 @@
       </select>
       <select name="semester"
               class="text-sm rounded-lg border border-slate-200 px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-maroon/40">
+        <option value="">All Semesters</option>
         {% for s in ['1st', '2nd', 'Summer'] %}
           <option value="{{ s }}" {{ 'selected' if current_semester == s else '' }}>{{ s }} Sem</option>
         {% endfor %}
       </select>
       <select name="year"
               class="text-sm rounded-lg border border-slate-200 px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-maroon/40">
+        <option value="">All Years</option>
         {% for y in range(2024, 2032) %}
           {% set yr = y ~ '-' ~ (y+1) %}
           <option value="{{ yr }}" {{ 'selected' if current_year == yr else '' }}>{{ yr }}</option>
         {% endfor %}
       </select>
       <button type="submit" class="px-4 py-1.5 bg-maroon text-white text-sm font-semibold rounded-lg hover:bg-maroon/90 transition">Filter</button>
+      {% if current_semester or current_year or section_filter %}
+      <a href="{{ url_for('panel.admin_schedules') }}" class="px-3 py-1.5 text-sm text-slate-500 rounded-lg hover:bg-slate-100 transition">Clear</a>
+      {% endif %}
     </form>
   </div>
 
@@ -95,11 +100,30 @@
                  class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
         </div>
         <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Semester *</label>
+          <select name="semester" required
+                  class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40">
+            {% for s in ['1st', '2nd', 'Summer'] %}
+              <option value="{{ s }}" {{ 'selected' if current_semester == s else '' }}>{{ s }} Sem</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Academic Year *</label>
+          <select name="year" required
+                  class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40">
+            {% for y in range(2024, 2032) %}
+              {% set yr = y ~ '-' ~ (y+1) %}
+              <option value="{{ yr }}" {{ 'selected' if current_year == yr else '' }}>{{ yr }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
           <label class="block text-xs font-medium text-slate-600 mb-1">Room</label>
           <input name="room" placeholder="e.g. Room 201"
                  class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
         </div>
-        <div class="flex items-end col-span-2 md:col-span-2">
+        <div class="flex items-end col-span-2 md:col-span-3">
           <button type="submit"
                   class="w-full px-4 py-1.5 bg-maroon text-white text-sm font-semibold rounded-lg hover:bg-maroon/90 transition">
             Add Schedule Entry
@@ -111,12 +135,17 @@
   </details>
 
   {# ── Schedule Table ── #}
-  {% if schedules %}
+  {% if schedules and schedules.items %}
   <div class="paper-card overflow-hidden">
-    <div class="px-4 py-2 bg-slate-50 border-b border-slate-200 text-xs text-slate-500 font-semibold">
-      {{ current_semester }} Semester {{ current_year }}
-      {% if section_filter %}— Filtered{% endif %}
-      — {{ schedules | length }} entr{{ 'y' if schedules | length == 1 else 'ies' }}
+    <div class="px-4 py-2 bg-slate-50 border-b border-slate-200 text-xs text-slate-500 font-semibold flex items-center justify-between">
+      <span>
+        {% if current_semester %}{{ current_semester }} Semester {% endif %}
+        {% if current_year %}{{ current_year }} {% endif %}
+        {% if not current_semester and not current_year %}All Schedules{% endif %}
+        {% if section_filter %}— Filtered{% endif %}
+        — {{ schedules.total }} entr{{ 'y' if schedules.total == 1 else 'ies' }}
+      </span>
+      <span class="text-slate-400">Page {{ schedules.page }} of {{ schedules.pages }}</span>
     </div>
     <table class="w-full text-sm">
       <thead>
@@ -127,11 +156,12 @@
           <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Day</th>
           <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Time</th>
           <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Room</th>
-          <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Action</th>
+          <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Sem / Year</th>
+          <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Actions</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-slate-100">
-        {% for sched in schedules %}
+        {% for sched in schedules.items %}
         <tr class="hover:bg-slate-50 transition-colors">
           <td class="px-4 py-3 font-bold text-maroon font-mono">
             {{ sched.section_obj.display_name if sched.section_obj else '—' }}
@@ -148,23 +178,198 @@
             {{ sched.time_start.strftime('%I:%M %p') }} – {{ sched.time_end.strftime('%I:%M %p') }}
           </td>
           <td class="px-4 py-3 text-center text-xs text-slate-500">{{ sched.room or '—' }}</td>
+          <td class="px-4 py-3 text-center text-xs text-slate-500">
+            {{ sched.semester }} / {{ sched.academic_year }}
+          </td>
           <td class="px-4 py-3 text-center">
-            <form method="POST" action="{{ url_for('panel.admin_delete_schedule', schedule_id=sched.id) }}"
-                  onsubmit="return confirm('Remove this schedule entry?');">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-              <button type="submit" class="text-xs px-3 py-1 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition">
-                Remove
+            <div class="flex gap-1 justify-center">
+              {# Edit Button #}
+              <button type="button"
+                      onclick="openAdminEditModal({
+                        id: {{ sched.id }},
+                        section_id: {{ sched.section_id }},
+                        subject_id: {{ sched.subject_id }},
+                        faculty_id: {{ sched.faculty_id or 'null' }},
+                        day: '{{ sched.day_of_week }}',
+                        time_start: '{{ sched.time_start.strftime('%H:%M') }}',
+                        time_end: '{{ sched.time_end.strftime('%H:%M') }}',
+                        room: '{{ sched.room or '' }}',
+                        semester: '{{ sched.semester }}',
+                        year: '{{ sched.academic_year }}'
+                      })"
+                      class="text-xs px-3 py-1 bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-100 transition">
+                Edit
               </button>
-            </form>
+              {# Delete Button #}
+              <form method="POST" action="{{ url_for('panel.admin_delete_schedule', schedule_id=sched.id) }}"
+                    onsubmit="return confirm('Remove this schedule entry?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <button type="submit" class="text-xs px-3 py-1 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition">
+                  Delete
+                </button>
+              </form>
+            </div>
           </td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
+
+    {# ── Pagination ── #}
+    {% if schedules.pages > 1 %}
+    <div class="px-4 py-3 border-t border-slate-100 flex items-center justify-between">
+      <span class="text-xs text-slate-500">
+        Showing {{ ((schedules.page - 1) * schedules.per_page) + 1 }}–{{ [schedules.page * schedules.per_page, schedules.total] | min }} of {{ schedules.total }}
+      </span>
+      <div class="flex gap-1">
+        {% if schedules.has_prev %}
+        <a href="?page={{ schedules.prev_num }}{% if current_semester %}&semester={{ current_semester }}{% endif %}{% if current_year %}&year={{ current_year }}{% endif %}{% if section_filter %}&section_id={{ section_filter }}{% endif %}"
+           class="px-3 py-1 text-xs rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition">← Prev</a>
+        {% endif %}
+        {% for p in schedules.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+          {% if p %}
+            <a href="?page={{ p }}{% if current_semester %}&semester={{ current_semester }}{% endif %}{% if current_year %}&year={{ current_year }}{% endif %}{% if section_filter %}&section_id={{ section_filter }}{% endif %}"
+               class="px-3 py-1 text-xs rounded-lg border transition {{ 'bg-maroon text-white border-maroon' if p == schedules.page else 'border-slate-200 text-slate-600 hover:bg-slate-50' }}">{{ p }}</a>
+          {% else %}
+            <span class="px-2 py-1 text-xs text-slate-400">…</span>
+          {% endif %}
+        {% endfor %}
+        {% if schedules.has_next %}
+        <a href="?page={{ schedules.next_num }}{% if current_semester %}&semester={{ current_semester }}{% endif %}{% if current_year %}&year={{ current_year }}{% endif %}{% if section_filter %}&section_id={{ section_filter }}{% endif %}"
+           class="px-3 py-1 text-xs rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition">Next →</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
   </div>
   {% else %}
   <div class="paper-card p-10 text-center text-slate-400">
-    No schedule entries found for the selected filters.
+    No schedule entries found{% if current_semester or current_year or section_filter %} for the selected filters{% endif %}.
   </div>
   {% endif %}
 </div>
+
+{# ── Edit Schedule Modal ── #}
+<div id="adminEditScheduleModal"
+     class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm"
+     onclick="if(event.target===this) closeAdminEditModal()">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6">
+    <div class="flex items-center justify-between mb-5">
+      <h3 class="font-bold text-slate-800 text-lg">Edit Schedule Entry</h3>
+      <button onclick="closeAdminEditModal()" class="text-slate-400 hover:text-slate-600 text-xl leading-none">&times;</button>
+    </div>
+    <form id="adminEditScheduleForm" method="POST" action="" class="grid grid-cols-2 gap-3">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+      <input type="hidden" id="edit_filter_semester" name="semester" value="{{ current_semester }}"/>
+      <input type="hidden" id="edit_filter_year" name="year" value="{{ current_year }}"/>
+
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">Section</label>
+        <select id="edit_section_id" name="section_id"
+                class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40">
+          {% for sec in sections %}
+            <option value="{{ sec.id }}">{{ sec.display_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">Subject</label>
+        <select id="edit_subject_id" name="subject_id"
+                class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40">
+          {% for s in subjects %}
+            <option value="{{ s.id }}">{{ s.subject_code }} — {{ s.subject_title[:25] }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-span-2">
+        <label class="block text-xs font-medium text-slate-600 mb-1">Faculty</label>
+        <select id="edit_faculty_id" name="faculty_id"
+                class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40">
+          <option value="">— No Faculty —</option>
+          {% for f in all_faculty %}
+            <option value="{{ f.id }}">{{ f.full_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">Day</label>
+        <select id="edit_day" name="day_of_week"
+                class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40">
+          {% for d in ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] %}
+            <option value="{{ d }}">{{ d }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">Room</label>
+        <input id="edit_room" name="room" type="text" placeholder="e.g. Room 201"
+               class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">Time Start</label>
+        <input id="edit_time_start" name="time_start" type="time"
+               class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">Time End</label>
+        <input id="edit_time_end" name="time_end" type="time"
+               class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">Semester</label>
+        <select id="edit_semester" name="semester"
+                class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40">
+          {% for s in ['1st', '2nd', 'Summer'] %}
+            <option value="{{ s }}">{{ s }} Sem</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">Academic Year</label>
+        <select id="edit_year" name="year"
+                class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40">
+          {% for y in range(2024, 2032) %}
+            {% set yr = y ~ '-' ~ (y+1) %}
+            <option value="{{ yr }}">{{ yr }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-span-2 flex gap-2 pt-2">
+        <button type="submit"
+                class="flex-1 px-4 py-2 bg-maroon text-white text-sm font-semibold rounded-lg hover:bg-maroon/90 transition">
+          Save Changes
+        </button>
+        <button type="button" onclick="closeAdminEditModal()"
+                class="px-4 py-2 bg-slate-100 text-slate-600 text-sm rounded-lg hover:bg-slate-200 transition">
+          Cancel
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openAdminEditModal(data) {
+  const modal = document.getElementById('adminEditScheduleModal');
+  const form = document.getElementById('adminEditScheduleForm');
+  form.action = '/panel/admin/schedules/' + data.id + '/edit';
+
+  document.getElementById('edit_section_id').value = data.section_id;
+  document.getElementById('edit_subject_id').value = data.subject_id;
+  document.getElementById('edit_faculty_id').value = data.faculty_id;
+  document.getElementById('edit_day').value = data.day;
+  document.getElementById('edit_time_start').value = data.time_start;
+  document.getElementById('edit_time_end').value = data.time_end;
+  document.getElementById('edit_room').value = data.room;
+  document.getElementById('edit_semester').value = data.semester;
+  document.getElementById('edit_year').value = data.year;
+
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+function closeAdminEditModal() {
+  const modal = document.getElementById('adminEditScheduleModal');
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+}
+</script>
