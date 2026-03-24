@@ -1,15 +1,28 @@
-{# HTMX partial: Admin — CSV Grade Import #}
+{# HTMX partial: Admin — Grade Import & Export #}
 <div class="space-y-6">
-  <h2 class="text-lg font-bold text-slate-800">CSV Grade Import</h2>
+  <div class="flex items-center justify-between">
+    <h2 class="text-lg font-bold text-slate-800">Grade Import & Export</h2>
+  </div>
 
-  {# ── Upload Form ── #}
+  {# ── Import Section ── #}
   <div class="paper-card p-5">
-    <h3 class="font-semibold text-slate-700 mb-4">Upload Grade File</h3>
+    <h3 class="font-semibold text-slate-700 mb-4">📥 Import Grades</h3>
+
     <form method="POST" action="{{ url_for('panel.admin_grade_import') }}" enctype="multipart/form-data" class="space-y-4">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="md:col-span-1">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {# File Upload #}
+        <div class="md:col-span-2">
+          <label class="block text-xs font-medium text-slate-600 mb-1">Grade File *</label>
+          <input type="file" name="grade_file" required
+                 accept=".csv,.xlsx,.pdf"
+                 class="w-full text-sm text-slate-600 file:mr-3 file:py-1.5 file:px-4 file:rounded-lg file:border-0 file:bg-maroon/10 file:text-maroon file:font-semibold file:cursor-pointer hover:file:bg-maroon/20 transition"/>
+          <p class="text-xs text-slate-500 mt-1">Supported: CSV, Excel (.xlsx), PDF</p>
+        </div>
+
+        {# Semester #}
+        <div>
           <label class="block text-xs font-medium text-slate-600 mb-1">Semester *</label>
           <select name="semester"
                   class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40">
@@ -18,15 +31,12 @@
             <option value="Summer" {% if current_semester == 'Summer' %}selected{% endif %}>Summer</option>
           </select>
         </div>
-        <div class="md:col-span-1">
+
+        {# Academic Year #}
+        <div>
           <label class="block text-xs font-medium text-slate-600 mb-1">Academic Year *</label>
-          <input name="academic_year" value="{{ current_year }}" placeholder="2024-2025"
+          <input name="year" value="{{ current_year }}" required placeholder="2025-2026"
                  class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
-        </div>
-        <div class="md:col-span-1">
-          <label class="block text-xs font-medium text-slate-600 mb-1">CSV File *</label>
-          <input type="file" name="csv_file" accept=".csv" required
-                 class="w-full text-sm text-slate-600 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-maroon/10 file:text-maroon file:font-semibold file:cursor-pointer hover:file:bg-maroon/20 transition"/>
         </div>
       </div>
 
@@ -34,6 +44,22 @@
         Import Grades
       </button>
     </form>
+
+    {# Format Guide Cards #}
+    <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div class="bg-green-50 rounded-lg p-3 border border-green-100">
+        <h4 class="font-semibold text-green-700 text-sm mb-1">📄 CSV Format</h4>
+        <p class="text-xs text-green-600">Columns: student_id, subject_code, grade</p>
+      </div>
+      <div class="bg-blue-50 rounded-lg p-3 border border-blue-100">
+        <h4 class="font-semibold text-blue-700 text-sm mb-1">📊 Excel Format (.xlsx)</h4>
+        <p class="text-xs text-blue-600">First sheet with columns: Student ID, Subject Code, Grade</p>
+      </div>
+      <div class="bg-purple-50 rounded-lg p-3 border border-purple-100">
+        <h4 class="font-semibold text-purple-700 text-sm mb-1">📑 PDF Format</h4>
+        <p class="text-xs text-purple-600">Grade report with tabular student data</p>
+      </div>
+    </div>
   </div>
 
   {# ── Import Result ── #}
@@ -48,19 +74,19 @@
       </svg>
       <span><strong>Import failed.</strong> {{ result.errors|length }} error(s) found. No grades were saved.</span>
     </div>
-    <div class="overflow-hidden rounded-lg border border-red-100">
+    <div class="overflow-hidden rounded-lg border border-red-100 max-h-64 overflow-y-auto">
       <table class="w-full text-xs">
-        <thead>
+        <thead class="sticky top-0">
           <tr class="bg-red-50 border-b border-red-100">
-            <th class="px-3 py-2 text-left font-semibold text-red-600">Row</th>
-            <th class="px-3 py-2 text-left font-semibold text-red-600">Error</th>
+            <th class="px-3 py-2 text-left font-semibold text-red-600">#</th>
+            <th class="px-3 py-2 text-left font-semibold text-red-600">Error Details</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-red-50">
           {% for err in result.errors %}
           <tr>
-            <td class="px-3 py-2 font-mono text-red-500">{{ err.row }}</td>
-            <td class="px-3 py-2 text-red-700">{{ err.message }}</td>
+            <td class="px-3 py-2 font-mono text-red-500">{{ loop.index }}</td>
+            <td class="px-3 py-2 text-red-700">{{ err }}</td>
           </tr>
           {% endfor %}
         </tbody>
@@ -77,51 +103,182 @@
   </div>
   {% endif %}
 
-  {# ── Format Guide ── #}
-  <div class="paper-card p-5 space-y-3">
-    <h3 class="font-semibold text-slate-700">CSV Format Guide</h3>
-    <p class="text-sm text-slate-600">
-      The file must be a <code class="px-1 py-0.5 bg-slate-100 rounded text-xs">.csv</code> with the following columns (header row required):
-    </p>
-    <div class="overflow-x-auto">
-      <table class="text-xs border border-slate-200 rounded-lg overflow-hidden">
-        <thead>
-          <tr class="bg-slate-50 border-b border-slate-200">
-            <th class="px-4 py-2 text-left font-semibold text-slate-600">Column</th>
-            <th class="px-4 py-2 text-left font-semibold text-slate-600">Description</th>
-            <th class="px-4 py-2 text-left font-semibold text-slate-600">Example</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-100">
-          <tr>
-            <td class="px-4 py-2 font-mono text-maroon">student_id</td>
-            <td class="px-4 py-2 text-slate-600">Student number (must exist in system)</td>
-            <td class="px-4 py-2 font-mono text-slate-500">2021-0001</td>
-          </tr>
-          <tr>
-            <td class="px-4 py-2 font-mono text-maroon">subject_code</td>
-            <td class="px-4 py-2 text-slate-600">Subject code (must exist and be enrolled)</td>
-            <td class="px-4 py-2 font-mono text-slate-500">IT 211</td>
-          </tr>
-          <tr>
-            <td class="px-4 py-2 font-mono text-maroon">grade</td>
-            <td class="px-4 py-2 text-slate-600">Numeric grade or remark</td>
-            <td class="px-4 py-2 font-mono text-slate-500">1.5 or INC</td>
-          </tr>
-        </tbody>
-      </table>
+  {# ── Export Section ── #}
+  <div class="paper-card p-5">
+    <h3 class="font-semibold text-slate-700 mb-4">📤 Export Grades (PDF)</h3>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {# Export by Semester #}
+      <div class="border border-slate-200 rounded-lg p-4 bg-white">
+        <h4 class="font-medium text-slate-700 mb-3 flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-maroon/10 text-maroon flex items-center justify-center text-xs">1</span>
+          By Semester
+        </h4>
+        <p class="text-xs text-slate-500 mb-3">Export all students' grades for a semester</p>
+        <form action="{{ url_for('panel.admin_export_semester_grades') }}" method="GET" class="space-y-3">
+          <select name="semester" class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40">
+            <option value="1st" {% if current_semester == '1st' %}selected{% endif %}>1st Semester</option>
+            <option value="2nd" {% if current_semester == '2nd' %}selected{% endif %}>2nd Semester</option>
+            <option value="Summer" {% if current_semester == 'Summer' %}selected{% endif %}>Summer</option>
+          </select>
+          <input type="text" name="year" value="{{ current_year }}" placeholder="2025-2026"
+                 class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+          <button type="submit" class="w-full px-3 py-2 bg-maroon text-white text-sm font-semibold rounded-lg hover:bg-maroon/90 transition">
+            Export Semester PDF
+          </button>
+        </form>
+      </div>
+
+      {# Export by Subject #}
+      <div class="border border-slate-200 rounded-lg p-4 bg-white">
+        <h4 class="font-medium text-slate-700 mb-3 flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-gold/20 text-gold flex items-center justify-center text-xs font-bold">2</span>
+          By Subject
+        </h4>
+        <p class="text-xs text-slate-500 mb-3">Export class list with grades for a subject</p>
+        <form id="export-subject-form" method="GET" class="space-y-3">
+          <select name="subject_id" id="export-subject-select" required
+                  class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40">
+            <option value="">— Select Subject —</option>
+            {% for s in subjects %}
+            <option value="{{ s.id }}">{{ s.code if s.code else s.subject_code }} - {{ s.title }}</option>
+            {% endfor %}
+          </select>
+          <select name="semester" class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40">
+            <option value="1st" {% if current_semester == '1st' %}selected{% endif %}>1st Semester</option>
+            <option value="2nd" {% if current_semester == '2nd' %}selected{% endif %}>2nd Semester</option>
+            <option value="Summer" {% if current_semester == 'Summer' %}selected{% endif %}>Summer</option>
+          </select>
+          <input type="text" name="year" value="{{ current_year }}" placeholder="2025-2026"
+                 class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+          <button type="submit" class="w-full px-3 py-2 bg-gold text-black text-sm font-semibold rounded-lg hover:bg-gold/90 transition">
+            Export Subject PDF
+          </button>
+        </form>
+        <script>
+          document.getElementById('export-subject-select').addEventListener('change', function() {
+            const form = document.getElementById('export-subject-form');
+            const subjectId = this.value;
+            if (subjectId) {
+              form.action = "{{ url_for('panel.admin_export_subject_grades', subject_id=0) }}".replace('/0', '/' + subjectId);
+            } else {
+              form.action = '';
+            }
+          });
+        </script>
+      </div>
+
+      {# Export by Student #}
+      <div class="border border-slate-200 rounded-lg p-4 bg-white">
+        <h4 class="font-medium text-slate-700 mb-3 flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold">3</span>
+          By Student (Transcript)
+        </h4>
+        <p class="text-xs text-slate-500 mb-3">Export individual student transcript</p>
+        <form id="export-student-form" method="GET" class="space-y-3">
+          <select name="student_id" id="export-student-select" required
+                  class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40">
+            <option value="">— Select Student —</option>
+            {% for st in students %}
+            <option value="{{ st.id }}">{{ st.student_id }} - {{ st.full_name }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="w-full px-3 py-2 bg-slate-700 text-white text-sm font-semibold rounded-lg hover:bg-slate-800 transition">
+            Export Transcript PDF
+          </button>
+        </form>
+        <script>
+          document.getElementById('export-student-select').addEventListener('change', function() {
+            const form = document.getElementById('export-student-form');
+            const studentId = this.value;
+            if (studentId) {
+              form.action = "{{ url_for('panel.admin_export_student_transcript', student_id=0) }}".replace('/0', '/' + studentId);
+            } else {
+              form.action = '';
+            }
+          });
+        </script>
+      </div>
     </div>
-    <div class="text-xs text-slate-500 space-y-1">
-      <p><span class="font-semibold">Valid numeric grades:</span> 1.0 · 1.25 · 1.5 · 1.75 · 2.0 · 2.25 · 2.5 · 2.75 · 3.0 · 5.0</p>
-      <p><span class="font-semibold">Valid remarks:</span> INC · DRP</p>
-      <p class="text-amber-600"><strong>Note:</strong> The import is all-or-nothing — if any row has an error, no grades are saved.</p>
-    </div>
-    <div class="bg-slate-50 rounded-lg p-3">
-      <p class="text-xs font-semibold text-slate-500 uppercase mb-2">Sample File</p>
-      <pre class="text-xs font-mono text-slate-700">student_id,subject_code,grade
+  </div>
+
+  {# ── Detailed Format Guide ── #}
+  <details class="paper-card">
+    <summary class="p-5 cursor-pointer font-semibold text-slate-700 select-none hover:bg-slate-50 transition">
+      📖 Detailed Import Format Guide
+    </summary>
+    <div class="px-5 pb-5 border-t border-slate-100 pt-4 space-y-4">
+      {# CSV Format #}
+      <div>
+        <h4 class="font-semibold text-green-700 mb-2">CSV Format</h4>
+        <p class="text-sm text-slate-600 mb-2">
+          The file must be a <code class="px-1 py-0.5 bg-slate-100 rounded text-xs">.csv</code> with the following columns (header row required):
+        </p>
+        <div class="overflow-x-auto">
+          <table class="text-xs border border-slate-200 rounded-lg overflow-hidden w-full">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-200">
+                <th class="px-4 py-2 text-left font-semibold text-slate-600">Column</th>
+                <th class="px-4 py-2 text-left font-semibold text-slate-600">Description</th>
+                <th class="px-4 py-2 text-left font-semibold text-slate-600">Example</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr>
+                <td class="px-4 py-2 font-mono text-maroon">student_id</td>
+                <td class="px-4 py-2 text-slate-600">Student number (must exist in system)</td>
+                <td class="px-4 py-2 font-mono text-slate-500">2021-0001</td>
+              </tr>
+              <tr>
+                <td class="px-4 py-2 font-mono text-maroon">subject_code</td>
+                <td class="px-4 py-2 text-slate-600">Subject code (must exist and be enrolled)</td>
+                <td class="px-4 py-2 font-mono text-slate-500">IT 211</td>
+              </tr>
+              <tr>
+                <td class="px-4 py-2 font-mono text-maroon">grade</td>
+                <td class="px-4 py-2 text-slate-600">Numeric grade or remark</td>
+                <td class="px-4 py-2 font-mono text-slate-500">1.5 or INC</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="bg-slate-50 rounded-lg p-3 mt-3">
+          <p class="text-xs font-semibold text-slate-500 uppercase mb-2">Sample CSV</p>
+          <pre class="text-xs font-mono text-slate-700">student_id,subject_code,grade
 2021-0001,IT 211,1.5
 2021-0002,IT 211,2.0
 2021-0003,IT 212,INC</pre>
+        </div>
+      </div>
+
+      {# Excel Format #}
+      <div>
+        <h4 class="font-semibold text-blue-700 mb-2">Excel Format (.xlsx)</h4>
+        <p class="text-sm text-slate-600 mb-2">
+          The first sheet should have headers in the first row. Flexible column name matching:
+        </p>
+        <ul class="text-xs text-slate-600 list-disc list-inside space-y-1">
+          <li><strong>Student ID:</strong> "Student ID", "student_id", "ID"</li>
+          <li><strong>Subject Code:</strong> "Subject Code", "subject_code", "Code"</li>
+          <li><strong>Grade:</strong> "Grade", "Final Grade"</li>
+        </ul>
+      </div>
+
+      {# PDF Format #}
+      <div>
+        <h4 class="font-semibold text-purple-700 mb-2">PDF Format</h4>
+        <p class="text-sm text-slate-600 mb-2">
+          The PDF should contain a table with grade data. The system will attempt to extract tables automatically.
+          Best results with clear, well-structured tables.
+        </p>
+      </div>
+
+      {# Grade Values #}
+      <div class="text-xs text-slate-500 space-y-1 pt-2 border-t border-slate-100">
+        <p><span class="font-semibold">Valid numeric grades:</span> 1.0 · 1.25 · 1.5 · 1.75 · 2.0 · 2.25 · 2.5 · 2.75 · 3.0 · 5.0</p>
+        <p><span class="font-semibold">Valid remarks:</span> INC (Incomplete) · DRP (Dropped)</p>
+        <p class="text-amber-600"><strong>Note:</strong> The import is all-or-nothing — if any row has an error, no grades are saved.</p>
+      </div>
     </div>
-  </div>
+  </details>
 </div>

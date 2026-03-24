@@ -1,8 +1,10 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, make_response
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, make_response, send_file
 from flask_login import login_required, current_user
 from app.utils.security import role_required
-from app.services import faculty_service, admin_service, storage_service
+from app.services import faculty_service, admin_service, storage_service, file_import_service, pdf_export_service
 from app.models.academic_settings import AcademicSettings
+from app.models.subject import Subject
+from app.models.student import Student
 from app.extensions import db
 import logging
 
@@ -1139,28 +1141,118 @@ def admin_grade_import():
     result = None
     semester, year = _current_period()
 
+    # Get data for export dropdowns
+    subjects = Subject.query.order_by(Subject.code if hasattr(Subject, 'code') else Subject.subject_code).all()
+    students = Student.query.order_by(Student.full_name).all()
+
     if request.method == 'POST':
         semester = request.form.get('semester', semester)
         year = request.form.get('year', year)
-        file = request.files.get('csv_file')
+        file = request.files.get('grade_file') or request.files.get('csv_file')
+
         if not file or not file.filename:
             flash('No file uploaded.', 'error')
         else:
-            result = admin_service.import_grades_from_csv(file.stream, semester, year, current_user)
-            if result['errors']:
-                flash(f"Import failed: {len(result['errors'])} error(s) found. No grades were saved.", 'error')
+            filename = file.filename.lower()
+
+            # Route to appropriate import handler based on file extension
+            if filename.endswith('.csv'):
+                result = admin_service.import_grades_from_csv(file.stream, semester, year, current_user)
+            elif filename.endswith('.xlsx'):
+                result = file_import_service.import_grades_from_excel(file.stream, semester, year, current_user)
+            elif filename.endswith('.pdf'):
+                result = file_import_service.import_grades_from_pdf(file.stream, semester, year, current_user)
             else:
-                flash(f"✅ Imported {result['imported']} grade(s) successfully.", 'success')
+                flash('Unsupported file format. Please use CSV, Excel (.xlsx), or PDF.', 'error')
+                result = None
+
+            if result:
+                if result['errors']:
+                    flash(f"Import failed: {len(result['errors'])} error(s) found. No grades were saved.", 'error')
+                else:
+                    flash(f"✅ Imported {result['imported']} grade(s) successfully.", 'success')
 
     context = {
         'result': result,
         'current_semester': semester,
         'current_year': year,
+        'subjects': subjects,
+        'students': students,
         'active_page': 'admin_grade_import',
     }
     if _is_htmx():
         return render_template('panel/partials/admin/grade_import.html', **context)
     return render_template('panel/pages/admin/grade_import.html', **context)
+
+
+# ── Grade Export Routes ─────────────────────────────────────────────
+
+@panel_bp.route('/admin/export-grades/semester')
+@login_required
+@role_required('admin')
+def admin_export_semester_grades():
+    """Export all grades for a semester as branded PDF."""
+    semester = request.args.get('semester')
+    year = request.args.get('year')
+
+    if not semester or not year:
+        semester, year = _current_period()
+
+    pdf_buffer = pdf_export_service.export_semester_grades(semester, year)
+
+    filename = f"grades_{semester}_{year.replace('-', '_')}.pdf"
+    return send_file(
+        pdf_buffer,
+        mimetype='application/pdf',
+        as_attachment=True,
+        download_name=filename
+    )
+
+
+@panel_bp.route('/admin/export-grades/subject/<int:subject_id>')
+@login_required
+@role_required('admin')
+def admin_export_subject_grades(subject_id):
+    """Export grades for a specific subject as branded PDF."""
+    semester = request.args.get('semester')
+    year = request.args.get('year')
+
+    if not semester or not year:
+        semester, year = _current_period()
+
+    pdf_buffer = pdf_export_service.export_subject_grades(subject_id, semester, year)
+
+    subject = db.session.get(Subject, subject_id)
+    subject_code = subject.code if hasattr(subject, 'code') else subject.subject_code
+    filename = f"grades_{subject_code.replace(' ', '_')}_{semester}_{year.replace('-', '_')}.pdf"
+    return send_file(
+        pdf_buffer,
+        mimetype='application/pdf',
+        as_attachment=True,
+        download_name=filename
+    )
+
+
+@panel_bp.route('/admin/export-grades/student/<int:student_id>')
+@login_required
+@role_required('admin')
+def admin_export_student_transcript(student_id):
+    """Export individual student transcript as branded PDF."""
+    semester = request.args.get('semester')  # Optional filter
+    year = request.args.get('year')  # Optional filter
+
+    pdf_buffer = pdf_export_service.export_student_transcript(
+        student_id, semester, year
+    )
+
+    student = db.session.get(Student, student_id)
+    filename = f"transcript_{student.student_id}.pdf"
+    return send_file(
+        pdf_buffer,
+        mimetype='application/pdf',
+        as_attachment=True,
+        download_name=filename
+    )
 
 
 # ── Admin Grades View ────────────────────────────────────────────────
