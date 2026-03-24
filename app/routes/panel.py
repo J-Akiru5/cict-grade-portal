@@ -982,12 +982,13 @@ def admin_grade_import():
 @login_required
 @role_required('admin')
 def admin_grades():
-    """Admin view of all student grades with filters."""
+    """Admin view of all students with aggregated grade summary."""
     from app.models.section import Section
     from app.models.subject import Subject
     from app.models.student import Student
     from app.models.enrollment import Enrollment
     from app.models.grade import Grade
+    from sqlalchemy import func
 
     # Get filter parameters
     search = request.args.get('q', '').strip()
@@ -1000,19 +1001,37 @@ def admin_grades():
     if not semester or not year:
         semester, year = _current_period()
 
-    # Build query for enrollments with grades
-    q = (
-        Enrollment.query
-        .join(Student)
-        .join(Subject)
-        .outerjoin(Grade)
-        .options(
-            db.contains_eager(Enrollment.student),
-            db.contains_eager(Enrollment.subject),
-            db.joinedload(Enrollment.grade),
+    # Subquery for GPA calculation per student
+    gpa_subquery = (
+        db.session.query(
+            Enrollment.student_id,
+            func.round(
+                func.sum(Grade.grade_value * Subject.units) / func.sum(Subject.units),
+                4
+            ).label('avg_gpa')
         )
+        .join(Grade, Enrollment.id == Grade.enrollment_id)
+        .join(Subject, Enrollment.subject_id == Subject.id)
         .filter(Enrollment.semester == semester)
         .filter(Enrollment.academic_year == year)
+        .filter(Grade.grade_value.isnot(None))
+        .filter((Grade.remarks.notin_(['INC', 'DRP'])) | (Grade.remarks.is_(None)))
+        .group_by(Enrollment.student_id)
+        .subquery()
+    )
+
+    # Main query: aggregate enrollments by student
+    q = (
+        db.session.query(
+            Student,
+            func.count(db.distinct(Enrollment.id)).label('subject_count'),
+            gpa_subquery.c.avg_gpa
+        )
+        .join(Enrollment, Student.id == Enrollment.student_id)
+        .outerjoin(gpa_subquery, Student.id == gpa_subquery.c.student_id)
+        .filter(Enrollment.semester == semester)
+        .filter(Enrollment.academic_year == year)
+        .group_by(Student.id, gpa_subquery.c.avg_gpa)
     )
 
     # Apply filters
@@ -1021,7 +1040,6 @@ def admin_grades():
             db.or_(
                 Student.full_name.ilike(f'%{search}%'),
                 Student.student_id.ilike(f'%{search}%'),
-                Subject.subject_code.ilike(f'%{search}%'),
             )
         )
     if section_id:
@@ -1029,8 +1047,18 @@ def admin_grades():
     if subject_id:
         q = q.filter(Enrollment.subject_id == subject_id)
 
-    q = q.order_by(Student.full_name, Subject.subject_code)
+    q = q.order_by(Student.full_name)
     pagination = q.paginate(page=page, per_page=30, error_out=False)
+
+    # Transform results to include metadata
+    students_data = [
+        {
+            'student': student,
+            'subject_count': subject_count,
+            'avg_gpa': avg_gpa,
+        }
+        for student, subject_count, avg_gpa in pagination.items
+    ]
 
     # Get filter options
     sections = Section.query.order_by(Section.program, Section.year_level, Section.section_letter).all()
@@ -1038,7 +1066,7 @@ def admin_grades():
 
     context = {
         'pagination': pagination,
-        'enrollments': pagination.items,
+        'students_data': students_data,
         'search': search,
         'section_id': section_id,
         'subject_id': subject_id,
@@ -1103,6 +1131,214 @@ def admin_encode_grade(enrollment_id):
         flash('Error saving grade.', 'error')
 
     return redirect(request.referrer or url_for('panel.admin_grades'))
+
+
+def _group_enrollments(enrollments, layout):
+    """Helper to group enrollments by layout type."""
+    from collections import defaultdict
+
+    if layout == 'by_semester':
+        # Group by semester + year
+        grouped = defaultdict(list)
+        for e in enrollments:
+            key = f"{e.semester} {e.academic_year}"
+            grouped[key].append(e)
+        return dict(grouped)
+
+    elif layout == 'by_section':
+        # Group by year level extracted from subject code
+        grouped = defaultdict(list)
+        for e in enrollments:
+            subject_code = e.subject.subject_code
+            year_level = 'Other'
+            # Try to extract year level from subject code (e.g., IT 211 -> Year 2)
+            parts = subject_code.split()
+            if len(parts) > 1 and parts[1].isdigit():
+                year_digit = parts[1][0]
+                year_level = f"Year {year_digit}"
+            grouped[year_level].append(e)
+        return dict(grouped)
+
+    else:  # by_subject (simple list, no grouping)
+        return {'All Subjects': enrollments}
+
+
+@panel_bp.route('/admin/grades/student/<int:student_db_id>')
+@login_required
+@role_required('admin')
+def admin_student_grades(student_db_id):
+    """Dedicated page for viewing/editing all grades for a specific student."""
+    from app.models.student import Student
+    from app.models.enrollment import Enrollment
+    from app.models.grade import Grade
+    from app.models.subject import Subject
+    from app.services import gwa_service
+
+    student = db.session.get(Student, student_db_id)
+    if not student:
+        flash('Student not found.', 'error')
+        return redirect(url_for('panel.admin_grades'))
+
+    # Get filter parameters
+    semester = request.args.get('semester')
+    year = request.args.get('year')
+    layout = request.args.get('layout', 'by_subject')
+
+    # Query all enrollments with grades for this student
+    query = (
+        Enrollment.query
+        .filter_by(student_id=student_db_id)
+        .join(Subject)
+        .outerjoin(Grade)
+        .options(
+            db.contains_eager(Enrollment.subject),
+            db.joinedload(Enrollment.grade),
+        )
+    )
+
+    # Optional filters
+    if semester:
+        query = query.filter(Enrollment.semester == semester)
+    if year:
+        query = query.filter(Enrollment.academic_year == year)
+
+    # Order based on layout
+    if layout == 'by_semester':
+        query = query.order_by(
+            Enrollment.academic_year.desc(),
+            Enrollment.semester,
+            Subject.subject_code
+        )
+    else:
+        query = query.order_by(Subject.subject_code)
+
+    enrollments = query.all()
+
+    # Get all grades for GWA calculation
+    all_grades = [e.grade for e in enrollments if e.grade]
+    overall_gwa = gwa_service.compute_gwa(all_grades) if all_grades else None
+    gwa_status = gwa_service.get_gwa_status(overall_gwa)
+
+    # Group enrollments by layout type
+    grouped_data = _group_enrollments(enrollments, layout)
+
+    # Get unique semesters/years for filtering
+    periods = (
+        db.session.query(
+            Enrollment.semester,
+            Enrollment.academic_year
+        )
+        .filter_by(student_id=student_db_id)
+        .distinct()
+        .order_by(Enrollment.academic_year.desc(), Enrollment.semester)
+        .all()
+    )
+
+    context = {
+        'student': student,
+        'enrollments': enrollments,
+        'grouped_data': grouped_data,
+        'layout': layout,
+        'overall_gwa': overall_gwa,
+        'gwa_status': gwa_status,
+        'total_subjects': len(enrollments),
+        'total_units': sum(e.subject.units for e in enrollments),
+        'encoded_count': sum(1 for e in enrollments if e.grade and e.grade.grade_value is not None),
+        'periods': periods,
+        'filter_semester': semester,
+        'filter_year': year,
+        'active_page': 'admin_grades',
+    }
+
+    if _is_htmx():
+        return render_template('panel/partials/admin/student_grades.html', **context)
+    return render_template('panel/pages/admin/student_grades.html', **context)
+
+
+@panel_bp.route('/admin/grades/student/<int:student_db_id>/save-all', methods=['POST'])
+@login_required
+@role_required('admin')
+def admin_save_student_grades(student_db_id):
+    """Batch save all grades for a student."""
+    from app.models.student import Student
+    from app.models.enrollment import Enrollment
+    from app.models.grade import Grade
+    from datetime import datetime, timezone
+
+    student = db.session.get(Student, student_db_id)
+    if not student:
+        flash('Student not found.', 'error')
+        return redirect(url_for('panel.admin_grades'))
+
+    # Parse form data: expect grades[enrollment_id] = grade_value
+    grades_data = {}
+    for key in request.form:
+        if key.startswith('grade_'):
+            enrollment_id = int(key.split('_')[1])
+            raw_value = request.form[key].strip().upper()
+            if raw_value:  # Only include non-empty values
+                grades_data[enrollment_id] = raw_value
+
+    if not grades_data:
+        flash('No grades to save.', 'warning')
+        return redirect(request.referrer or url_for('panel.admin_student_grades', student_db_id=student_db_id))
+
+    # Validate and save all grades
+    errors = []
+    updated_count = 0
+
+    try:
+        for enrollment_id, raw in grades_data.items():
+            enrollment = db.session.get(Enrollment, enrollment_id)
+            if not enrollment or enrollment.student_id != student_db_id:
+                errors.append(f'Invalid enrollment {enrollment_id}')
+                continue
+
+            # Parse grade value
+            remarks = None
+            grade_value = None
+
+            if raw in ('INC', 'DRP'):
+                remarks = raw
+            else:
+                try:
+                    grade_value = round(float(raw), 2)
+                    if grade_value not in admin_service.VALID_GRADES:
+                        errors.append(
+                            f'{enrollment.subject.subject_code}: Invalid grade {raw}. '
+                            f'Must be one of {sorted(admin_service.VALID_GRADES)}.'
+                        )
+                        continue
+                except ValueError:
+                    errors.append(f'{enrollment.subject.subject_code}: Invalid grade "{raw}".')
+                    continue
+
+            # Create or update grade
+            grade = enrollment.grade
+            if not grade:
+                grade = Grade(enrollment_id=enrollment.id)
+                db.session.add(grade)
+
+            grade.grade_value = grade_value
+            grade.remarks = remarks
+            grade.date_encoded = datetime.now(timezone.utc)
+            grade.encoded_by_id = current_user.id
+            updated_count += 1
+
+        if errors:
+            db.session.rollback()
+            for error in errors:
+                flash(error, 'error')
+        else:
+            db.session.commit()
+            flash(f'Successfully saved {updated_count} grade(s).', 'success')
+
+    except Exception as e:
+        db.session.rollback()
+        logging.error(f'Batch grade save error: {e}')
+        flash('Error saving grades.', 'error')
+
+    return redirect(request.referrer or url_for('panel.admin_student_grades', student_db_id=student_db_id))
 
 
 # ── Admin Audit Log ─────────────────────────────────────────────────

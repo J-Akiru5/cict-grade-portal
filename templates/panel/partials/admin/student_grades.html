@@ -1,0 +1,205 @@
+{# HTMX partial: Admin Student Grades Detail with Multiple Layouts #}
+<div class="space-y-4" x-data="{ dirty: false }">
+
+  {# ── Header & Breadcrumb ── #}
+  <div class="flex items-center gap-3">
+    <a href="{{ url_for('panel.admin_grades', semester=filter_semester, year=filter_year) }}"
+       class="text-xs text-maroon hover:underline">← Back to Grades</a>
+  </div>
+
+  {# ── Student Info Card ── #}
+  <div class="paper-card p-5">
+    <div class="flex items-start justify-between">
+      <div>
+        <h1 class="text-xl font-bold text-slate-900">{{ student.full_name }}</h1>
+        <div class="flex flex-wrap gap-2 mt-2">
+          <span class="bg-maroon/10 text-maroon text-xs font-mono font-semibold px-2 py-1 rounded">
+            {{ student.student_id }}
+          </span>
+          {% if student.section_obj %}
+          <span class="bg-slate-100 text-slate-600 text-xs px-2 py-1 rounded">
+            {{ student.section_obj.display_name }}
+          </span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="text-right">
+        {% if overall_gwa %}
+        <div class="text-sm text-slate-500">Overall GWA</div>
+        <div class="text-2xl font-bold font-mono {{ gwa_status.color }}">
+          {{ '%.2f'|format(overall_gwa) }}
+        </div>
+        <span class="text-xs {{ gwa_status.badge }} px-2 py-0.5 rounded-full mt-1 inline-block">
+          {{ gwa_status.label }}
+        </span>
+        {% else %}
+        <div class="text-sm text-slate-500">Overall GWA</div>
+        <div class="text-2xl font-bold font-mono text-slate-400">---</div>
+        <span class="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full mt-1 inline-block">
+          No grades yet
+        </span>
+        {% endif %}
+      </div>
+    </div>
+
+    {# Summary Stats #}
+    <div class="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-slate-100">
+      <div class="text-center">
+        <div class="text-2xl font-bold text-slate-800">{{ total_subjects }}</div>
+        <div class="text-xs text-slate-500">Total Subjects</div>
+      </div>
+      <div class="text-center">
+        <div class="text-2xl font-bold text-slate-800">{{ total_units }}</div>
+        <div class="text-xs text-slate-500">Total Units</div>
+      </div>
+      <div class="text-center">
+        <div class="text-2xl font-bold text-green-600">{{ encoded_count }}</div>
+        <div class="text-xs text-slate-500">Grades Encoded</div>
+      </div>
+    </div>
+  </div>
+
+  {# ── Layout Switcher & Filters ── #}
+  <div class="paper-card p-4">
+    <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+      {# Layout Tabs #}
+      <div class="flex gap-1 bg-slate-100 p-1 rounded-lg">
+        {% for layout_key, layout_label in [
+          ('by_subject', 'By Subject'),
+          ('by_section', 'By Year Level'),
+          ('by_semester', 'By Semester')
+        ] %}
+        <a href="{{ url_for('panel.admin_student_grades', student_db_id=student.id, layout=layout_key, semester=filter_semester, year=filter_year) }}"
+           class="px-3 py-1.5 text-sm font-medium rounded transition
+                  {{ 'bg-white text-maroon shadow-sm' if layout == layout_key else 'text-slate-600 hover:text-slate-900' }}">
+          {{ layout_label }}
+        </a>
+        {% endfor %}
+      </div>
+
+      {# Period Filter #}
+      <form method="GET" class="flex gap-2 items-end">
+        <input type="hidden" name="layout" value="{{ layout }}"/>
+        <select name="semester"
+                class="text-sm rounded-lg border border-slate-200 px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-maroon/40">
+          <option value="">All Semesters</option>
+          {% for sem in ['1st', '2nd', 'Summer'] %}
+            <option value="{{ sem }}" {{ 'selected' if filter_semester == sem }}>{{ sem }}</option>
+          {% endfor %}
+        </select>
+        <input type="text" name="year" value="{{ filter_year or '' }}" placeholder="Year"
+               class="w-28 text-sm rounded-lg border border-slate-200 px-2 py-1.5 font-mono focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+        <button type="submit"
+                class="px-3 py-1.5 bg-maroon text-white text-sm font-medium rounded-lg hover:bg-maroon/90 transition">
+          Filter
+        </button>
+        <a href="{{ url_for('panel.admin_student_grades', student_db_id=student.id, layout=layout) }}"
+           class="px-3 py-1.5 bg-slate-100 text-slate-600 text-sm rounded-lg hover:bg-slate-200 transition">
+          Clear
+        </a>
+      </form>
+    </div>
+  </div>
+
+  {# ── Grades Form ── #}
+  <form method="POST"
+        action="{{ url_for('panel.admin_save_student_grades', student_db_id=student.id) }}"
+        @submit="dirty = false"
+        class="space-y-4">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+    {% if grouped_data %}
+      {% for group_name, group_enrollments in grouped_data.items() %}
+      <div class="paper-card overflow-hidden">
+        {% if grouped_data|length > 1 %}
+        <div class="bg-slate-50 px-4 py-2 border-b border-slate-200">
+          <h3 class="font-semibold text-slate-700">{{ group_name }}</h3>
+        </div>
+        {% endif %}
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-200">
+                <th class="px-4 py-3 text-left font-semibold text-slate-600 text-xs uppercase">Subject Code</th>
+                <th class="px-4 py-3 text-left font-semibold text-slate-600 text-xs uppercase">Title</th>
+                <th class="px-4 py-3 text-center font-semibold text-slate-600 text-xs uppercase">Units</th>
+                <th class="px-4 py-3 text-center font-semibold text-slate-600 text-xs uppercase">Period</th>
+                <th class="px-4 py-3 text-center font-semibold text-slate-600 text-xs uppercase">Grade</th>
+                <th class="px-4 py-3 text-center font-semibold text-slate-600 text-xs uppercase">Remarks</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              {% for enrollment in group_enrollments %}
+              {% set grade = enrollment.grade %}
+              <tr class="hover:bg-slate-50 transition-colors">
+                <td class="px-4 py-3 font-mono font-semibold text-maroon">
+                  {{ enrollment.subject.subject_code }}
+                </td>
+                <td class="px-4 py-3 text-slate-700">
+                  {{ enrollment.subject.subject_title }}
+                </td>
+                <td class="px-4 py-3 text-center text-slate-600">
+                  {{ enrollment.subject.units }}
+                </td>
+                <td class="px-4 py-3 text-center text-xs text-slate-500 font-mono">
+                  {{ enrollment.semester }}<br/>{{ enrollment.academic_year }}
+                </td>
+                <td class="px-4 py-3 text-center">
+                  <input type="text"
+                         name="grade_{{ enrollment.id }}"
+                         value="{{ grade.grade_value if grade and grade.grade_value else (grade.remarks if grade and grade.remarks else '') }}"
+                         placeholder="1.75"
+                         @input="dirty = true"
+                         class="w-24 rounded-lg border border-slate-200 px-2 py-1 text-sm text-center font-mono
+                                focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+                </td>
+                <td class="px-4 py-3 text-center">
+                  {% if grade %}
+                    {% set r = grade.computed_remarks %}
+                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full
+                                 {% if r == 'PASSED' %}bg-green-100 text-green-700
+                                 {% elif r == 'FAILED' %}bg-red-100 text-red-700
+                                 {% elif r in ('INC','DRP') %}bg-yellow-100 text-yellow-700
+                                 {% else %}bg-slate-100 text-slate-500{% endif %}">
+                      {{ r }}
+                    </span>
+                  {% else %}
+                    <span class="text-xs text-slate-400">---</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="paper-card p-10 text-center text-slate-400">
+        No enrollments found for this student.
+      </div>
+    {% endif %}
+
+    {# ── Save Button (Sticky) ── #}
+    {% if grouped_data %}
+    <div class="sticky bottom-4 flex justify-center">
+      <button type="submit"
+              class="px-6 py-3 bg-maroon text-white font-semibold rounded-lg shadow-lg hover:bg-maroon/90 transition
+                     flex items-center gap-2"
+              :class="{ 'ring-2 ring-maroon/40 ring-offset-2': dirty }">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M5 13l4 4L19 7"/>
+        </svg>
+        Save All Grades
+      </button>
+    </div>
+    {% endif %}
+  </form>
+
+  <p class="text-xs text-slate-400 text-center">
+    Valid grades: 1.0,1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 2.75, 3.0, 5.0 &nbsp;|&nbsp; Special: INC, DRP
+  </p>
+
+</div>
