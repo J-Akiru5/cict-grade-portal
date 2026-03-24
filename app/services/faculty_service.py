@@ -111,6 +111,93 @@ def get_faculty_schedule(faculty_id: int, semester: str = None, academic_year: s
     return q.paginate(page=page, per_page=per_page, error_out=False)
 
 
+def get_faculty_sections(faculty_id: int, semester: str, academic_year: str) -> list:
+    """Return distinct sections from the faculty's schedule, with student count and subject list."""
+    from app.models.student import Student
+    
+    # Get schedules for this faculty that are linked to a section
+    schedules = (
+        Schedule.query
+        .filter_by(faculty_id=faculty_id, semester=semester, academic_year=academic_year)
+        .filter(Schedule.section_id.isnot(None))
+        .options(db.joinedload(Schedule.subject), db.joinedload(Schedule.section_obj))
+        .all()
+    )
+
+    sections_dict = {}
+    for sched in schedules:
+        sec_id = sched.section_id
+        if sec_id not in sections_dict:
+            # Count students officially belonging to this section
+            student_count = db.session.query(db.func.count(Student.id)).filter_by(section_id=sec_id).scalar()
+            
+            sections_dict[sec_id] = {
+                'id': sec_id,
+                'name': sched.section_obj.display_name,
+                'year_level': sched.section_obj.year_level,
+                'student_count': student_count,
+                'subjects': set()
+            }
+        
+        sections_dict[sec_id]['subjects'].add(sched.subject.subject_code)
+
+    # Convert sets to sorted lists for the template
+    result = list(sections_dict.values())
+    for r in result:
+        r['subjects'] = sorted(list(r['subjects']))
+
+    # Sort by year level, then section name
+    return sorted(result, key=lambda x: (x['year_level'], x['name']))
+
+
+def get_students_for_section(faculty_id: int, section_id: int, semester: str, academic_year: str) -> dict:
+    """Return all students in the section, plus irregular students enrolled in faculty's subjects for this section."""
+    from app.models.student import Student
+    from app.models.section import Section
+    
+    # 1. Verify faculty handles this section
+    handles_section = Schedule.query.filter_by(
+        faculty_id=faculty_id, section_id=section_id, 
+        semester=semester, academic_year=academic_year
+    ).first() is not None
+    
+    if not handles_section:
+        raise PermissionError('You do not handle this section for the current academic period.')
+
+    # 2. Regular section students
+    section_students = Student.query.filter_by(section_id=section_id).order_by(Student.full_name).all()
+    
+    # 3. Irregular students (students not in this section, but taking a subject the faculty teaches to this section)
+    faculty_subjects_for_section = [
+        sched.subject_id for sched in Schedule.query.filter_by(
+            faculty_id=faculty_id, section_id=section_id, 
+            semester=semester, academic_year=academic_year
+        ).all()
+    ]
+    
+    irregular_students = []
+    if faculty_subjects_for_section:
+        irregular_students = (
+            Student.query
+            .join(Enrollment, Enrollment.student_id == Student.id)
+            .filter(
+                Student.section_id.is_distinct_from(section_id),
+                Enrollment.subject_id.in_(faculty_subjects_for_section),
+                Enrollment.semester == semester,
+                Enrollment.academic_year == academic_year
+            )
+            .order_by(Student.full_name)
+            .distinct()
+            .all()
+        )
+        
+    return {
+        "section_students": section_students,
+        "irregular_students": irregular_students
+    }
+
+
+
 def add_faculty_schedule(
     faculty_id: int,
     subject_id: int,

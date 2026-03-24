@@ -1,0 +1,152 @@
+{# HTMX partial: Admin — Student Duplicates Scanner #}
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <h2 class="text-lg font-bold text-slate-800">Duplicate Student Profiles</h2>
+      <p class="text-sm text-slate-500 mt-1">Scan results for potential duplicate student records</p>
+    </div>
+    <a href="{{ url_for('panel.admin_students') }}"
+       class="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition text-sm font-medium">
+      ← Back to Students
+    </a>
+  </div>
+
+  {% if duplicates %}
+  <div class="space-y-4">
+    {% for dup_group in duplicates %}
+    <div class="paper-card overflow-hidden">
+      <div class="px-4 py-3 bg-amber-50 border-b border-amber-200">
+        <div class="flex items-center gap-2">
+          <span class="px-2 py-0.5 {% if dup_group.type == 'gmail' %}bg-red-200 text-red-900{% elif dup_group.type == 'name' %}bg-amber-200 text-amber-900{% elif dup_group.type == 'student_id' %}bg-rose-200 text-rose-900{% else %}bg-purple-200 text-purple-900{% endif %} rounded-full text-xs font-bold uppercase">
+            {{ dup_group.type }}
+          </span>
+          <span class="text-sm font-medium text-amber-900">
+            Matching: <span class="font-mono">{{ dup_group.criterion }}</span>
+          </span>
+          <span class="ml-auto text-xs text-amber-700">
+            {{ dup_group.students|length }} profiles found
+          </span>
+        </div>
+      </div>
+
+      <div class="divide-y divide-slate-100">
+        {% for student in dup_group.students %}
+        <div class="px-4 py-3 hover:bg-slate-50 transition-colors">
+          <div class="grid grid-cols-12 gap-4 items-center">
+            <div class="col-span-3">
+              <div class="font-medium text-slate-800">{{ student.full_name }}</div>
+              <div class="text-xs text-slate-500 font-mono">{{ student.student_id }}</div>
+            </div>
+            <div class="col-span-2 text-sm text-slate-600">
+              {{ student.section or '—' }}
+            </div>
+            <div class="col-span-2 text-sm text-slate-600">
+              {{ student.gmail or '—' }}
+            </div>
+            <div class="col-span-1">
+              {% if student.user_id %}
+                <span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700">
+                  Has Account
+                </span>
+              {% else %}
+                <span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">
+                  No Account
+                </span>
+              {% endif %}
+            </div>
+            <div class="col-span-1 text-center text-xs text-slate-500">
+              {% set enroll_count = student.enrollments.count() if student.enrollments else 0 %}
+              {% set sched_count = student.schedules.count() if student.schedules else 0 %}
+              <div>{{ enroll_count }} enroll.</div>
+              <div>{{ sched_count }} sched.</div>
+            </div>
+            <div class="col-span-3 flex gap-2 justify-end">
+              <a href="{{ url_for('panel.admin_edit_student', student_db_id=student.id) }}"
+                 class="text-xs px-3 py-1 bg-blue-50 text-blue-700 rounded hover:bg-blue-100 transition">
+                Edit
+              </a>
+
+              {# Transfer Data Dropdown #}
+              <div class="relative inline-block">
+                <button type="button"
+                        onclick="toggleTransferDropdown({{ student.id }})"
+                        class="text-xs px-3 py-1 bg-indigo-50 text-indigo-700 rounded hover:bg-indigo-100 transition">
+                  Transfer To →
+                </button>
+                <div id="transfer-dropdown-{{ student.id }}"
+                     class="hidden absolute right-0 mt-1 w-64 bg-white border border-slate-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
+                  {% for target in dup_group.students %}
+                    {% if target.id != student.id %}
+                    <form method="POST"
+                          action="{{ url_for('panel.admin_transfer_student_data', target_id=target.id, source_id=student.id) }}"
+                          onsubmit="return confirm('Transfer all enrollments and schedules from {{ student.full_name }} to {{ target.full_name }}? This cannot be undone.');"
+                          class="border-b border-slate-100 last:border-0">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                      <button type="submit"
+                              class="w-full px-3 py-2 text-left text-xs hover:bg-slate-50 transition">
+                        <div class="font-medium text-slate-700">{{ target.full_name }}</div>
+                        <div class="text-slate-500">{{ target.student_id }}</div>
+                      </button>
+                    </form>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              </div>
+
+              {# Delete Button #}
+              <form method="POST"
+                    action="{{ url_for('panel.admin_delete_duplicate_student', student_db_id=student.id) }}"
+                    onsubmit="return confirm('Delete {{ student.full_name }}? This cannot be undone. Ensure all data has been transferred first.');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                {% set has_data = (enroll_count + sched_count) > 0 %}
+                <button type="submit"
+                        {% if has_data %}disabled title="Cannot delete - student has enrollments or schedules. Transfer data first."{% endif %}
+                        class="text-xs px-3 py-1 rounded transition {% if has_data %}bg-slate-100 text-slate-400 cursor-not-allowed{% else %}bg-red-50 text-red-600 hover:bg-red-100{% endif %}">
+                  Delete
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="paper-card p-10 text-center">
+    <div class="text-green-600 text-5xl mb-4">✓</div>
+    <div class="text-green-700 text-lg font-semibold mb-2">No Duplicates Found</div>
+    <p class="text-slate-500 text-sm">All student profiles are unique. No duplicates detected.</p>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+// Toggle transfer dropdown visibility
+function toggleTransferDropdown(studentId) {
+  const dropdown = document.getElementById('transfer-dropdown-' + studentId);
+  const allDropdowns = document.querySelectorAll('[id^="transfer-dropdown-"]');
+
+  // Close all other dropdowns
+  allDropdowns.forEach(d => {
+    if (d.id !== 'transfer-dropdown-' + studentId) {
+      d.classList.add('hidden');
+    }
+  });
+
+  // Toggle current dropdown
+  dropdown.classList.toggle('hidden');
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', function(event) {
+  const isDropdownButton = event.target.closest('button[onclick^="toggleTransferDropdown"]');
+  const isDropdownContent = event.target.closest('[id^="transfer-dropdown-"]');
+
+  if (!isDropdownButton && !isDropdownContent) {
+    const allDropdowns = document.querySelectorAll('[id^="transfer-dropdown-"]');
+    allDropdowns.forEach(d => d.classList.add('hidden'));
+  }
+});
+</script>

@@ -1,3 +1,9 @@
 {% extends "panel/layout.html" %}
 {% block page_title %}Students{% endblock %}
-{% block main_content %}{% include "panel/partials/students.html" %}{% endblock %}
+{% block main_content %}
+  {% if view == 'section' %}
+    {% include "panel/partials/faculty_section_students.html" %}
+  {% else %}
+    {% include "panel/partials/faculty_sections.html" %}
+  {% endif %}
+{% endblock %}

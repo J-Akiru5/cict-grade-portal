@@ -228,7 +228,7 @@ def create_account_for_student_profile(student_db_id: int) -> tuple[Student, Use
             other = existing_user.student_profile
             raise ValueError(
                 f'This email is already linked to another student: {other.full_name} '
-                f'({other.student_id}). Use the merge function to combine these records.'
+                f'({other.student_id}). Cannot use this email.'
             )
         existing_user.role = 'student'
         existing_user.is_active = True
@@ -244,7 +244,7 @@ def create_account_for_student_profile(student_db_id: int) -> tuple[Student, Use
             raise ValueError(
                 f'Gmail "{email}" is also used by another student profile: '
                 f'{duplicate_profile.full_name} ({duplicate_profile.student_id}). '
-                f'Please merge profiles first using the merge function below.'
+                f'Cannot create account for duplicate profile.'
             )
 
         temp_password = _generate_temporary_password()
@@ -380,8 +380,24 @@ def create_student(
         if existing_by_email:
             raise ValueError(
                 f'Gmail "{gmail}" is already used by student {existing_by_email.full_name} '
-                f'({existing_by_email.student_id}). Consider merging records.'
+                f'({existing_by_email.student_id}). Cannot create duplicate.'
             )
+
+    # Pre-check: full name similarity (prevent near-duplicates)
+    if full_name:
+        import difflib
+        all_students = Student.query.all()
+        name_clean = full_name.strip().lower()
+
+        for existing in all_students:
+            existing_name_clean = existing.full_name.strip().lower()
+            similarity = difflib.SequenceMatcher(None, name_clean, existing_name_clean).ratio()
+
+            if similarity >= 0.85:  # 85% similarity threshold
+                raise ValueError(
+                    f'A student with similar name already exists: {existing.full_name} ({existing.student_id}). '
+                    f'Cannot create potential duplicate. Please verify this is not a duplicate.'
+                )
 
     student = Student(
         user_id=user_id,
@@ -424,53 +440,165 @@ def delete_student(student_db_id: int) -> None:
     db.session.commit()
 
 
-def merge_student_profiles(primary_id: int, secondary_id: int) -> Student:
+def find_duplicate_students():
     """
-    Merge two student profiles into one.
-    The primary profile is kept; data from secondary fills in blanks.
-    Enrollments, grades, and schedules are transferred to primary.
-    Secondary profile is then deleted.
+    Scan the database for potential duplicate student profiles.
+
+    Detection criteria:
+    - Exact student_id match (should never happen due to unique constraint)
+    - Case-insensitive gmail match
+    - Similar full_name (fuzzy match using difflib)
+    - Multiple profiles linked to same user account
+
+    Returns:
+        list: List of duplicate groups, each containing:
+            {
+                'type': 'student_id' | 'gmail' | 'name' | 'user_id',
+                'criterion': str,  # the matching value
+                'students': [Student, Student, ...]
+            }
+    """
+    import difflib
+    from collections import defaultdict
+
+    duplicates = []
+
+    # 1. Check for student_id duplicates (safety check - shouldn't happen)
+    student_id_groups = defaultdict(list)
+    all_students = Student.query.all()
+
+    for student in all_students:
+        if student.student_id:
+            student_id_groups[student.student_id].append(student)
+
+    for student_id, students in student_id_groups.items():
+        if len(students) > 1:
+            duplicates.append({
+                'type': 'student_id',
+                'criterion': student_id,
+                'students': students
+            })
+
+    # 2. Check for gmail duplicates (case-insensitive)
+    gmail_groups = defaultdict(list)
+    students_with_gmail = Student.query.filter(Student.gmail.isnot(None)).all()
+
+    for student in students_with_gmail:
+        gmail_clean = student.gmail.strip().lower()
+        if gmail_clean:
+            gmail_groups[gmail_clean].append(student)
+
+    for gmail, students in gmail_groups.items():
+        if len(students) > 1:
+            duplicates.append({
+                'type': 'gmail',
+                'criterion': gmail,
+                'students': students
+            })
+
+    # 3. Check for similar names (fuzzy matching)
+    all_students_sorted = Student.query.order_by(Student.full_name).all()
+    processed = set()
+
+    for i, student1 in enumerate(all_students_sorted):
+        if student1.id in processed:
+            continue
+
+        group = [student1]
+        name1_clean = student1.full_name.strip().lower()
+
+        for student2 in all_students_sorted[i+1:]:
+            if student2.id in processed:
+                continue
+
+            name2_clean = student2.full_name.strip().lower()
+            similarity = difflib.SequenceMatcher(None, name1_clean, name2_clean).ratio()
+
+            if similarity >= 0.85:
+                group.append(student2)
+                processed.add(student2.id)
+
+        if len(group) > 1:
+            processed.add(student1.id)
+            duplicates.append({
+                'type': 'name',
+                'criterion': student1.full_name,
+                'students': group
+            })
+
+    # 4. Check for multiple profiles linked to same user
+    user_id_groups = defaultdict(list)
+    students_with_user = Student.query.filter(Student.user_id.isnot(None)).all()
+
+    for student in students_with_user:
+        user_id_groups[student.user_id].append(student)
+
+    for user_id, students in user_id_groups.items():
+        if len(students) > 1:
+            duplicates.append({
+                'type': 'user_id',
+                'criterion': user_id,
+                'students': students
+            })
+
+    return duplicates
+
+
+def transfer_student_data(source_id: int, target_id: int):
+    """
+    Transfer enrollments and schedules from source student to target student.
+
+    Args:
+        source_id: ID of the student to transfer data FROM
+        target_id: ID of the student to transfer data TO
+
+    Returns:
+        dict: Count of transferred records
+
+    Raises:
+        ValueError: If students not found or if source and target are the same
     """
     from app.models.enrollment import Enrollment
     from app.models.schedule import Schedule
 
-    primary = db.session.get(Student, primary_id)
-    secondary = db.session.get(Student, secondary_id)
+    source = db.session.get(Student, source_id)
+    target = db.session.get(Student, target_id)
 
-    if not primary or not secondary:
+    if not source or not target:
         raise ValueError('One or both student profiles not found.')
-    if primary_id == secondary_id:
-        raise ValueError('Cannot merge a profile with itself.')
+    if source_id == target_id:
+        raise ValueError('Cannot transfer data to the same profile.')
 
-    # Transfer user account if secondary has one and primary doesn't
-    if secondary.user_id and not primary.user_id:
-        primary.user_id = secondary.user_id
-        secondary.user_id = None
+    # Count existing data
+    enrollment_count = Enrollment.query.filter_by(student_id=source_id).count()
+    schedule_count = Schedule.query.filter_by(student_id=source_id).count()
 
-    # Fill in blank fields from secondary
-    fields_to_merge = [
-        'full_name', 'age', 'address', 'contact_number', 'gmail',
-        'gender', 'section', 'section_id', 'year_level', 'curriculum_year'
-    ]
-    for field in fields_to_merge:
-        if not getattr(primary, field) and getattr(secondary, field):
-            setattr(primary, field, getattr(secondary, field))
+    # Transfer enrollments (handle potential duplicates)
+    # If target already has enrollment in same subject, keep target's data
+    source_enrollments = Enrollment.query.filter_by(student_id=source_id).all()
+    target_subject_ids = [e.subject_id for e in target.enrollments]
 
-    # Transfer enrollments
-    Enrollment.query.filter_by(student_id=secondary_id).update(
-        {'student_id': primary_id}, synchronize_session=False
-    )
+    transferred_enrollments = 0
+    for enrollment in source_enrollments:
+        if enrollment.subject_id not in target_subject_ids:
+            enrollment.student_id = target_id
+            transferred_enrollments += 1
+        else:
+            # Target already has this enrollment, delete source's
+            db.session.delete(enrollment)
 
     # Transfer schedules
-    Schedule.query.filter_by(student_id=secondary_id).update(
-        {'student_id': primary_id}, synchronize_session=False
+    Schedule.query.filter_by(student_id=source_id).update(
+        {'student_id': target_id}, synchronize_session=False
     )
 
-    # Delete secondary profile
-    db.session.delete(secondary)
     db.session.commit()
 
-    return primary
+    return {
+        'enrollments_transferred': transferred_enrollments,
+        'enrollments_skipped': enrollment_count - transferred_enrollments,
+        'schedules_transferred': schedule_count
+    }
 
 
 def create_student_with_account(

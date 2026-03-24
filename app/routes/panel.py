@@ -232,17 +232,74 @@ def encode_grade(subject_id, enrollment_id):
 @login_required
 @role_required('faculty', 'admin')
 def students():
-    search = request.args.get('q', '').strip()
-    page = request.args.get('page', 1, type=int)
-    pagination = admin_service.get_all_students(search=search or None, page=page, per_page=20)
+    semester, year = _current_period()
+    faculty = faculty_service.get_faculty_profile(current_user.id)
+    
+    if not faculty:
+        flash('Faculty profile not found. Cannot view sections.', 'error')
+        if current_user.role == 'admin':
+            return redirect(url_for('panel.admin_students'))
+        return redirect(url_for('panel.dashboard'))
+        
+    sections = faculty_service.get_faculty_sections(faculty.id, semester, year)
+
     context = {
-        'pagination': pagination,
-        'students': pagination.items,
-        'search': search,
+        'sections': sections,
+        'current_semester': semester,
+        'current_year': year,
         'active_page': 'students',
+        'view': 'cards'
     }
     if _is_htmx():
-        return render_template('panel/partials/students.html', **context)
+        return render_template('panel/partials/faculty_sections.html', **context)
+    return render_template('panel/pages/students.html', **context)
+
+
+@panel_bp.route('/students/section/<int:section_id>')
+@login_required
+@role_required('faculty', 'admin')
+def students_by_section(section_id):
+    semester, year = _current_period()
+    faculty = faculty_service.get_faculty_profile(current_user.id)
+    
+    if not faculty:
+        flash('Faculty profile not found.', 'error')
+        return redirect(url_for('panel.students'))
+
+    from app.models.section import Section
+    section = db.session.get(Section, section_id)
+    if not section:
+        flash('Section not found.', 'error')
+        return redirect(url_for('panel.students'))
+
+    search = request.args.get('q', '').strip()
+
+    try:
+        data = faculty_service.get_students_for_section(faculty.id, section_id, semester, year)
+    except PermissionError as e:
+        flash(str(e), 'error')
+        return redirect(url_for('panel.students'))
+        
+    section_students = data['section_students']
+    irregular_students = data['irregular_students']
+    
+    if search:
+        search_lower = search.lower()
+        section_students = [s for s in section_students if search_lower in s.full_name.lower() or search_lower in s.student_id.lower()]
+        irregular_students = [s for s in irregular_students if search_lower in s.full_name.lower() or search_lower in s.student_id.lower()]
+
+    context = {
+        'section': section,
+        'section_students': section_students,
+        'irregular_students': irregular_students,
+        'search': search,
+        'current_semester': semester,
+        'current_year': year,
+        'active_page': 'students',
+        'view': 'section'
+    }
+    if _is_htmx():
+        return render_template('panel/partials/faculty_section_students.html', **context)
     return render_template('panel/pages/students.html', **context)
 
 
@@ -707,6 +764,89 @@ def admin_students():
     return render_template('panel/pages/admin/students.html', **context)
 
 
+@panel_bp.route('/admin/students/duplicates')
+@login_required
+@role_required('admin')
+def admin_students_duplicates():
+    """View for scanning and managing duplicate student profiles."""
+    duplicates = admin_service.find_duplicate_students()
+
+    context = {
+        'duplicates': duplicates,
+        'active_page': 'admin_students_duplicates',
+    }
+
+    if _is_htmx():
+        return render_template('panel/partials/admin/student_duplicates.html', **context)
+    return render_template('panel/pages/admin/student_duplicates.html', **context)
+
+
+@panel_bp.route('/admin/students/<int:target_id>/transfer-from/<int:source_id>', methods=['POST'])
+@login_required
+@role_required('admin')
+def admin_transfer_student_data(target_id, source_id):
+    """Transfer enrollments and schedules from source student to target student."""
+    try:
+        result = admin_service.transfer_student_data(source_id, target_id)
+        flash(
+            f'Successfully transferred {result["enrollments_transferred"]} enrollment(s) '
+            f'and {result["schedules_transferred"]} schedule(s). '
+            f'{result["enrollments_skipped"]} duplicate enrollment(s) skipped.',
+            'success'
+        )
+    except ValueError as e:
+        flash(str(e), 'error')
+    except Exception as e:
+        flash(f'Transfer failed: {e}', 'error')
+
+    return redirect(url_for('panel.admin_students_duplicates'))
+
+
+@panel_bp.route('/admin/students/<int:student_db_id>/delete-as-duplicate', methods=['POST'])
+@login_required
+@role_required('admin')
+def admin_delete_duplicate_student(student_db_id):
+    """
+    Delete a student profile identified as a duplicate.
+    Ensures the student has no enrollments or schedules before deletion.
+    """
+    try:
+        student = db.session.get(Student, student_db_id)
+        if not student:
+            flash('Student not found.', 'error')
+            return redirect(url_for('panel.admin_students_duplicates'))
+
+        # Safety check: prevent deletion if student has data
+        enrollment_count = student.enrollments.count() if hasattr(student, 'enrollments') else 0
+        schedule_count = student.schedules.count() if hasattr(student, 'schedules') else 0
+
+        if enrollment_count > 0 or schedule_count > 0:
+            flash(
+                f'Cannot delete {student.full_name}. Student has {enrollment_count} enrollment(s) '
+                f'and {schedule_count} schedule(s). Please transfer data first.',
+                'error'
+            )
+            return redirect(url_for('panel.admin_students_duplicates'))
+
+        # If student has a linked user account, unlink it (don't delete user)
+        if student.user_id:
+            student.user_id = None
+            db.session.commit()
+
+        # Delete the student profile
+        student_name = student.full_name
+        student_id_str = student.student_id
+        db.session.delete(student)
+        db.session.commit()
+
+        flash(f'Deleted duplicate profile: {student_name} ({student_id_str}).', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting student: {e}', 'error')
+
+    return redirect(url_for('panel.admin_students_duplicates'))
+
+
 @panel_bp.route('/admin/students/create', methods=['POST'])
 @login_required
 @role_required('admin')
@@ -816,22 +956,6 @@ def admin_delete_student(student_db_id):
         flash('Student deleted.', 'success')
     except Exception as e:
         flash(f'Error: {e}', 'error')
-    return redirect(url_for('panel.admin_students'))
-
-
-@panel_bp.route('/admin/students/merge', methods=['POST'])
-@login_required
-@role_required('admin')
-def admin_merge_students():
-    try:
-        primary_id = int(request.form['primary_id'])
-        secondary_id = int(request.form['secondary_id'])
-        merged = admin_service.merge_student_profiles(primary_id, secondary_id)
-        flash(f'Successfully merged into {merged.full_name} ({merged.student_id}).', 'success')
-    except ValueError as e:
-        flash(str(e), 'error')
-    except Exception as e:
-        flash(f'Merge failed: {e}', 'error')
     return redirect(url_for('panel.admin_students'))
 
 

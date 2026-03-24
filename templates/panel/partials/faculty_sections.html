@@ -1,0 +1,73 @@
+{# HTMX partial: Section Cards #}
+<div class="space-y-6">
+  <div class="flex items-center justify-between flex-wrap gap-3">
+    <div>
+      <h2 class="text-xl font-bold text-slate-800">My Sections</h2>
+      <p class="text-sm text-slate-500">
+        Showing sections for {{ current_semester }} Semester, AY {{ current_year }}
+      </p>
+    </div>
+  </div>
+
+  {% if sections %}
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for section in sections %}
+    <a href="{{ url_for('panel.students_by_section', section_id=section.id) }}"
+       hx-get="{{ url_for('panel.students_by_section', section_id=section.id) }}"
+       hx-push-url="true"
+       hx-target="#main-content"
+       class="block paper-card p-6 hover:shadow-md hover:border-maroon/30 transition border-t-4 border-t-maroon cursor-pointer group relative overflow-hidden">
+      
+      <!-- Subtle background texture matching ISUFST vibes -->
+      <div class="absolute -right-6 -top-6 w-24 h-24 bg-maroon/5 rounded-full blur-2xl group-hover:bg-maroon/10 transition duration-500"></div>
+
+      <div class="relative flex justify-between items-start mb-4">
+        <div>
+          <h3 class="text-xl font-extrabold text-maroon group-hover:text-red-900 transition flex items-center gap-2">
+            <svg class="w-5 h-5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+            {{ section.name }}
+          </h3>
+          <span class="inline-block mt-2 px-2.5 py-0.5 bg-slate-100 text-slate-600 text-xs font-semibold rounded-full border border-slate-200">
+            Year {{ section.year_level }}
+          </span>
+        </div>
+        <div class="flex flex-col items-center justify-center bg-maroon/5 rounded-xl px-4 py-2 border border-maroon/10 shadow-inner">
+          <span class="text-2xl font-black text-maroon font-mono">{{ section.student_count }}</span>
+          <span class="text-[10px] font-bold text-maroon/70 uppercase tracking-widest mt-0.5">Students</span>
+        </div>
+      </div>
+
+      <div class="relative space-y-2 mt-5 pt-4 border-t border-slate-100">
+        <p class="text-[11px] text-slate-500 font-bold uppercase tracking-widest mb-1.5 flex items-center gap-1">
+          <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+          </svg>
+          Subjects Handled
+        </p>
+        <div class="flex flex-wrap gap-2">
+          {% for subject in section.subjects %}
+          <span class="px-2 py-1 bg-white border border-slate-200 shadow-sm text-slate-700 text-xs rounded-md font-mono font-medium">
+            {{ subject }}
+          </span>
+          {% endfor %}
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="paper-card p-12 text-center flex flex-col items-center justify-center">
+    <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 text-slate-300">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+      </svg>
+    </div>
+    <h3 class="text-lg font-bold text-slate-700 mb-1">No Sections Assigned</h3>
+    <p class="text-slate-500 text-sm max-w-md">
+      You do not have any sections assigned for the current academic period.
+    </p>
+  </div>
+  {% endif %}
+</div>
