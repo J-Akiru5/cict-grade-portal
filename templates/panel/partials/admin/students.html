@@ -363,6 +363,39 @@
         </form>
       </div>
     </details>
+
+    {# ── Bulk Import ── #}
+    <details class="paper-card h-fit">
+      <summary class="p-4 cursor-pointer font-semibold text-slate-800 select-none">📤 Bulk Import</summary>
+      <div class="px-5 pb-5 border-t border-slate-100 pt-4">
+        <form method="POST" action="{{ url_for('panel.admin_bulk_import_students') }}" enctype="multipart/form-data" class="space-y-3">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">Upload File *</label>
+            <input type="file" name="import_file" accept=".xlsx,.xls,.csv" required
+                   class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40
+                          file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:bg-slate-100 file:text-slate-700
+                          hover:file:bg-slate-200 file:text-xs file:font-medium"/>
+          </div>
+
+          <div class="text-xs text-slate-500 bg-slate-50 p-3 rounded-lg">
+            <div class="font-semibold mb-2">Required columns:</div>
+            <ul class="space-y-1">
+              <li><code class="bg-white px-1 rounded">student_id</code> - Student ID number</li>
+              <li><code class="bg-white px-1 rounded">full_name</code> - Student's full name</li>
+              <li><code class="bg-white px-1 rounded">year_level</code> - Year level (1, 2, 3, or 4)</li>
+            </ul>
+            <div class="font-semibold mt-3 mb-1">Optional columns:</div>
+            <div class="text-xs">section, gmail, age, address, contact_number, gender</div>
+          </div>
+
+          <button type="submit" class="w-full px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition">
+            Import Students
+          </button>
+        </form>
+      </div>
+    </details>
   </div>
 
   {# ── Student Table ── #}

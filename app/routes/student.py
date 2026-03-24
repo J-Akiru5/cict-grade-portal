@@ -200,3 +200,33 @@ def grades():
     if _is_htmx():
         return render_template('partials/grades.html', **context)
     return render_template('student/pages/grades.html', **context)
+
+
+@student_bp.route('/grade-history')
+@login_required
+@role_required('student')
+def grade_history():
+    student = student_service.get_student_profile(current_user.id)
+    history = student_service.get_grade_history(student.id) if student else {}
+
+    # Calculate cumulative GWA across all semesters
+    all_grades = []
+    for period_data in history.values():
+        all_grades.extend(period_data['grades'])
+
+    cumulative_gwa = None
+    if all_grades:
+        total_weighted = sum(g['grade_value'] * (g['units'] or 3) for g in all_grades if g['grade_value'])
+        total_units = sum(g['units'] or 3 for g in all_grades if g['grade_value'])
+        cumulative_gwa = round(total_weighted / total_units, 4) if total_units > 0 else None
+
+    context = {
+        'student': student,
+        'history': history,
+        'cumulative_gwa': cumulative_gwa,
+        'active_page': 'grade_history',
+        'get_grade_color': gwa_service.get_grade_color,
+    }
+    if _is_htmx():
+        return render_template('partials/grade_history.html', **context)
+    return render_template('student/pages/grade_history.html', **context)

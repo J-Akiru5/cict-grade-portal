@@ -1,11 +1,11 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, make_response, send_file
 from flask_login import login_required, current_user
 from app.utils.security import role_required
-from app.services import faculty_service, admin_service, storage_service, file_import_service, pdf_export_service
+from app.services import faculty_service, admin_service, storage_service, file_import_service, pdf_export_service, student_import_service
 from app.models.academic_settings import AcademicSettings
 from app.models.subject import Subject
 from app.models.student import Student
-from app.extensions import db
+from app.extensions import db, limiter
 import logging
 
 panel_bp = Blueprint('panel', __name__, template_folder='../../templates/panel')
@@ -1006,6 +1006,7 @@ def admin_delete_student(student_db_id):
 @panel_bp.route('/admin/students/bulk-delete', methods=['POST'])
 @login_required
 @role_required('admin')
+@limiter.limit("5 per minute")  # Strict limit for dangerous operations
 def admin_bulk_delete_students():
     """Bulk delete multiple students at once."""
     student_ids = request.form.getlist('student_ids', type=int)
@@ -1071,6 +1072,50 @@ def admin_bulk_enroll():
         flash(f'Successfully enrolled {enrolled} student(s).', 'success')
     if skipped > 0:
         flash(f'{skipped} student(s) were already enrolled or could not be enrolled.', 'info')
+
+    return redirect(url_for('panel.admin_students'))
+
+
+@panel_bp.route('/admin/students/bulk-import', methods=['POST'])
+@login_required
+@role_required('admin')
+@limiter.limit("5 per minute")  # Strict limit for file uploads
+def admin_bulk_import_students():
+    """Bulk import students from Excel/CSV file."""
+    upload_file = request.files.get('import_file')
+
+    if not upload_file or not upload_file.filename:
+        flash('Please select a file to import.', 'warning')
+        return redirect(url_for('panel.admin_students'))
+
+    filename = upload_file.filename.lower()
+
+    try:
+        # Determine file type and process accordingly
+        if filename.endswith('.xlsx') or filename.endswith('.xls'):
+            result = student_import_service.import_students_from_excel(upload_file)
+        elif filename.endswith('.csv'):
+            result = student_import_service.import_students_from_csv(upload_file)
+        else:
+            flash('Invalid file format. Please upload an Excel (.xlsx, .xls) or CSV file.', 'error')
+            return redirect(url_for('panel.admin_students'))
+
+        # Handle results
+        if result['errors']:
+            # Show first few errors
+            error_preview = result['errors'][:3]
+            error_msg = '; '.join(error_preview)
+            if len(result['errors']) > 3:
+                error_msg += f' ... and {len(result["errors"]) - 3} more errors'
+            flash(f'Import failed: {error_msg}', 'error')
+        else:
+            flash(f'Successfully imported {result["imported"]} student(s).', 'success')
+            if result['skipped'] > 0:
+                flash(f'{result["skipped"]} student(s) were skipped.', 'info')
+
+    except Exception as e:
+        logging.exception('Error during student import')
+        flash(f'Import error: {str(e)}', 'error')
 
     return redirect(url_for('panel.admin_students'))
 

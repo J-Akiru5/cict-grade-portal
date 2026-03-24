@@ -1,0 +1,190 @@
+{# Email notification status template for admin panel #}
+<div class="space-y-6">
+
+  <div class="flex items-center justify-between flex-wrap gap-3">
+    <h2 class="text-lg font-bold text-slate-800">Email Notification System</h2>
+    <div class="flex gap-2">
+      <button onclick="refreshStats()"
+              class="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition text-sm font-medium">
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  {# System Status #}
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="paper-card p-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="text-xs text-slate-500 uppercase font-semibold">System Status</div>
+          <div class="text-2xl font-bold {{ 'text-green-600' if stats.is_running else 'text-red-600' }}">
+            {{ 'Running' if stats.is_running else 'Stopped' }}
+          </div>
+        </div>
+        <div class="w-12 h-12 rounded-full {{ 'bg-green-100' if stats.is_running else 'bg-red-100' }} flex items-center justify-center">
+          {% if stats.is_running %}
+            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+          {% else %}
+            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="paper-card p-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="text-xs text-slate-500 uppercase font-semibold">Queue Size</div>
+          <div class="text-2xl font-bold text-slate-800">{{ stats.queue_size }}</div>
+          <div class="text-xs text-slate-500">Pending tasks</div>
+        </div>
+        <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+          <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="paper-card p-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="text-xs text-slate-500 uppercase font-semibold">Success Rate</div>
+          {% set success_rate = ((stats.tasks_completed / stats.tasks_total * 100) | round(1)) if stats.tasks_total > 0 else 0 %}
+          <div class="text-2xl font-bold text-slate-800">{{ success_rate }}%</div>
+          <div class="text-xs text-slate-500">{{ stats.tasks_completed }}/{{ stats.tasks_total }} completed</div>
+        </div>
+        <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
+          <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# Detailed Statistics #}
+  <div class="paper-card overflow-hidden">
+    <div class="px-6 py-4 bg-slate-50 border-b border-slate-200">
+      <h3 class="text-lg font-semibold text-slate-800">Email Statistics</h3>
+    </div>
+    <div class="p-6">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div class="text-center">
+          <div class="text-3xl font-bold text-green-600 font-mono">{{ stats.tasks_completed }}</div>
+          <div class="text-sm text-slate-500 mt-1">Emails Sent</div>
+        </div>
+        <div class="text-center">
+          <div class="text-3xl font-bold text-red-600 font-mono">{{ stats.tasks_failed }}</div>
+          <div class="text-sm text-slate-500 mt-1">Failed</div>
+        </div>
+        <div class="text-center">
+          <div class="text-3xl font-bold text-blue-600 font-mono">{{ stats.tasks_total }}</div>
+          <div class="text-sm text-slate-500 mt-1">Total Tasks</div>
+        </div>
+        <div class="text-center">
+          <div class="text-3xl font-bold text-purple-600 font-mono">
+            {% if stats.started_at %}
+              {{ ((now - stats.started_at).total_seconds() / 3600) | round(1) }}h
+            {% else %}
+              --
+            {% endif %}
+          </div>
+          <div class="text-sm text-slate-500 mt-1">Uptime</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# Configuration Status #}
+  <div class="paper-card overflow-hidden">
+    <div class="px-6 py-4 bg-slate-50 border-b border-slate-200">
+      <h3 class="text-lg font-semibold text-slate-800">Configuration</h3>
+    </div>
+    <div class="p-6">
+      <div class="space-y-4">
+        <div class="flex justify-between items-center">
+          <span class="text-sm font-medium text-slate-600">SMTP Server</span>
+          <span class="text-sm text-slate-800 font-mono">{{ config.smtp_server or 'Not configured' }}</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-sm font-medium text-slate-600">SMTP Port</span>
+          <span class="text-sm text-slate-800 font-mono">{{ config.smtp_port or 'Default' }}</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-sm font-medium text-slate-600">From Email</span>
+          <span class="text-sm text-slate-800 font-mono">{{ config.from_email or 'Not configured' }}</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-sm font-medium text-slate-600">Authentication</span>
+          <span class="px-2 py-1 text-xs rounded-full {{ 'bg-green-100 text-green-700' if config.smtp_configured else 'bg-red-100 text-red-700' }}">
+            {{ 'Configured' if config.smtp_configured else 'Missing credentials' }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# Test Email Section #}
+  <div class="paper-card overflow-hidden">
+    <div class="px-6 py-4 bg-slate-50 border-b border-slate-200">
+      <h3 class="text-lg font-semibold text-slate-800">Send Test Email</h3>
+    </div>
+    <div class="p-6">
+      <form id="test-email-form" class="flex gap-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <input type="email" name="test_email" placeholder="Enter email address" required
+               class="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/40"/>
+        <button type="submit"
+                class="px-4 py-2 bg-maroon text-white text-sm font-semibold rounded-lg hover:bg-maroon/90 transition">
+          Send Test
+        </button>
+      </form>
+      <p class="text-xs text-slate-500 mt-2">
+        This will send a test notification email to verify the configuration.
+      </p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function refreshStats() {
+  // Use HTMX to refresh the stats
+  htmx.get(window.location.href, {
+    target: document.body,
+    swap: 'outerHTML'
+  });
+}
+
+// Auto-refresh every 30 seconds
+setInterval(refreshStats, 30000);
+
+// Handle test email form
+document.getElementById('test-email-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const formData = new FormData(this);
+
+  fetch('/panel/admin/email-test', {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      alert('Test email queued successfully!');
+    } else {
+      alert('Error: ' + data.message);
+    }
+  })
+  .catch(error => {
+    alert('Error sending test email: ' + error.message);
+  });
+});
+</script>

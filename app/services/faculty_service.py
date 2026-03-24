@@ -284,6 +284,7 @@ def release_grades_for_subject(
     Mark all encoded grades for a subject as released (visible to students).
     Returns the count of grades released.
     Raises PermissionError if subject is not owned by faculty.
+    Also sends email notifications to students about their released grades.
     """
     if not is_subject_owned_by_faculty(faculty_id, subject_id):
         raise PermissionError('Subject not assigned to this faculty member.')
@@ -305,15 +306,34 @@ def release_grades_for_subject(
     )
 
     count = 0
+    released_student_ids = []
+
     for grade in grades_to_release:
         grade.is_released = True
         grade.released_at = now
         grade.released_by_id = actor_user.id
+        released_student_ids.append(grade.enrollment.student_id)
         count += 1
 
     if count > 0:
         db.session.commit()
         logging.info(f'Released {count} grades for subject {subject_id} by user {actor_user.id}')
+
+        # Send email notifications asynchronously
+        try:
+            from app.utils.background_tasks import send_bulk_grade_notifications_async
+            send_bulk_grade_notifications_async(
+                subject_id, semester, academic_year, actor_user
+            )
+            logging.info(f'Queued email notifications for {count} grade releases')
+
+        except Exception as e:
+            logging.error(f'Error queueing grade release notifications: {str(e)}')
+            # Don't fail the grade release if email notifications fail
+
+        except Exception as e:
+            logging.error(f'Error sending grade release notifications: {str(e)}')
+            # Don't fail the grade release if email notifications fail
 
     return count
 

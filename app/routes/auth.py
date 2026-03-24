@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import login_user, logout_user, current_user, login_required
 from app.services import auth_service, email_service
 from app.models.user import User
-from app.extensions import db
+from app.extensions import db, limiter
 from datetime import datetime, timezone
 from sqlalchemy.exc import IntegrityError
 import logging
@@ -11,6 +11,7 @@ auth_bp = Blueprint('auth', __name__, template_folder='../../templates/auth')
 
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
+@limiter.limit("5 per minute")  # Prevent brute force attacks
 def login():
     if current_user.is_authenticated:
         return _redirect_by_role(current_user.role)
@@ -101,6 +102,7 @@ def _redirect_by_role(role: str):
 
 
 @auth_bp.route('/forgot-password', methods=['GET', 'POST'])
+@limiter.limit("3 per 10 minutes")  # Prevent email spam abuse
 def forgot_password():
     """Request a password reset link."""
     if current_user.is_authenticated:
@@ -125,6 +127,7 @@ def forgot_password():
 
 
 @auth_bp.route('/reset-password', methods=['GET', 'POST'])
+@limiter.limit("3 per 10 minutes")  # Prevent password reset abuse
 def reset_password():
     """Set a new password using the token from the reset email."""
     if current_user.is_authenticated:
@@ -175,6 +178,7 @@ def reset_password():
 
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
+@limiter.limit("3 per 10 minutes")  # Prevent registration spam
 def register():
     """Student/faculty self-registration."""
     if current_user.is_authenticated:

@@ -2,7 +2,7 @@ import os
 from flask import Flask, request
 from flask_login import current_user
 from .config import config
-from .extensions import db, migrate, login_manager, csrf
+from .extensions import db, migrate, login_manager, csrf, limiter
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 
@@ -36,6 +36,13 @@ def create_app(config_name: str | None = None) -> Flask:
     migrate.init_app(app, db)
     csrf.init_app(app)
 
+    # Initialize rate limiter
+    limiter.init_app(app)
+
+    # Register rate limit error handlers
+    from .utils.rate_limit_handlers import register_rate_limit_handlers
+    register_rate_limit_handlers(app, limiter)
+
     # Flask-Login setup
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
@@ -52,16 +59,22 @@ def create_app(config_name: str | None = None) -> Flask:
     from .routes.main import main_bp
     from .routes.panel import panel_bp
     from .routes.chatbot import chatbot_bp
+    from .routes.api import api_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(student_bp, url_prefix='/student')
     app.register_blueprint(panel_bp, url_prefix='/panel')
     app.register_blueprint(chatbot_bp)
+    app.register_blueprint(api_bp)
 
     # Register error handlers
     from .utils.errors import register_error_handlers
     register_error_handlers(app)
+
+    # Initialize background task system
+    from .utils.background_tasks import init_background_tasks
+    init_background_tasks(app)
 
     # Register CLI commands
     from .utils.seed import register_cli
